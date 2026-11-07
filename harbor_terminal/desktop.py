@@ -6,7 +6,7 @@ from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QFormLayout,
     QLineEdit, QComboBox, QPushButton, QLabel, QTabWidget, QDialog,
     QDialogButtonBox, QGroupBox, QFileDialog, QDockWidget, QTreeWidget,
     QTreeWidgetItem, QToolBar, QToolButton, QStackedWidget, QListWidget,
-    QMenu, QMessageBox, QFontDialog, QCheckBox, QAbstractItemView)
+    QMenu, QMessageBox, QFontDialog, QCheckBox, QAbstractItemView, QScrollArea)
 
 from .appearance import Preferences, SCHEMES, apply_desktop_style, icon, terminal_font
 from .terminal_model import ENCODINGS
@@ -22,7 +22,8 @@ class ConnectionOptions(QDialog):
         outer = QVBoxLayout(self)
         row = QHBoxLayout(); outer.addLayout(row, 1)
         categories = QListWidget(); categories.setFixedWidth(145)
-        categories.addItems(['终端 / 编码', 'SSH / 身份', 'SSH / 跳板', '串口'])
+        categories.addItems(['终端 / 编码', 'SSH / 身份', 'SSH / 跳板', '串口', 'SSH / 安全策略'])
+        self.categories=categories
         pages = QStackedWidget(); row.addWidget(categories); row.addWidget(pages, 1)
 
         def page(title):
@@ -56,6 +57,9 @@ class ConnectionOptions(QDialog):
         choose = QPushButton('浏览…'); choose.clicked.connect(self.choose_key); key_row.addWidget(choose)
         self.passphrase = QLineEdit(); self.passphrase.setEchoMode(QLineEdit.EchoMode.Password)
         form.addRow('私钥文件：', key_row); form.addRow('本次私钥口令：', self.passphrase)
+        self.certificate=QLineEdit(options.get('client_certificate',''));cert_row=QHBoxLayout();cert_row.addWidget(self.certificate,1)
+        cert_choose=QPushButton('浏览…');cert_choose.clicked.connect(self.choose_certificate);cert_row.addWidget(cert_choose)
+        form.addRow('OpenSSH用户证书：',cert_row)
         note = QLabel('密码和私钥口令仅用于本次连接，不保存到会话配置。'); note.setWordWrap(True)
         form.addRow(note)
 
@@ -84,6 +88,8 @@ class ConnectionOptions(QDialog):
             field = QComboBox(); field.addItems(values); field.setCurrentText(options[key])
             self.serial_fields[key] = field; form.addRow(labels[key], field)
         form.addRow(QLabel('设备和波特率在“快速连接”中设置。'))
+        from .ssh_dialogs import PolicyEditor
+        self.policy=PolicyEditor(options,self);scroll=QScrollArea();scroll.setWidgetResizable(True);scroll.setWidget(self.policy);pages.addWidget(scroll)
         categories.currentRowChanged.connect(pages.setCurrentIndex); categories.setCurrentRow(0)
         outer.addWidget(QLabel('连接参数在下次连接时生效。'))
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
@@ -96,11 +102,21 @@ class ConnectionOptions(QDialog):
         path, _ = QFileDialog.getOpenFileName(self, '选择私钥文件')
         if path: self.private_key.setText(path)
 
+    def choose_certificate(self):
+        path,_=QFileDialog.getOpenFileName(self,'选择OpenSSH用户公钥证书')
+        if path:self.certificate.setText(path)
+
+    def accept(self):
+        try:self.policy.values()
+        except ValueError:self.categories.setCurrentRow(4);self.policy.status.setText('策略无效：检查算法名称、旧算法许可及重协商范围。');return
+        super().accept()
+
     def values(self):
         return dict(encoding=self.encoding.currentText(), backspace=self.backspace.currentText(),
                     private_key=self.private_key.text().strip(), jump_profile=self.jump_profile.currentData(),
                     auth_method=self.auth_method.currentData(),
                     ssh_mode='channels' if self.channels_only.isChecked() else 'shell',
+                    client_certificate=self.certificate.text().strip(),**self.policy.values(),
                     **{key: field.currentText() for key, field in self.serial_fields.items()})
 
 
@@ -245,6 +261,9 @@ class DesktopShell:
         self.forward_button = self._action('forward', 'SSH 隧道', self.open_forwards)
         self.break_button = self._action('terminal', '发送 BREAK', self.send_break)
         self.command_action = self._action('terminal', '命令与流程…', self.open_command_panel, 'Alt+M')
+        self.host_keys_action=self._action('settings','主机密钥管理…',self.open_host_keys)
+        self.key_tools_action=self._action('settings','生成 / 检查身份密钥…',self.open_key_tools)
+        self.diagnostics_action=self._action('log','SSH协商诊断…',self.open_diagnostics)
 
     def _build_toolbar(self):
         self.toolbar = QToolBar('标准工具栏', self); self.toolbar.setObjectName('standardToolbar')
@@ -290,6 +309,7 @@ class DesktopShell:
         tools.addAction(self.command_action)
         tools.addAction(self.input_lock_action)
         tools.addAction(self.rename_tab_action)
+        tools.addSeparator();tools.addActions([self.host_keys_action,self.key_tools_action,self.diagnostics_action])
         self.windows_menu = bar.addMenu('窗口(&W)'); self.windows_menu.aboutToShow.connect(self.populate_windows_menu)
         help_menu = bar.addMenu('帮助(&H)')
         help_menu.addAction('快捷键', lambda: QMessageBox.information(self, '快捷键',

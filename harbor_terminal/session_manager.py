@@ -13,6 +13,7 @@ from .profile_operations import (csv_headers,default_mapping,parse_import,plan_i
     export_sessions,patch_sessions,rename_path,delete_sessions,describe_changes,IMPORT_LIMIT)
 from .storage import atomic_bytes,StorageConflict,CommitUncertain
 from .terminal_model import ENCODINGS
+from .ssh_dialogs import POLICY_LABELS
 
 
 LABELS=dict(mode='协议',port='端口 / 波特率',username='用户名',known_hosts='已验证known_hosts路径',
@@ -24,6 +25,10 @@ CHOICES=dict(mode=('SSH','Serial'),auth_method=tuple(AUTH_METHODS),ssh_mode=('sh
 CHOICE_LABELS={'auto':'自动（公钥优先）','password-first':'密码优先','interactive-first':'交互认证优先',
     'publickey-only':'仅公钥','interactive-only':'仅交互认证','shell':'交互Shell','channels':'仅SFTP / 隧道',
     'del':'DEL (0x7F)','bs':'BS (0x08)','none':'无','rtscts':'RTS/CTS','dsrdtr':'DSR/DTR','xonxoff':'XON/XOFF'}
+LABELS.update(POLICY_LABELS,client_certificate='OpenSSH用户证书路径',ssh_compression='SSH压缩',
+    ssh_strict_kex='Strict KEX',ssh_allow_legacy='本会话旧算法许可',ssh_rekey_bytes='重协商字节阈值',ssh_rekey_seconds='重协商秒数')
+CHOICES.update(ssh_compression=('none','delayed'),ssh_strict_kex=('require','prefer'),ssh_allow_legacy=('false','true'))
+CHOICE_LABELS.update(delayed='仅认证后压缩',require='必须核验',prefer='兼容协商',false='不允许',true='明确允许')
 STRATEGIES=(('仅新增，冲突跳过','add-only'),('替换同名会话','replace'),('合并已提供字段','merge'),('创建副本','copy'))
 
 

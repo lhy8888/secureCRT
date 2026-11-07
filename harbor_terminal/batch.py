@@ -13,6 +13,7 @@ from .profiles import load
 from .reports import atomic_json
 from .serial_config import SerialSettings
 from .transport import SSHTransport, SerialTransport
+from .ssh_policy import POLICY_FIELDS
 
 
 async def run_batch(args):
@@ -32,6 +33,8 @@ async def run_batch(args):
     if args.serial_port and profile.get('mode','Serial')!='Serial':raise ValueError('Conflicting profile protocol')
     serial=bool(args.serial_port or profile.get('mode')=='Serial')
     if serial:
+        if args.identity_file or args.certificate_file or args.known_hosts or args.auth_method or args.channels_only:
+            raise ValueError('SSH authentication options cannot be combined with serial flows')
         settings=SerialSettings(args.baudrate if args.baudrate is not None else int(profile.get('port',115200)),int(profile.get('bytesize','8')),
             profile.get('parity','N'),float(profile.get('stopbits','1')),profile.get('flow_control','none'))
         device=args.serial_port or profile.get('host')
@@ -53,6 +56,9 @@ async def run_batch(args):
             auth_method=args.auth_method or profile.get('auth_method','auto'))
         key=args.identity_file or profile.get('private_key')
         if key:options['client_keys']=[str(key)]
+        options['security']={field:profile[field] for field in POLICY_FIELDS if field in profile}
+        certificate=args.certificate_file or profile.get('client_certificate')
+        if certificate:options['client_certs']=[str(certificate)]
         reference=profile.get('jump_profile')
         if reference:
             jump=load(args.sessions).get(reference)
@@ -60,6 +66,12 @@ async def run_batch(args):
             options['jump']=dict(host=jump.get('host',''),username=jump.get('username',''),
                 port=int(jump.get('port','22')),known_hosts=jump.get('known_hosts'),auth_method=jump.get('auth_method','auto'))
             if jump.get('private_key'):options['jump']['client_keys']=[jump['private_key']]
+            options['jump']['security']={field:jump[field] for field in POLICY_FIELDS if field in jump}
+            if jump.get('client_certificate'):options['jump']['client_certs']=[jump['client_certificate']]
+        for peer in (options,options.get('jump',{})):
+            policy=peer.get('security',{})
+            if (policy.get('ssh_allow_legacy')=='true' or policy.get('ssh_strict_kex')=='prefer') and not args.allow_legacy_ssh:
+                raise ValueError('Compatibility profiles require explicit --allow-legacy-ssh')
         identity=dict(protocol='SSH2',host=endpoint.host,username=endpoint.username,port=endpoint.port)
     stream=ReceiveStream(profile.get('encoding','utf-8'));cursor=stream.cursor();reader=None
     result=dict(status='running',version=version('harbor-terminal'),target=identity,

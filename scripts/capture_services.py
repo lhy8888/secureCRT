@@ -223,7 +223,21 @@ async def capture(output):
             window.load_profile('本地实验室/核心交换机'); window.show_quick_connect()
             app.processEvents(); save(window.quick_dialog, 'quick-connect'); window.quick_dialog.reject()
             settings = ConnectionOptions(window.options, window, profiles=window.profiles)
-            settings.show(); app.processEvents(); save(settings, 'options'); settings.close(); settings.deleteLater()
+            settings.show(); app.processEvents(); save(settings, 'options')
+            settings.categories.setCurrentRow(4);app.processEvents();save(settings,'ssh-policy')
+            settings.close(); settings.deleteLater()
+            from harbor_terminal.key_dialogs import HostKeysDialog,TrustReview
+            keys=HostKeysDialog(window);keys.show();app.processEvents();save(keys,'host-keys')
+            review=TrustReview(keys.snapshot.value,keys);review.show();app.processEvents();save(review,'host-trust-review')
+            assert not review.ok.isEnabled();review.reject();review.deleteLater();keys.close();keys.deleteLater()
+            window.open_key_tools();identity=window.key_dialog
+            identity.path.setText(str(temporary/'generated-identity'));identity.password.setText('generated-fixture-only');identity.start(False)
+            await until(app,lambda:identity.last_result is not None and not identity.job.isRunning(),seconds=15)
+            assert not identity.password.text() and 'PRIVATE KEY' not in identity.output.toPlainText()
+            save(identity,'identity-tool');identity.close()
+            window.open_diagnostics();diagnostic=window.service_panels[(worker,'diagnostics')]
+            await until(app,lambda:worker.ssh_diagnostics().get('strict_kex') is True)
+            diagnostic.refresh();app.processEvents();save(diagnostic,'ssh-diagnostics');diagnostic.close()
             window.open_command_panel();panel=window.command_panel
             panel.persist_library({'生成测试命令':dict(text='capture-command',pinned=True)})
             panel.edit.setPlainText('capture-command')

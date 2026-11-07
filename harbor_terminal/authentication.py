@@ -4,6 +4,7 @@ import threading
 import uuid
 
 import asyncssh
+from .ssh_policy import negotiated,SecurityPolicyError
 
 
 AUTH_METHODS = {
@@ -41,11 +42,17 @@ def validate_challenge(name, instructions, prompts):
 
 
 class InteractiveClient(asyncssh.SSHClient):
-    def __init__(self, ask, context, started, status=None):
+    def __init__(self, ask, context, started, status=None, require_strict=True):
         self.ask, self.context, self.started, self.status = ask, context, started, status
         self.rounds = 0
+        self.require_strict=require_strict;self.connection=None
 
-    def kbdint_auth_requested(self): return ''
+    def connection_made(self,connection):self.connection=connection
+
+    def begin_auth(self,username):
+        if self.require_strict and negotiated(self.connection)['strict_kex'] is not True:raise SecurityPolicyError()
+
+    def kbdint_auth_requested(self): return '' if self.ask is not None else None
 
     async def kbdint_challenge_received(self, name, instructions, lang, prompts):
         self.rounds += 1

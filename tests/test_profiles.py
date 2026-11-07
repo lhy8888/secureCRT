@@ -35,7 +35,7 @@ def test_wrong_root_type_rejected(tmp_path, payload):
         load(path)
 
 
-def test_v1_is_readable_and_new_serial_settings_round_trip_as_v4(tmp_path):
+def test_v1_is_readable_and_new_serial_settings_round_trip_as_v5(tmp_path):
     import json
     path=tmp_path/'sessions.json'
     old={'console':{'mode':'Serial','host':'COM3','port':'115200'}}
@@ -44,7 +44,7 @@ def test_v1_is_readable_and_new_serial_settings_round_trip_as_v4(tmp_path):
     old['console'].update(bytesize='7',parity='E',stopbits='2',flow_control='rtscts',encoding='gb18030')
     save(path,old)
     assert load(path)==old
-    assert json.loads(path.read_text())['version']==4
+    assert json.loads(path.read_text())['version']==5
 
 
 @pytest.mark.parametrize('field',['password','passphrase','private_key_content'])
@@ -65,3 +65,18 @@ def test_v2_profiles_remain_readable_and_jump_reference_is_only_metadata(tmp_pat
         sessions['target'][field]='test-only'
         with pytest.raises(ValueError):save(path,sessions)
         del sessions['target'][field]
+
+
+def test_v4_migration_preserves_policy_order_and_cert_paths_but_rejects_legacy_injection(tmp_path):
+    import json
+    from harbor_terminal.profile_operations import parse_import,export_sessions
+    path=tmp_path/'sessions.json';data={'SSH':dict(mode='SSH',host='example.invalid',port='22',auth_method='publickey-only')}
+    path.write_text(json.dumps(dict(version=4,sessions=data)))
+    assert load(path)==data
+    data['SSH'].update(ssh_ciphers='aes256-ctr,aes128-ctr',ssh_strict_kex='require',client_certificate='identity-cert.pub')
+    save(path,data)
+    assert json.loads(path.read_text())['version']==5
+    assert parse_import(export_sessions(load(path),'xml').decode(),'xml').sessions==data
+    previous=path.read_bytes();data['SSH']['ssh_ciphers']='aes128-cbc'
+    with pytest.raises(ValueError):save(path,data)
+    assert path.read_bytes()==previous

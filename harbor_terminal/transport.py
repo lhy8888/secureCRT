@@ -6,6 +6,8 @@ import serial
 
 from .serial_config import SerialSettings
 from .authentication import AUTH_METHODS, InteractiveClient
+from .ssh_policy import SSHPolicy,negotiated
+from .key_tools import identity_bytes
 
 
 class IncompleteWriteError(IOError):
@@ -23,14 +25,15 @@ class SSHTransport:
     async def connect(self, host, username, *, port=22, password=None,
                       known_hosts=None, client_keys=None, passphrase=None,
                       term_size=(100, 30), timeout=15, jump=None, status=None,
-                      auth_method='auto', auth_prompt=None, auth_timeout=180, shell=True):
+                      auth_method='auto', auth_prompt=None, auth_timeout=180, shell=True,
+                      security=None,client_certs=None):
         if self.connection is not None:
             raise RuntimeError("Already connected")
         if type(shell) is not bool:raise ValueError('Invalid SSH shell mode')
         connection = hop = None
         try:
             if jump:
-                allowed = {'host','username','port','password','known_hosts','client_keys','passphrase','auth_method'}
+                allowed = {'host','username','port','password','known_hosts','client_keys','passphrase','auth_method','security','client_certs'}
                 if not isinstance(jump, dict) or set(jump) - allowed:
                     raise ValueError('Only one explicitly configured SSH jump is supported')
                 if status: status('ConnectingJump')
@@ -40,7 +43,7 @@ class SSHTransport:
             connection = await self._open_ssh(host, username, port=port, password=password,
                 known_hosts=known_hosts, client_keys=client_keys, passphrase=passphrase,
                 timeout=timeout, tunnel=hop, auth_method=auth_method, auth_prompt=auth_prompt,
-                auth_timeout=auth_timeout, status=status, stage='target')
+                auth_timeout=auth_timeout, status=status, stage='target',security=security,client_certs=client_certs)
             process = await asyncio.wait_for(connection.create_process(
                 term_type='xterm-256color', term_size=term_size, encoding=None, stderr=asyncssh.STDOUT), timeout) if shell else None
         except BaseException:
@@ -53,7 +56,8 @@ class SSHTransport:
     @staticmethod
     async def _open_ssh(host, username, *, port=22, password=None, known_hosts=None,
                         client_keys=None, passphrase=None, timeout=15, tunnel=None,
-                        auth_method='auto', auth_prompt=None, auth_timeout=180, status=None, stage='target'):
+                        auth_method='auto', auth_prompt=None, auth_timeout=180, status=None, stage='target',
+                        security=None,client_certs=None):
         if not host or not username or not 1 <= int(port) <= 65535:
             raise ValueError('Invalid host, username, or port')
         # Both hops independently verify their own endpoint identity.
@@ -62,21 +66,47 @@ class SSHTransport:
             raise ValueError('Create a known_hosts file using an independently verified host fingerprint first')
         if auth_method not in AUTH_METHODS or not 0<timeout<=600 or not 0<auth_timeout<=600:
             raise ValueError('Invalid authentication method or deadline')
+        policy=SSHPolicy.parse(security)
+        selected=client_keys if isinstance(client_keys,(list,tuple)) else [client_keys] if client_keys is not None else []
+        if len(selected)>16:raise ValueError('At most 16 explicit identity keys')
+        loaded=[]
+        for item in selected:
+            candidate=item[0] if isinstance(item,tuple) else item
+            if isinstance(candidate,(str,Path)):
+                candidate=asyncssh.import_private_key(identity_bytes(candidate),passphrase)
+                item=(candidate,*item[1:]) if isinstance(item,tuple) else candidate
+            loaded.append(item)
+        if client_keys is not None:client_keys=loaded
+        if client_certs:
+            if (not isinstance(client_certs,(list,tuple)) or len(client_certs)!=1
+                    or not isinstance(client_keys,(list,tuple)) or len(client_keys)!=1):
+                raise ValueError('Certificate sessions require one explicit private key and certificate')
+            def bounded(path,limit):
+                with Path(path).open('rb') as stream:raw=stream.read(limit+1)
+                if len(raw)>limit:raise ValueError('Identity file exceeds size limit')
+                return raw
+            certificate=asyncssh.import_certificate(bounded(client_certs[0],65536))
+            identity=(client_keys[0] if isinstance(client_keys[0],asyncssh.SSHKey)
+                      else asyncssh.import_private_key(identity_bytes(client_keys[0]),passphrase))
+            if certificate.is_x509 or certificate.key.public_data!=identity.public_data:
+                raise ValueError('OpenSSH user certificate does not match the selected private key')
+            certificate.validate(1,None)
+            client_certs=[certificate]
         options = dict(port=int(port), username=username, password=password, known_hosts=str(path),
             config=None, passphrase=passphrase, tunnel=tunnel,
             keepalive_interval=15, keepalive_count_max=3, agent_forwarding=False,
             preferred_auth=AUTH_METHODS[auth_method])
+        options.update(policy.options())
+        if client_certs is not None:options['client_certs']=client_certs
         # None at this application's API means no explicit key selection, not
         # AsyncSSH's "disable all public-key authentication" sentinel.
         if client_keys is not None:options['client_keys']=client_keys
-        if auth_prompt is None:
-            return await asyncio.wait_for(asyncssh.connect(host, connect_timeout=timeout,
-                login_timeout=timeout, **options), timeout)
         challenged = asyncio.Event()
         context = dict(host=host, port=int(port), username=username, stage=stage)
         async def establish():
             return await asyncssh.connect(host, connect_timeout=None, login_timeout=timeout+auth_timeout,
-                client_factory=lambda: InteractiveClient(auth_prompt, context, challenged, status), **options)
+                client_factory=lambda: InteractiveClient(auth_prompt, context, challenged, status,
+                    policy.values['ssh_strict_kex']=='require'), **options)
         task = asyncio.create_task(establish()); notice = asyncio.create_task(challenged.wait())
         try:
             done, _ = await asyncio.wait((task, notice), timeout=timeout, return_when=asyncio.FIRST_COMPLETED)
@@ -97,6 +127,9 @@ class SSHTransport:
             if connection:await connection.wait_closed()
             return b''
         return await self.process.stdout.read(16384)
+
+    def diagnostics(self):
+        return negotiated(self.connection) if self.connection else {}
 
     async def write(self, data):
         if self.process is None:raise RuntimeError('This SSH connection has no interactive shell')

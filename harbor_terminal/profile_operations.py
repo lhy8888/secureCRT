@@ -81,12 +81,12 @@ def parse_import(text, kind, *, mapping=None):
                 if event=='start':
                     if root is None:root=element
                     depth+=1;nodes+=1
-                    if depth>3 or nodes>10000:raise ValueError('XML structure exceeds session limits')
+                    if depth>3 or nodes>1+500*(1+len(profiles.FIELDS)):raise ValueError('XML structure exceeds session limits')
                 else:depth-=1
         parser.close()
     except ET.ParseError: raise ValueError('Malformed XML') from None
-    if root is None or root.tag!='harbor-sessions' or root.attrib!={'version':'4'} or (root.text or '').strip():
-        raise ValueError('Expected Harbor session XML version 4')
+    if root is None or root.tag!='harbor-sessions' or root.attrib not in ({'version':'4'},{'version':'5'}) or (root.text or '').strip():
+        raise ValueError('Expected Harbor session XML version 4 or 5')
     sessions={}
     for item in root:
         if item.tag!='session' or set(item.attrib)!={'name'} or (item.text or '').strip(): raise ValueError('Invalid XML session')
@@ -100,7 +100,7 @@ def parse_import(text, kind, *, mapping=None):
         if (item.tail or '').strip(): raise ValueError('Unexpected XML text')
         sessions[name]=record
         if len(sessions)>500: raise ValueError('At most 500 sessions')
-    profiles.validate(sessions)
+    profiles.validate(sessions,version=int(root.attrib['version']))
     return ImportResult(sessions)
 
 
@@ -111,7 +111,7 @@ def export_sessions(sessions, kind):
     for name,profile in sessions.items():
         if any(any(ord(c)<32 and c not in '\t\r\n' for c in value) for value in [name,*profile.values()]):
             raise ValueError('XML cannot represent control characters in this configuration')
-    root=ET.Element('harbor-sessions',version='4')
+    root=ET.Element('harbor-sessions',version='5')
     for name,profile in sorted(sessions.items()):
         item=ET.SubElement(root,'session',name=name)
         for key,value in sorted(profile.items()): ET.SubElement(item,'field',name=key).text=value

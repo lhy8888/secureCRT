@@ -18,6 +18,8 @@ def argument_parser():
     parser.add_argument('--port','-p',type=int)
     parser.add_argument('--known-hosts',type=Path)
     parser.add_argument('--identity-file','-i',type=Path)
+    parser.add_argument('--certificate-file',type=Path,help='OpenSSH public user certificate')
+    parser.add_argument('--allow-legacy-ssh',action='store_true',help='Explicitly consent to a saved profile compatibility policy')
     parser.add_argument('--auth-method',choices=tuple(AUTH_METHODS))
     parser.add_argument('--profile',help='Saved session name')
     parser.add_argument('--sessions',type=Path,help='Explicit session database path')
@@ -54,7 +56,8 @@ def populate_window(window,args):
             window.port.setText(str(args.port))
     if args.known_hosts:window.known.setText(str(args.known_hosts))
     if args.identity_file:window.options['private_key']=str(args.identity_file)
+    if args.certificate_file:window.options['client_certificate']=str(args.certificate_file)
     if args.auth_method:window.options['auth_method']=args.auth_method
     if args.channels_only:window.options['ssh_mode']='channels'
     return bool(args.destination or args.profile or args.serial_port or args.username or args.port is not None
-                or args.known_hosts or args.identity_file or args.auth_method or args.channels_only)
+                or args.known_hosts or args.identity_file or args.certificate_file or args.auth_method or args.channels_only)

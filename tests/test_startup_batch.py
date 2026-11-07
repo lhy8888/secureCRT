@@ -142,4 +142,34 @@ def test_v3_session_remains_readable_and_v4_authentication_options_roundtrip(tmp
     assert load(path)==sessions
     sessions['target'].update(auth_method='interactive-first',ssh_mode='channels')
     save(path,sessions)
-    assert load(path)==sessions and json.loads(path.read_text())['version']==4
+    assert load(path)==sessions and json.loads(path.read_text())['version']==5
+
+
+@pytest.mark.parametrize('jump_compatibility',[False,True])
+async def test_batch_compatibility_requires_explicit_consent_for_target_or_jump(key_server,tmp_path,jump_compatibility):
+    from harbor_terminal.profiles import save
+    endpoint=dict(mode='SSH',host='127.0.0.1',port=str(key_server.server.get_port()),username='runner',
+                  private_key=str(key_server.key),known_hosts=str(key_server.known))
+    sessions={'target':dict(endpoint)}
+    if jump_compatibility:
+        sessions['target']['jump_profile']='jump'
+        sessions['jump']=dict(endpoint,ssh_strict_kex='prefer')
+    else:sessions['target']['ssh_strict_kex']='prefer'
+    path=tmp_path/'sessions.json';save(path,sessions)
+    flow=tmp_path/'flow.json';flow.write_text(json.dumps(dict(version=1,steps=[dict(action='send',text='probe')])))
+    report=tmp_path/'result.json'
+    args=argument_parser().parse_args(['--sessions',str(path),'--profile','target','--run-flow',str(flow),'--output',str(report)])
+    with pytest.raises(ValueError,match='--allow-legacy-ssh'):await run_batch(args)
+    assert key_server.controls.authentications==0 and not report.exists()
+    if not jump_compatibility:
+        args.allow_legacy_ssh=True
+        assert await run_batch(args)==0 and key_server.controls.authentications>0
+
+
+async def test_serial_flow_rejects_ssh_certificate_before_opening_any_device(tmp_path):
+    flow=tmp_path/'flow.json';flow.write_text(json.dumps(dict(version=1,steps=[dict(action='send',text='probe')])))
+    report=tmp_path/'result.json'
+    args=argument_parser().parse_args(['--serial-port','COM-DO-NOT-OPEN','--certificate-file','cert.pub',
+                                     '--run-flow',str(flow),'--output',str(report)])
+    with pytest.raises(ValueError,match='SSH authentication'):await run_batch(args)
+    assert not report.exists()

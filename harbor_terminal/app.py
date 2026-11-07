@@ -17,6 +17,7 @@ from .appearance import icon, terminal_font
 from .auth_dialog import AuthenticationDialog
 from . import session_templates
 from .storage import StorageConflict, CommitUncertain, ANY_REVISION
+from .ssh_policy import POLICY_FIELDS
 
 DEFAULTS = session_templates.BASE_OPTIONS
 STATES = dict(Connecting='连接中', ConnectingJump='连接跳板中', ConnectingTarget='连接目标中',
@@ -36,6 +37,7 @@ class Window(QMainWindow, DesktopShell):
         self._probe = None
         self.service_panels = {}
         self.auth_dialogs = {}
+        self.key_dialog = None
         self.options = dict(DEFAULTS)
         self.passphrase = None
         self.jump_password = self.jump_passphrase = None
@@ -255,7 +257,9 @@ class Window(QMainWindow, DesktopShell):
                 options = dict(host=self.host.text().strip(),username=self.user.text().strip(),
                                port=number,password=self.password.text() or None,
                                passphrase=self.passphrase,known_hosts=self.known.text().strip() or None,
-                               auth_method=self.options['auth_method'],shell=self.options.get('ssh_mode','shell')=='shell')
+                               auth_method=self.options['auth_method'],shell=self.options.get('ssh_mode','shell')=='shell',
+                               security={key:self.options[key] for key in POLICY_FIELDS})
+                if self.options.get('client_certificate'):options['client_certs']=[self.options['client_certificate']]
                 if self.options['private_key']: options['client_keys'] = [self.options['private_key']]
                 reference = self.options.get('jump_profile')
                 if reference:
@@ -266,9 +270,15 @@ class Window(QMainWindow, DesktopShell):
                         port=int(jump.get('port','22')), known_hosts=jump.get('known_hosts') or None,
                         password=self.jump_password, passphrase=self.jump_passphrase)
                     options['jump']['auth_method'] = jump.get('auth_method','auto')
+                    options['jump']['security']={key:jump[key] for key in POLICY_FIELDS if key in jump}
+                    if jump.get('client_certificate'):options['jump']['client_certs']=[jump['client_certificate']]
                     if jump.get('private_key'): options['jump']['client_keys'] = [jump['private_key']]
         except (ValueError,TypeError):
             self.status.setText('连接参数无效，请检查端口、编码、串口或跳板引用；当前仅支持单级跳板'); return
+        if self.mode.currentText()=='SSH':
+            from .ssh_dialogs import confirm_compatibility
+            if not confirm_compatibility(options,self.quick_dialog if self.quick_dialog.isVisible() else self):
+                self.status.setText('已取消本次兼容连接');return
         self.password.clear(); self.passphrase = None
         self.jump_password = self.jump_passphrase = None
         worker = Worker(self.mode.currentText(),options)
@@ -363,7 +373,7 @@ class Window(QMainWindow, DesktopShell):
         if not terminal:
             self.status.setText('请先选择会话'); return None
         worker = terminal.worker
-        if kind in ('sftp', 'forward') and worker.mode != 'SSH':
+        if kind in ('sftp', 'forward','diagnostics') and worker.mode != 'SSH':
             self.status.setText('此工具仅用于当前SSH会话'); return None
         if kind == 'hex' and worker.mode != 'Serial':
             self.status.setText('当前Hex视图用于串口原始字节'); return None
@@ -375,6 +385,9 @@ class Window(QMainWindow, DesktopShell):
                 panel = ForwardDialog(worker, terminal.session_label, self)
             elif kind == 'hex':
                 panel = HexDialog(worker, terminal.session_label, self)
+            elif kind=='diagnostics':
+                from .ssh_dialogs import DiagnosticsDialog
+                panel=DiagnosticsDialog(worker,terminal.session_label,self)
             else:
                 panel = LogDialog(worker, terminal.session_label, terminal.encoding, self)
             self.service_panels[key] = panel
@@ -396,9 +409,25 @@ class Window(QMainWindow, DesktopShell):
     def open_forwards(self):
         self.service_panel('forward')
 
+    def open_diagnostics(self):self.service_panel('diagnostics')
+
+    def open_host_keys(self):
+        from .key_dialogs import HostKeysDialog
+        dialog=HostKeysDialog(self)
+        try:dialog.exec()
+        finally:dialog.deleteLater()
+
+    def open_key_tools(self):
+        from .key_dialogs import KeyToolsDialog
+        if self.key_dialog is None:self.key_dialog=KeyToolsDialog(self)
+        self.key_dialog.show();self.key_dialog.raise_();self.key_dialog.activateWindow()
+
+    def key_job_running(self):return bool(self.key_dialog and self.key_dialog.job and self.key_dialog.job.isRunning())
+
     def update_activity(self):
         terminal = self.tabs.currentWidget()
         connected = bool(terminal and terminal.worker.status == 'Connected' and not terminal.worker.stop_event.is_set())
+        self.diagnostics_action.setEnabled(bool(terminal and terminal.worker.mode=='SSH'))
         for action in (self.clone_action,self.rename_tab_action,self.input_lock_action):action.setEnabled(bool(terminal))
         self.reconnect_action.setEnabled(bool(terminal and terminal.worker.status=='Disconnected'))
         self.input_lock_action.setChecked(bool(terminal and terminal.worker.input_locked))
@@ -505,17 +534,18 @@ class Window(QMainWindow, DesktopShell):
         if worker in self._closing_tabs: self.remove_session(worker)
 
     def finish_close(self):
-        busy = any(w.isRunning() for w in self.workers) or (self._probe and self._probe.isRunning())
+        busy = any(w.isRunning() for w in self.workers) or (self._probe and self._probe.isRunning()) or self.key_job_running()
         if not busy:
             self.close_timer.stop(); self.close()
 
     def closeEvent(self, event):
         self._closing = True; self.connect_button.setEnabled(False)
+        if self.key_dialog:self.key_dialog.reject()
         self.quick_action.setEnabled(False); self.quick_dialog.reject()
         if self.command_panel:self.command_panel.cancel_flows()
         for dialog in list(self.auth_dialogs.values()): dialog.finish_without_reply()
         for worker in self.workers: worker.stop_event.set()
-        busy = any(w.isRunning() for w in self.workers) or (self._probe and self._probe.isRunning())
+        busy = any(w.isRunning() for w in self.workers) or (self._probe and self._probe.isRunning()) or self.key_job_running()
         if busy:
             self.status.setText('正在取消任务并关闭连接…'); self.close_timer.start(50)
             event.ignore(); return

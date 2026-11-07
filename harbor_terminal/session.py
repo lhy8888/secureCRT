@@ -17,6 +17,7 @@ from .journal import SessionJournal
 from .forwarding import ForwardSpec, ForwardManager
 from .authentication import AuthenticationBroker, AuthenticationCancelled, AuthenticationTimeout, AuthenticationLimit
 from .automation import ReceiveStream, run_flow, validate_steps
+from .ssh_policy import SecurityPolicyError
 
 
 class Worker(QThread):
@@ -37,6 +38,7 @@ class Worker(QThread):
         self.lock = threading.Lock()
         self.incoming, self.outgoing = bytearray(), bytearray()
         self._protocol_outgoing = bytearray()
+        self._ssh_diagnostics = {}
         self.status = 'Disconnected'
         self._size = (100, 30)
         self._resize = True
@@ -56,6 +58,9 @@ class Worker(QThread):
         accepted = self.authentication.reply(identifier, answers)
         if accepted and answers is None: self.stop_event.set()
         return accepted
+
+    def ssh_diagnostics(self):
+        with self.lock:return dict(self._ssh_diagnostics)
 
     def _set_state(self, state):
         with self.lock:
@@ -232,6 +237,7 @@ class Worker(QThread):
                 await asyncio.sleep(.01)
 
     async def _control(self, transport):
+        last_diagnostics=0
         while True:
             with self.lock:
                 if self.stop_event.is_set():
@@ -244,6 +250,11 @@ class Worker(QThread):
                 await transport.resize(*size)
             if control:
                 await asyncio.wait_for(transport.send_break(control[1]), 3)
+            now=asyncio.get_running_loop().time()
+            if self.mode=='SSH' and hasattr(transport,'diagnostics') and now-last_diagnostics>=1:
+                snapshot=transport.diagnostics()
+                with self.lock:self._ssh_diagnostics=snapshot
+                last_diagnostics=now
             await asyncio.sleep(.025)
 
     async def _file_operations(self, transport):
@@ -396,6 +407,8 @@ class Worker(QThread):
             if stop in done:
                 return
             await connect
+            if self.mode=='SSH' and hasattr(transport,'diagnostics'):
+                with self.lock:self._ssh_diagnostics=transport.diagnostics()
             options.clear()
             self.options.pop('password', None)
             self.options.pop('passphrase', None)
@@ -412,7 +425,9 @@ class Worker(QThread):
                 await task
         except Exception as exc:
             # Type is diagnostic; arbitrary exception text may contain secrets.
-            if isinstance(exc, AuthenticationCancelled):
+            if isinstance(exc, SecurityPolicyError):
+                message = '服务器未通过必需的Strict KEX核验，已在发送认证凭据前停止'
+            elif isinstance(exc, AuthenticationCancelled):
                 message = '认证已取消'
             elif isinstance(exc, AuthenticationTimeout):
                 message = '等待认证输入超时，连接已停止'

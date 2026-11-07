@@ -21,9 +21,15 @@ async def protocol_probe(root):
     from .forwarding import ForwardManager, ForwardSpec
     from .startup import argument_parser
     from .batch import run_batch
+    from .key_tools import generate_identity,public_info
+    from . import host_keys
     checks={};remote=root/'remote';remote.mkdir()
-    key=asyncssh.generate_private_key('ssh-ed25519');host_key=asyncssh.generate_private_key('ssh-ed25519')
-    private=root/'encrypted-key';private.write_bytes(key.export_private_key(passphrase='local-fixture-only'));private.chmod(0o600)
+    private=root/'encrypted-key'
+    generated=await asyncio.to_thread(generate_identity,private,'Ed25519','local-fixture-only')
+    inspected=await asyncio.to_thread(public_info,private,'local-fixture-only')
+    checks['identity_tool_encrypted_roundtrip']=generated['fingerprint']==inspected['fingerprint']
+    key=asyncssh.read_private_key(private,passphrase='local-fixture-only');host_key=asyncssh.generate_private_key('ssh-ed25519')
+    ca=asyncssh.generate_private_key('ssh-ed25519')
     plain=root/'batch-key';plain.write_bytes(key.export_private_key());plain.chmod(0o600)
     async def tcp_echo(reader,writer):
         try:
@@ -34,6 +40,7 @@ async def protocol_probe(root):
         def begin_auth(self,username):return True
         def public_key_auth_supported(self):return True
         def validate_public_key(self,username,pub):return username=='smoke' and pub.get_fingerprint()==key.get_fingerprint()
+        def validate_ca_key(self,username,pub):return username=='smoke' and pub.public_data==ca.public_data
         def kbdint_auth_supported(self):return True
         def get_kbdint_challenge(self,username,lang,methods):
             return ('Local test','Line one\nLine two','',[('OTP:',False)]) if username=='smoke-mfa' else False
@@ -45,11 +52,16 @@ async def protocol_probe(root):
             except asyncssh.TerminalSizeChanged:continue
             if not data:break
             process.stdout.write(data)
-    server=await asyncssh.create_server(Server,'127.0.0.1',0,server_host_keys=[host_key],process_factory=shell,
+    host_certificate=ca.generate_host_certificate(host_key,'packaged-host',principals=['127.0.0.1'])
+    server=await asyncssh.create_server(Server,'127.0.0.1',0,server_host_keys=[(host_key,host_certificate)],process_factory=shell,
         encoding=None,line_editor=False,sftp_factory=lambda channel:asyncssh.SFTPServer(channel,chroot=os.fsencode(remote)))
-    known=root/'known_hosts';known.write_bytes(f'[127.0.0.1]:{server.get_port()} '.encode()+host_key.export_public_key())
+    known=root/'known_hosts';trust=host_keys.make_entry(f'[127.0.0.1]:{server.get_port()}',ca.export_public_key(),'@cert-authority')
+    store=host_keys.store(known);store.save(trust,expected_revision=None)
+    checks['host_ca_local_matching']=host_keys.match(trust,'127.0.0.1',server.get_port())['certificate_authorities']==[ca.get_fingerprint('sha256')]
     options=dict(host='127.0.0.1',username='smoke',port=server.get_port(),known_hosts=str(known),
-                 client_keys=[str(private)],passphrase='local-fixture-only',auth_method='publickey-only')
+                 client_keys=[str(private)],passphrase='local-fixture-only',auth_method='publickey-only',
+                 security=dict(ssh_kex='curve25519-sha256',ssh_ciphers='aes128-ctr',
+                               ssh_macs='hmac-sha2-256-etm@openssh.com',ssh_compression='delayed'))
     client=SSHTransport();manager=None
     try:
         await client.connect(**options);await client.write(b'packaged-ssh#')
@@ -57,6 +69,18 @@ async def protocol_probe(root):
         async with asyncio.timeout(5):
             while len(received)<13:received.extend(await client.read())
         checks['encrypted_key_and_ssh']=bytes(received)==b'packaged-ssh#'
+        metadata=client.diagnostics()
+        atomic_json(root/'negotiated.json',metadata)
+        checks['strict_kex_and_algorithm_policy']=(metadata['strict_kex'] is True and metadata['metadata_adapter'] is True
+            and metadata['kex']=='curve25519-sha256' and metadata['send_cipher']=='aes128-ctr'
+            and metadata['send_mac']=='hmac-sha2-256-etm@openssh.com')
+        checks['authenticated_compression']=metadata['send_compression']=='zlib@openssh.com'
+        cert=root/'user-cert.pub';cert.write_bytes(ca.generate_user_certificate(key,'packaged-user',principals=['smoke']).export_certificate())
+        certified=SSHTransport()
+        try:
+            await certified.connect(**dict(options,client_certs=[str(cert)]))
+            checks['separate_user_certificate_and_host_ca']=not certified.connection.is_closed()
+        finally:await certified.close()
         source=root/'payload.bin';source.write_bytes(bytes(range(256))*4)
         service=SFTPService(client.connection)
         await service.execute(FileRequest('upload','/payload.bin',str(source)))
@@ -113,6 +137,31 @@ def desktop_smoke(app, report_path):
             result['checks']['mainwindow'] = window.isVisible() and bool(window.menuBar().actions())
             import asyncio
             result['checks'].update(asyncio.run(protocol_probe(Path(temporary))))
+            from .key_dialogs import HostKeysDialog,TrustReview,KeyToolsDialog
+            from .ssh_dialogs import DiagnosticsDialog
+            from .session import Worker
+            import json
+            diagnostic_worker=Worker('SSH',{})
+            diagnostic_worker._ssh_diagnostics=json.loads((Path(temporary)/'negotiated.json').read_text())
+            diagnostic=DiagnosticsDialog(diagnostic_worker,'local packaged fixture',window);diagnostic.show();app.processEvents()
+            result['checks']['ssh_diagnostics_dialog']=diagnostic.tree.topLevelItemCount()>=12
+            diagnostic.close();diagnostic.deleteLater()
+            window.known.setText(str(Path(temporary)/'known_hosts'))
+            hosts=HostKeysDialog(window);hosts.show();app.processEvents()
+            result['checks']['host_key_manager']=hosts.tree.topLevelItemCount()==1
+            review=TrustReview(hosts.snapshot.value,hosts);review.show();app.processEvents();review.accept()
+            result['checks']['trust_requires_acknowledgement']=review.isVisible() and not review.ok.isEnabled()
+            review.reject();review.deleteLater();hosts.close();hosts.deleteLater()
+            key_tools=KeyToolsDialog(window);window.key_dialog=key_tools;key_tools.show()
+            key_tools.path.setText(str(Path(temporary)/'encrypted-key'));key_tools.password.setText('local-fixture-only');key_tools.start(True)
+            import time
+            deadline=time.monotonic()+30
+            while key_tools.job.isRunning() and time.monotonic()<deadline:
+                app.processEvents();key_tools.job.wait(10)
+            if key_tools.job.isRunning():raise TimeoutError('Identity inspection did not finish')
+            app.processEvents()
+            result['checks']['background_identity_inspection']=bool(key_tools.last_result) and not key_tools.password.text() and 'PRIVATE KEY' not in key_tools.output.toPlainText()
+            key_tools.close()
             from .session_manager import SessionManager,ImportDialog,TemplateDialog
             from .profile_operations import plan_import,export_sessions,parse_import
             from .storage import StorageConflict
@@ -138,6 +187,7 @@ def desktop_smoke(app, report_path):
             def dismiss_options():
                 modal = app.activeModalWidget()
                 result['checks']['nested_options'] = isinstance(modal, ConnectionOptions) and modal.parentWidget() is window.quick_dialog
+                result['checks']['ssh_policy_options'] = isinstance(modal, ConnectionOptions) and modal.policy.values()['ssh_strict_kex']=='require'
                 if modal: modal.reject()
             QTimer.singleShot(50, dismiss_options); window.edit_options()
             window.quick_dialog.reject(); app.processEvents()
