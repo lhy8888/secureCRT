@@ -19,7 +19,7 @@ async def sftp_endpoint(tmp_path):
     root=tmp_path/'remote';root.mkdir()
     controls=SimpleNamespace(corrupt_reads=False,deny_atomic=False,stall_commit=False,
                              write_delay=0,authentications=0,allowed_destinations=set(),
-                             tiny_reads=False,read_cutoff=None,processes=0)
+                             tiny_reads=False,read_cutoff=None,processes=0,received=bytearray())
     class Server(asyncssh.SSHServer):
         def begin_auth(self,username):return True
         def password_auth_supported(self):return True
@@ -60,6 +60,7 @@ async def sftp_endpoint(tmp_path):
             try:data=await process.stdin.read(1024)
             except asyncssh.TerminalSizeChanged:continue
             if not data:break
+            controls.received.extend(data)
             process.stdout.write(data)
     key=asyncssh.generate_private_key('ssh-ed25519')
     server=await asyncssh.create_server(Server,'127.0.0.1',0,server_host_keys=[key],

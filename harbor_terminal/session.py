@@ -32,9 +32,11 @@ class Worker(QThread):
         self.mode, self.options = mode, dict(options)
         self.session_id = uuid.uuid4().hex
         self.interactive = mode!='SSH' or self.options.get('shell',True)
+        self.input_locked = False
         self.stop_event = threading.Event()
         self.lock = threading.Lock()
         self.incoming, self.outgoing = bytearray(), bytearray()
+        self._protocol_outgoing = bytearray()
         self.status = 'Disconnected'
         self._size = (100, 30)
         self._resize = True
@@ -120,6 +122,7 @@ class Worker(QThread):
         with self.lock:
             if self.status != 'Connected' or self.stop_event.is_set() or not self.interactive:
                 return False
+            if self.input_locked and owner is None:return False
             job = self._flow_job
             if job:
                 if owner != job['id']:
@@ -133,12 +136,22 @@ class Worker(QThread):
             self._outgoing_owner = owner
         return True
 
+    def set_input_locked(self,locked):
+        with self.lock:self.input_locked=bool(locked)
+
+    def respond(self,data):
+        # Terminal protocol replies are independent of manual input and jobs.
+        with self.lock:
+            if (self.status!='Connected' or self.stop_event.is_set() or not self.interactive
+                    or not data or len(data)>1024 or len(self._protocol_outgoing)+len(data)>4096):return False
+            self._protocol_outgoing.extend(data);return True
+
     def submit_flow(self, steps, encoding='utf-8'):
         steps = validate_steps(steps)
         for step in steps:
             if step['action']=='send': step['text'].encode(encoding)
         with self.lock:
-            if self.status!='Connected' or self.stop_event.is_set() or not self.interactive or self._flow_job or self.outgoing: return None
+            if self.status!='Connected' or self.stop_event.is_set() or not self.interactive or self.input_locked or self._flow_job or self.outgoing: return None
             identifier = uuid.uuid4().hex
             self._flow_job = dict(id=identifier,steps=steps,cursor=self.receive_stream.cursor(),
                 encoding=encoding,cancel=threading.Event())
@@ -162,7 +175,7 @@ class Worker(QThread):
 
     def send_break(self):
         with self.lock:
-            if self.status != 'Connected' or self.stop_event.is_set() or not self.interactive or len(self._controls) >= 16:
+            if self.status != 'Connected' or self.stop_event.is_set() or not self.interactive or self.input_locked or len(self._controls) >= 16:
                 return False
             self._controls.append(('break', 0.25))
         return True
@@ -196,17 +209,25 @@ class Worker(QThread):
             with self.lock:
                 if self.stop_event.is_set():
                     self.outgoing.clear()
+                    self._protocol_outgoing.clear()
                     return
+                protocol = bytes(self._protocol_outgoing)
+                self._protocol_outgoing.clear()
                 outgoing = bytes(self.outgoing)
+                owner = self._outgoing_owner
+                owned_job = self._flow_job if self._flow_job and self._flow_job['id']==owner else None
                 self.outgoing.clear()
                 self._outgoing_owner = None
-            if outgoing:
-                try:
-                    await asyncio.wait_for(transport.write(outgoing), 5)
-                except IncompleteWriteError as exc:
-                    self._observe('TX', outgoing[:exc.sent])
-                    raise
-                self._observe('TX', outgoing)
+            if protocol or outgoing:
+                for index,payload in enumerate((protocol,outgoing)):
+                    if not payload:continue
+                    with self.lock:
+                        if self.stop_event.is_set():return
+                        if index==1 and owned_job and owned_job['cancel'].is_set():continue
+                    try:await asyncio.wait_for(transport.write(payload),5)
+                    except IncompleteWriteError as exc:
+                        self._observe('TX',payload[:exc.sent]);raise
+                    self._observe('TX',payload)
             else:
                 await asyncio.sleep(.01)
 
@@ -347,6 +368,7 @@ class Worker(QThread):
             finally:
                 monitor.cancel();await asyncio.gather(monitor,return_exceptions=True)
                 with self.lock:
+                    if event['status']!='success':job['cancel'].set()
                     event['sends_queued']=event['result'].get('sends_queued',self._flow_progress.get('sends_queued',0))
                     if self._flow_job is job:self._flow_job=None
                     if self._outgoing_owner==identifier and event['status']!='success':
@@ -435,6 +457,7 @@ class Worker(QThread):
             self.options.pop('jump', None)
             with self.lock:
                 self.outgoing.clear()
+                self._protocol_outgoing.clear()
                 self._controls.clear()
             try:
                 await transport.close()

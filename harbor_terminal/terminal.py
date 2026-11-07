@@ -81,7 +81,7 @@ class Terminal(QAbstractScrollArea):
         self.viewport().update()
 
     def _respond(self, data):
-        if not self.worker.send(data):
+        if not self.worker.respond(data):
             self.worker.stop_event.set()
 
     def resizeEvent(self, event):

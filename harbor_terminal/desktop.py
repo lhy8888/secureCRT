@@ -6,7 +6,7 @@ from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QFormLayout,
     QLineEdit, QComboBox, QPushButton, QLabel, QTabWidget, QDialog,
     QDialogButtonBox, QGroupBox, QFileDialog, QDockWidget, QTreeWidget,
     QTreeWidgetItem, QToolBar, QToolButton, QStackedWidget, QListWidget,
-    QMenu, QMessageBox, QFontDialog, QCheckBox)
+    QMenu, QMessageBox, QFontDialog, QCheckBox, QAbstractItemView)
 
 from .appearance import Preferences, SCHEMES, apply_desktop_style, icon, terminal_font
 from .terminal_model import ENCODINGS
@@ -219,6 +219,14 @@ class DesktopShell:
 
     def _build_actions(self):
         self.quick_action = self._action('quick', '快速连接…', lambda: self.show_quick_connect(), 'Alt+Q')
+        self.new_action = self._action('terminal','新建会话…',self.new_session,'Ctrl+Shift+N')
+        self.manager_action = self._action('folder','会话管理…',self.open_session_manager,'Alt+E')
+        self.defaults_action = self._action('settings','默认会话模板…',self.edit_defaults)
+        self.clone_action = self._action('copy','克隆当前连接…',self.clone_session)
+        self.reconnect_action = self._action('connect','重新连接…',self.clone_session)
+        self.rename_tab_action = self._action('terminal','临时标签名称…',self.rename_tab)
+        self.input_lock_action = self._action('settings','锁定终端输入（防误触）',self.toggle_input_lock)
+        self.input_lock_action.setCheckable(True)
         self.disconnect_action = self._action('disconnected', '断开当前会话', self.disconnect, 'Ctrl+Shift+D')
         self.save_action = self._action('save', '保存会话…', self.save_profile, 'Alt+S')
         self.close_action = self._action('close', '关闭当前标签', lambda: self.close_tab(self.tabs.currentIndex()), 'Ctrl+Shift+W')
@@ -258,7 +266,8 @@ class DesktopShell:
     def _build_menus(self):
         bar = self.menuBar(); bar.setNativeMenuBar(False)
         file = bar.addMenu('文件(&F)')
-        file.addActions([self.quick_action, self.save_action]); file.addSeparator()
+        file.addActions([self.new_action,self.quick_action,self.manager_action,self.save_action]); file.addSeparator()
+        file.addActions([self.clone_action,self.reconnect_action]);file.addSeparator()
         file.addActions([self.disconnect_action, self.close_action]); file.addSeparator()
         file.addAction('退出', self.close, QKeySequence('Alt+F4'))
         edit = bar.addMenu('编辑(&E)'); edit.addActions([self.copy_action, self.paste_action]); edit.addSeparator(); edit.addAction(self.find_action)
@@ -271,6 +280,7 @@ class DesktopShell:
             action = theme.addAction(label); action.setCheckable(True); action.setChecked(self.preferences.theme == value)
             group.addAction(action); action.triggered.connect(lambda checked, key=value: self.set_desktop_theme(key))
         options = bar.addMenu('选项(&O)'); options.addActions([self.options_action, self.font_action])
+        options.addAction(self.defaults_action)
         colors = options.addMenu('终端配色'); group = QActionGroup(self)
         for key, (label, _, _) in SCHEMES.items():
             action = colors.addAction(label); action.setCheckable(True); action.setChecked(self.preferences.scheme == key)
@@ -278,6 +288,8 @@ class DesktopShell:
         transfer = bar.addMenu('传输(&T)'); transfer.addAction(self.sftp_button)
         tools = bar.addMenu('工具(&U)'); tools.addActions([self.log_button, self.hex_button, self.forward_button, self.break_button])
         tools.addAction(self.command_action)
+        tools.addAction(self.input_lock_action)
+        tools.addAction(self.rename_tab_action)
         self.windows_menu = bar.addMenu('窗口(&W)'); self.windows_menu.aboutToShow.connect(self.populate_windows_menu)
         help_menu = bar.addMenu('帮助(&H)')
         help_menu.addAction('快捷键', lambda: QMessageBox.information(self, '快捷键',
@@ -293,16 +305,28 @@ class DesktopShell:
         self.session_filter.setClearButtonEnabled(True); self.session_filter.textChanged.connect(self.update_profiles)
         layout.addWidget(self.session_filter)
         self.tree = QTreeWidget(); self.tree.setHeaderHidden(True); self.tree.setIndentation(16)
+        self.tree.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         self.tree.setUniformRowHeights(True); self.tree.itemDoubleClicked.connect(self.connect_profile)
         self.tree.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.tree.customContextMenuRequested.connect(self.session_context_menu)
         layout.addWidget(self.tree, 1); self.session_dock.setWidget(panel)
         self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.session_dock)
         self.active_dock = QDockWidget('活动会话', self); self.active_dock.setObjectName('activeDock')
+        active_panel=QWidget();active_layout=QVBoxLayout(active_panel);active_layout.setContentsMargins(4,4,4,4)
+        self.active_filter=QLineEdit();self.active_filter.setPlaceholderText('筛选活动会话 / 主机 / 状态')
+        self.active_filter.textChanged.connect(self.rebuild_active_sessions);active_layout.addWidget(self.active_filter)
+        self.active_counts=QLabel('共0个会话');self.active_counts.setWordWrap(True);active_layout.addWidget(self.active_counts)
         self.active_tree = QTreeWidget(); self.active_tree.setHeaderLabels(['会话', '状态'])
+        self.active_tree.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         self.active_tree.setUniformRowHeights(True); self.active_tree.setRootIsDecorated(False)
         self.active_tree.itemDoubleClicked.connect(self.activate_session_item)
-        self.active_dock.setWidget(self.active_tree); self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.active_dock)
+        active_layout.addWidget(self.active_tree,1)
+        operation=QToolButton();operation.setText('选中会话操作');operation.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
+        menu=QMenu(operation)
+        for title,action in (('断开所选会话…','disconnect'),('锁定所选输入…','lock'),('解锁所选输入…','unlock')):
+            menu.addAction(title,lambda checked=False,value=action:self.active_sessions_action(value))
+        operation.setMenu(menu);active_layout.addWidget(operation)
+        self.active_dock.setWidget(active_panel); self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.active_dock)
         self.tabifyDockWidget(self.session_dock, self.active_dock); self.session_dock.raise_()
         self.resizeDocks([self.session_dock], [224], Qt.Orientation.Horizontal)
 
@@ -312,7 +336,7 @@ class DesktopShell:
             try:endpoint=parse_destination(host.strip(),username=self.user.text())
             except ValueError:self.status.setText('目标格式无效；支持 user@host:port 或 [IPv6]:port，不接受URL口令');return
             self.mode.setCurrentText('SSH');self.host.setText(endpoint.host);self.port.setText(str(endpoint.port))
-            self.user.setText(endpoint.username);self._loaded_profile = None
+            self.user.setText(endpoint.username);self._loaded_profile = None;self._pending_label=None
         self.quick_dialog.error.clear(); self.quick_dialog.show(); self.quick_dialog.raise_()
         self.quick_dialog.activateWindow()
         (self.password if self.host.text().strip() and self.user.text().strip() else self.host).setFocus()
@@ -339,18 +363,49 @@ class DesktopShell:
         if name:
             menu.addAction('连接…', lambda: self.connect_profile(item, 0))
             menu.addAction('载入会话设置', lambda: self.load_profile(name)); menu.addSeparator()
+        menu.addAction(self.manager_action)
         menu.addAction(self.quick_action); menu.addAction(self.save_action)
         menu.exec(self.tree.viewport().mapToGlobal(position))
 
-    def rebuild_active_sessions(self):
+    def rebuild_active_sessions(self,*_):
+        selected={item.data(0,Qt.ItemDataRole.UserRole) for item in self.active_tree.selectedItems()}
         self.active_tree.clear()
+        query=self.active_filter.text().casefold();connected=pending=disconnected=0
         for worker, terminal in self.sessions.items():
             from .app import STATES
+            if worker.status=='Connected':connected+=1
+            elif worker.status=='Disconnected':disconnected+=1
+            else:pending+=1
+            host=getattr(terminal,'connection_profile',{}).get('host','')
+            if query and query not in ' '.join((terminal.session_label,host,worker.status,STATES.get(worker.status,''))).casefold():continue
             item = QTreeWidgetItem([terminal.session_label, STATES.get(worker.status, worker.status)])
             item.setData(0, Qt.ItemDataRole.UserRole, worker.session_id)
             item.setIcon(0, icon('connected' if worker.status == 'Connected' else 'disconnected' if worker.status == 'Disconnected' else 'pending'))
             self.active_tree.addTopLevelItem(item)
+            item.setSelected(worker.session_id in selected)
+        self.active_counts.setText(f'共{len(self.sessions)} · 已连接{connected} · 处理中{pending} · 已断开{disconnected}')
         self.active_tree.resizeColumnToContents(0)
+
+    def active_sessions_action(self,action):
+        if action not in ('disconnect','lock','unlock'):return
+        selected={item.data(0,Qt.ItemDataRole.UserRole) for item in self.active_tree.selectedItems()}
+        targets=[(worker,worker.session_id,terminal.session_label) for worker,terminal in self.sessions.items() if worker.session_id in selected]
+        if not targets:self.status.setText('请在活动会话列表中明确选择目标。');return
+        from .session_manager import label,buttons
+        dialog=QDialog(self);dialog.setWindowTitle('确认活动会话操作');layout=QVBoxLayout(dialog)
+        layout.addWidget(label('固定目标：'+'、'.join(name for _,_,name in targets)))
+        layout.addWidget(label('断开会取消该连接上的传输和流程。' if action=='disconnect' else '输入锁仅防误触，不隐藏输出或验证口令；已启动流程仍可继续。'))
+        buttons(dialog,layout,dict(disconnect='断开所选',lock='锁定输入',unlock='解锁输入')[action])
+        try:
+            if dialog.exec()!=QDialog.DialogCode.Accepted:return
+        finally:dialog.deleteLater()
+        count=0
+        for worker,identifier,_ in targets:
+            if worker not in self.sessions or worker.session_id!=identifier:continue
+            if action=='disconnect':worker.stop_event.set()
+            else:worker.set_input_locked(action=='lock')
+            count+=1
+        self.update_activity();self.status.setText(f'已对{count}个仍存在的所选会话执行操作。')
 
     def activate_session_item(self, item, _column):
         identifier = item.data(0, Qt.ItemDataRole.UserRole)

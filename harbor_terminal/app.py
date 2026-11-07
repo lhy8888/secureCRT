@@ -15,9 +15,10 @@ from .panels import SFTPDialog, LogDialog, HexDialog, ForwardDialog
 from .desktop import DesktopShell, ConnectionOptions
 from .appearance import icon, terminal_font
 from .auth_dialog import AuthenticationDialog
+from . import session_templates
+from .storage import StorageConflict, CommitUncertain, ANY_REVISION
 
-DEFAULTS = dict(bytesize='8', parity='N', stopbits='1', flow_control='none',
-                encoding='utf-8', backspace='del', private_key='', jump_profile='', auth_method='auto', ssh_mode='shell')
+DEFAULTS = session_templates.BASE_OPTIONS
 STATES = dict(Connecting='连接中', ConnectingJump='连接跳板中', ConnectingTarget='连接目标中',
               AuthenticatingJump='跳板交互认证', AuthenticatingTarget='目标交互认证',
               Connected='已连接', Closing='关闭中', Disconnected='已断开')
@@ -41,11 +42,25 @@ class Window(QMainWindow, DesktopShell):
         self.profile_path = Path(profile_path) if profile_path else Path(QStandardPaths.writableLocation(QStandardPaths.StandardLocation.AppConfigLocation)) / 'HarborTerminal' / 'sessions.json'
         self.profiles = {}
         self.profile_error = None
+        self.profile_store = profiles.store(self.profile_path)
+        self.profile_revision = None
         try:
-            self.profiles = profiles.load(self.profile_path)
+            snapshot = self.profile_store.read()
+            self.profiles, self.profile_revision = snapshot.value, snapshot.revision
         except (OSError, ValueError, TypeError) as exc:
             self.profile_error = type(exc).__name__
+            try: self.profile_revision = self.profile_store.revision()
+            except (OSError, ValueError): pass
+        self.template_store = session_templates.store(self.profile_path)
+        self.templates = {mode:{} for mode in session_templates.BUILTIN}
+        self.template_revision = None; self.template_error = None
+        try:
+            snapshot = self.template_store.read()
+            self.templates, self.template_revision = snapshot.value, snapshot.revision
+        except (OSError, ValueError, TypeError) as exc:
+            self.template_error = type(exc).__name__
         self.build_desktop()
+        self.apply_protocol_defaults(self.mode.currentText())
         self.close_timer = QTimer(self); self.close_timer.timeout.connect(self.finish_close)
         self.service_timer = QTimer(self); self.service_timer.setInterval(200)
         self.service_timer.timeout.connect(self.update_activity); self.service_timer.start()
@@ -83,13 +98,70 @@ class Window(QMainWindow, DesktopShell):
 
     def mode_changed(self, mode):
         serial = mode == 'Serial'
-        self.port.setText('115200' if serial else '22')
+        self.apply_protocol_defaults(mode)
+        self.host.clear(); self._loaded_profile = None; self._pending_label = None
         self.serial_row.setVisible(serial)
         self.trust_group.setVisible(not serial)
         self.user.setEnabled(not serial); self.password.setEnabled(not serial)
         self.known.setEnabled(not serial)
         self.password.clear()
         if serial: self.scan_ports()
+
+    def apply_protocol_defaults(self, mode):
+        settings = session_templates.settings(self.templates, mode)
+        self.options = {key:settings.get(key,value) for key,value in DEFAULTS.items()}
+        self.port.setText(settings['port'])
+        self.user.setText(settings.get('username','')); self.known.setText(settings.get('known_hosts',''))
+        self.password.clear(); self.passphrase = None
+        self.jump_password = self.jump_passphrase = None
+
+    def new_session(self):
+        self.apply_protocol_defaults(self.mode.currentText()); self.host.clear()
+        self._loaded_profile = None; self._pending_label = None; self.show_quick_connect()
+
+    def edit_defaults(self):
+        from .session_manager import TemplateDialog
+        dialog=TemplateDialog(self)
+        try: dialog.exec()
+        finally: dialog.deleteLater()
+
+    def open_session_manager(self, selected=None):
+        from .session_manager import SessionManager
+        if selected is None or isinstance(selected,bool):
+            selected=tuple(item.data(0,Qt.ItemDataRole.UserRole) for item in self.tree.selectedItems()
+                           if item.data(0,Qt.ItemDataRole.UserRole))
+        dialog=SessionManager(self, selected)
+        try: dialog.exec()
+        finally: dialog.deleteLater()
+
+    def commit_profiles(self, updated, *, expected_revision=...):
+        if self.profile_error:
+            self.status.setText('会话文件无法读取，已禁用保存以保护原文件'); return False
+        try:
+            snapshot=self.profile_store.save(updated,expected_revision=self.profile_revision if expected_revision is ... else expected_revision)
+        except StorageConflict:
+            self.status.setText('另一个窗口已修改会话配置；原文件保留，请先在会话管理中重新载入。');return False
+        except CommitUncertain:
+            self.status.setText('保存结果待确认，磁盘可能已有更新；请重新载入并核对。');return False
+        except (OSError,ValueError):
+            self.status.setText('保存失败，请检查字段、文件权限或其他窗口的保存操作；原文件保留。');return False
+        self.profiles,self.profile_revision=snapshot.value,snapshot.revision
+        self.update_profiles();return True
+
+    def reload_profiles(self):
+        try:snapshot=self.profile_store.read()
+        except (OSError,ValueError,TypeError):self.status.setText('磁盘会话文件无法读取；保留当前窗口内容。');return False
+        self.profiles,self.profile_revision=snapshot.value,snapshot.revision;self.profile_error=None
+        self.update_profiles();return True
+
+    def restore_profile_backup(self, *, expected_revision=..., expected_backup_revision=ANY_REVISION):
+        try:snapshot=self.profile_store.restore_backup(expected_revision=self.profile_revision if expected_revision is ... else expected_revision,
+                                                       expected_backup_revision=expected_backup_revision)
+        except StorageConflict:self.status.setText('文件在恢复前已变化；请重新载入后检查。');return False
+        except CommitUncertain:self.status.setText('恢复结果待确认，请重新载入磁盘文件并核对。');return False
+        except (OSError,ValueError):self.status.setText('有效备份无法恢复；当前文件保留。');return False
+        self.profiles,self.profile_revision=snapshot.value,snapshot.revision;self.profile_error=None
+        self.update_profiles();return True
 
     def scan_ports(self):
         if self._probe and self._probe.isRunning(): return
@@ -137,12 +209,16 @@ class Window(QMainWindow, DesktopShell):
     def load_profile(self, name):
         profile = self.profiles.get(name)
         if not profile: return
+        self.populate_profile(profile, name=name)
+
+    def populate_profile(self, profile, *, name=None):
         self.mode.setCurrentText(profile.get('mode','SSH'))
         for widget,key in ((self.host,'host'),(self.port,'port'),(self.user,'username'),(self.known,'known_hosts')):
-            widget.setText(profile.get(key,''))
+            widget.setText(profile.get(key,('115200' if self.mode.currentText()=='Serial' else '22') if key=='port' else ''))
         self.options = {key:profile.get(key,value) for key,value in DEFAULTS.items()}
         self._loaded_profile = name
-        self.saved.setCurrentText(name)
+        self._pending_label = None
+        if name:self.saved.setCurrentText(name)
         self.quick_host.setText(profile.get('host','') if profile.get('mode','SSH') == 'SSH' else '')
         self.password.clear(); self.passphrase = None
         self.jump_password = self.jump_passphrase = None
@@ -158,11 +234,8 @@ class Window(QMainWindow, DesktopShell):
         updated = dict(self.profiles)
         updated[name] = dict(mode=self.mode.currentText(),host=self.host.text().strip(),port=self.port.text(),
                              username=self.user.text().strip(),known_hosts=self.known.text().strip(),**self.options)
-        try:
-            profiles.save(self.profile_path,updated)
-        except (OSError,ValueError):
-            self.status.setText('保存失败，请检查会话参数；原文件已保留'); return
-        self.profiles = updated; self.update_profiles()
+        if not self.commit_profiles(updated): return
+        self._loaded_profile=name
         self.status.setText('会话已保存，密码和私钥口令不写入磁盘')
 
     def connect_session(self):
@@ -202,9 +275,13 @@ class Window(QMainWindow, DesktopShell):
         worker.receive_stream.configure(self.options['encoding'])
         terminal = Terminal(worker,encoding=self.options['encoding'],backspace=self.options['backspace'])
         terminal.set_appearance(self.preferences.scheme, terminal_font(self.preferences.family, self.preferences.size))
+        terminal.connection_profile = dict(mode=self.mode.currentText(),host=self.host.text().strip(),port=self.port.text(),
+            username=self.user.text().strip(),known_hosts=self.known.text().strip(),**self.options)
         loaded = self.profiles.get(self._loaded_profile, {})
         terminal.session_label = (self._loaded_profile.split('/')[-1] if loaded and loaded.get('host') == self.host.text().strip()
                                   else self.host.text().strip()[:40] or '会话')
+        pending=getattr(self,'_pending_label',None)
+        if pending and pending[1]==self.host.text().strip():terminal.session_label=pending[0]
         self.sessions[worker] = terminal; self.workers.append(worker)
         self.tabs.setCurrentIndex(self.tabs.addTab(terminal,terminal.session_label))
         self.tabs.setTabIcon(self.tabs.indexOf(terminal), icon('pending'))
@@ -215,6 +292,27 @@ class Window(QMainWindow, DesktopShell):
         worker.forward_result.connect(self.on_forward_result)
         worker.auth_requested.connect(self.on_auth_requested)
         worker.start(); self.quick_dialog.accept(); self.activateWindow(); terminal.setFocus()
+
+    def clone_session(self):
+        terminal=self.tabs.currentWidget()
+        if not terminal:return
+        self.populate_profile(dict(terminal.connection_profile))
+        self._pending_label=(terminal.session_label,self.host.text().strip())
+        self.show_quick_connect()
+        self.quick_dialog.error.setText('已载入该连接的非秘密参数；请重新提供本次凭据。确认后建立独立连接。')
+
+    def rename_tab(self):
+        terminal=self.tabs.currentWidget()
+        if not terminal:return
+        name,ok=QInputDialog.getText(self,'临时标签名称','仅修改当前标签，不改保存的会话：',text=terminal.session_label)
+        if not ok:return
+        if not name.strip() or len(name)>128 or any(ord(c)<32 or ord(c)==127 for c in name):
+            self.status.setText('标签名称无效');return
+        terminal.session_label=name.strip();self.session_state(terminal.worker,terminal.worker.status);self.current_changed(self.tabs.currentIndex())
+
+    def toggle_input_lock(self,checked=False):
+        terminal=self.tabs.currentWidget()
+        if terminal:terminal.worker.set_input_locked(checked);self.update_activity()
 
     @Slot(str)
     def on_worker_state(self, state):
@@ -301,15 +399,19 @@ class Window(QMainWindow, DesktopShell):
     def update_activity(self):
         terminal = self.tabs.currentWidget()
         connected = bool(terminal and terminal.worker.status == 'Connected' and not terminal.worker.stop_event.is_set())
+        for action in (self.clone_action,self.rename_tab_action,self.input_lock_action):action.setEnabled(bool(terminal))
+        self.reconnect_action.setEnabled(bool(terminal and terminal.worker.status=='Disconnected'))
+        self.input_lock_action.setChecked(bool(terminal and terminal.worker.input_locked))
         self.disconnect_action.setEnabled(bool(terminal and terminal.worker.status != 'Disconnected'))
         for action in (self.copy_action, self.paste_action, self.find_action, self.close_action): action.setEnabled(bool(terminal))
         for action in (self.sftp_button, self.forward_button): action.setEnabled(connected and terminal.worker.mode == 'SSH')
         self.hex_button.setEnabled(connected and terminal.worker.mode == 'Serial')
-        self.log_button.setEnabled(connected); self.break_button.setEnabled(connected and terminal.worker.interactive)
+        self.log_button.setEnabled(connected); self.break_button.setEnabled(connected and terminal.worker.interactive and not terminal.worker.input_locked)
         if not terminal:
             self.activity.clear(); self.dimensions.clear(); self.connection_info.setText('未连接'); return
         worker = terminal.worker
         notes = []
+        if worker.input_locked:notes.append('输入已锁定（已启动流程仍可继续）')
         if worker.journal:
             value = worker.journal.snapshot()
             label = dict(opening='准备', running='记录中', closing='关闭中', closed='已停止', error='错误')

@@ -23,9 +23,12 @@ Copy-Item scripts/Test-HarborHardware.ps1 dist/HarborTerminal/
 Copy-Item scripts/Measure-HarborComparison.ps1 dist/HarborTerminal/
 Copy-Item docs/windows-hardware-testing.md dist/HarborTerminal/HARDWARE-TESTING.md
 Copy-Item docs/windows-comparison.md dist/HarborTerminal/COMPARISON.md
-$sourceCommit = (& git rev-parse HEAD).Trim()
-Assert-NativeSuccess
-$sourceDirty = [bool](& git status --porcelain --untracked-files=no)
+$sourceCommit = $null; $sourceDirty = $null
+if ((Test-Path .git) -and (Get-Command git -ErrorAction SilentlyContinue)) {
+    $sourceCommit = (& git rev-parse HEAD).Trim()
+    Assert-NativeSuccess
+    $sourceDirty = [bool](& git status --porcelain --untracked-files=no)
+}
 @{
     source_commit = $sourceCommit
     source_dirty = $sourceDirty

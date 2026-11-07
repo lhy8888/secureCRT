@@ -113,6 +113,26 @@ def desktop_smoke(app, report_path):
             result['checks']['mainwindow'] = window.isVisible() and bool(window.menuBar().actions())
             import asyncio
             result['checks'].update(asyncio.run(protocol_probe(Path(temporary))))
+            from .session_manager import SessionManager,ImportDialog,TemplateDialog
+            from .profile_operations import plan_import,export_sessions,parse_import
+            from .storage import StorageConflict
+            from . import profiles
+            imported=ImportDialog(b'Name,Host,Port,Password\nfixture,fixture.invalid,2222,fixture-only\n','csv',window)
+            imported.read_rows()
+            result['checks']['import_secret_columns_ignored']=bool(imported.incoming) and 'fixture-only' not in profiles.encode(imported.incoming).decode()
+            manager=SessionManager(window);manager.show();app.processEvents()
+            stale=window.profile_store.read()
+            QTimer.singleShot(50,lambda:app.activeModalWidget().accept())
+            result['checks']['session_import_preview_commit']=manager.commit(plan_import(window.profiles,imported.incoming,'add-only'))
+            try:window.profile_store.save({},expected_revision=stale.revision)
+            except StorageConflict:result['checks']['stale_configuration_rejected']=True
+            else:result['checks']['stale_configuration_rejected']=False
+            result['checks']['native_xml_roundtrip']=parse_import(export_sessions(window.profiles,'xml').decode(),'xml').sessions==window.profiles
+            template=TemplateDialog(window);template.show();app.processEvents()
+            template.editors['Serial'].inputs['port'].setText('57600');template.accept()
+            result['checks']['protocol_template_dialog']=window.templates['Serial'].get('port')=='57600'
+            for dialog in (template,imported,manager):dialog.close();dialog.deleteLater()
+            app.processEvents()
             window.quick_action.trigger(); app.processEvents()
             result['checks']['quick_connect'] = window.quick_dialog.isVisible()
             def dismiss_options():

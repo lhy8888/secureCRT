@@ -8,6 +8,26 @@ from harbor_terminal.commands import load_library, save_library, parse_flow
 from harbor_terminal.session import Worker
 
 
+async def test_cancelled_flow_is_not_written_after_an_awaited_protocol_reply():
+    worker=Worker('SSH',{});worker._set_state('Connected')
+    identifier=worker.submit_flow([dict(action='delay',seconds=1)])
+    assert worker.send(b'must-not-send',owner=identifier) and worker.respond(b'protocol-reply')
+    started=asyncio.Event();release=asyncio.Event();received=[]
+    class Transport:
+        async def write(self,data):
+            received.append(data)
+            if data==b'protocol-reply':started.set();await release.wait()
+    writer=asyncio.create_task(worker._writer(Transport()))
+    try:
+        await asyncio.wait_for(started.wait(),1)
+        worker.cancel_flow(identifier)
+        with worker.lock:worker._flow_job=None
+        release.set();await asyncio.sleep(.03)
+        assert received==[b'protocol-reply']
+    finally:
+        worker.stop_event.set();release.set();await asyncio.wait_for(writer,1)
+
+
 async def test_receive_cursor_matches_fragmented_unicode_and_ansi_and_retains_tail():
     stream=ReceiveStream();cursor=stream.cursor()
     encoded='before 你\x1b[31m好\x1b[0m# next$'.encode()

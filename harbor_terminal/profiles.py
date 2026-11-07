@@ -1,11 +1,9 @@
 """Versioned atomic session storage. Credentials are never accepted or persisted."""
 import json
-import os
-from pathlib import Path
-import tempfile
 
 from .serial_config import SerialSettings
 from .terminal_model import ENCODINGS
+from .storage import DocumentStore, ANY_REVISION
 
 V1_FIELDS = frozenset(('mode', 'host', 'port', 'username', 'known_hosts'))
 V2_FIELDS = V1_FIELDS | {'bytesize', 'parity', 'stopbits', 'flow_control',
@@ -15,11 +13,13 @@ FIELDS = V3_FIELDS | {'auth_method','ssh_mode'}
 
 
 def validate(sessions, *, version=4):
+    if version not in (1,2,3,4): raise ValueError('Unsupported session version')
     if not isinstance(sessions, dict) or len(sessions) > 500:
         raise ValueError('Invalid session collection')
     allowed = V1_FIELDS if version == 1 else V2_FIELDS if version == 2 else V3_FIELDS if version == 3 else FIELDS
     for name, profile in sessions.items():
-        if not isinstance(name, str) or not name.strip() or len(name) > 256:
+        if (not isinstance(name, str) or not name.strip() or len(name) > 256
+                or any(ord(c)<32 or ord(c)==127 for c in name)):
             raise ValueError('Invalid session name')
         if len(name.split('/')) > 16 or any(not part.strip() for part in name.split('/')):
             raise ValueError('Invalid session folder path')
@@ -47,36 +47,41 @@ def validate(sessions, *, version=4):
             raise ValueError('Invalid SSH port')
 
 
-def load(path):
-    path = Path(path)
-    if not path.exists():
-        return {}
-    if path.stat().st_size > 1048576:
-        raise ValueError('Session file exceeds 1 MiB')
-    data = json.loads(path.read_text(encoding='utf-8'))
+def reject_duplicates(pairs):
+    result={}
+    for key,value in pairs:
+        if key in result:raise ValueError('Duplicate configuration key')
+        result[key]=value
+    return result
+
+
+def decode(raw):
+    if raw is None: return {}
+    data = json.loads(raw.decode('utf-8-sig'),object_pairs_hook=reject_duplicates)
     if (not isinstance(data, dict) or type(data.get('version')) is not int
-            or data['version'] not in (1, 2, 3, 4) or not isinstance(data.get('sessions'), dict)):
+            or data['version'] not in (1, 2, 3, 4) or not isinstance(data.get('sessions'), dict)
+            or set(data)-{'version','sessions'}):
         raise ValueError('Unsupported session file')
     result = data['sessions']
     validate(result, version=data['version'])
     return result
 
 
-def save(path, sessions):
-    # Validate exactly the bytes we will persist before touching an existing file.
+def encode(sessions):
     validate(sessions)
     payload = json.dumps({'version': 4, 'sessions': sessions}, ensure_ascii=False, indent=2)
     if len(payload.encode('utf-8')) > 1048576:
         raise ValueError('Session file exceeds 1 MiB')
-    path = Path(path)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    handle, temporary = tempfile.mkstemp(prefix='.sessions-', dir=path.parent)
-    try:
-        with os.fdopen(handle, 'w', encoding='utf-8') as stream:
-            stream.write(payload)
-            stream.flush()
-            os.fsync(stream.fileno())
-        os.replace(temporary, path)
-    finally:
-        if os.path.exists(temporary):
-            os.unlink(temporary)
+    return payload.encode('utf-8')
+
+
+def store(path):
+    return DocumentStore(path, decode, encode)
+
+
+def load(path):
+    return store(path).read().value
+
+
+def save(path, sessions, *, expected_revision=ANY_REVISION):
+    return store(path).save(sessions, expected_revision=expected_revision)
