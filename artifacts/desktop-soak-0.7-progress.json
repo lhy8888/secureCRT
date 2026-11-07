@@ -1,0 +1,329 @@
+{
+  "status": "running",
+  "pid": 8349,
+  "version": "0.7.0",
+  "platform": "offscreen",
+  "started": "2026-11-07T16:09:20.072128+00:00",
+  "requested_seconds": 259200.0,
+  "elapsed_seconds": 324.55032709499983,
+  "cycles": 1196,
+  "errors": 0,
+  "protocol_queries": 48,
+  "protocol_replies": 48,
+  "configuration_commits": 5,
+  "scope": "Actual Qt window + Worker + loopback SSH + flows + input lock + protocol replies + profile transactions; no physical COM or vendor comparison",
+  "samples": [
+    {
+      "threads": 4,
+      "monotonic": 3507.121027417,
+      "rss_bytes": 91262976,
+      "handles": 16,
+      "elapsed_seconds": 0.13420701799987,
+      "cycles": 1
+    },
+    {
+      "threads": 4,
+      "monotonic": 3517.162070014,
+      "rss_bytes": 91975680,
+      "handles": 20,
+      "elapsed_seconds": 10.17524769199963,
+      "cycles": 40
+    },
+    {
+      "threads": 4,
+      "monotonic": 3527.176876089,
+      "rss_bytes": 92291072,
+      "handles": 20,
+      "elapsed_seconds": 20.190055008999934,
+      "cycles": 78
+    },
+    {
+      "threads": 4,
+      "monotonic": 3537.345288437,
+      "rss_bytes": 92454912,
+      "handles": 20,
+      "elapsed_seconds": 30.358468357999755,
+      "cycles": 116
+    },
+    {
+      "threads": 4,
+      "monotonic": 3547.539472058,
+      "rss_bytes": 92639232,
+      "handles": 20,
+      "elapsed_seconds": 40.55265187899977,
+      "cycles": 154
+    },
+    {
+      "threads": 4,
+      "monotonic": 3557.673908494,
+      "rss_bytes": 92913664,
+      "handles": 20,
+      "elapsed_seconds": 50.6870883849997,
+      "cycles": 192
+    },
+    {
+      "threads": 4,
+      "monotonic": 3567.692802382,
+      "rss_bytes": 93130752,
+      "handles": 20,
+      "elapsed_seconds": 60.70598059099984,
+      "cycles": 230
+    },
+    {
+      "threads": 4,
+      "monotonic": 3577.912290504,
+      "rss_bytes": 93286400,
+      "handles": 20,
+      "elapsed_seconds": 70.92547098599971,
+      "cycles": 268
+    },
+    {
+      "threads": 4,
+      "monotonic": 3588.091421028,
+      "rss_bytes": 93462528,
+      "handles": 20,
+      "elapsed_seconds": 81.10460149999972,
+      "cycles": 306
+    },
+    {
+      "threads": 4,
+      "monotonic": 3598.17004792,
+      "rss_bytes": 93659136,
+      "handles": 20,
+      "elapsed_seconds": 91.18322856199984,
+      "cycles": 344
+    },
+    {
+      "threads": 4,
+      "monotonic": 3608.334750703,
+      "rss_bytes": 93810688,
+      "handles": 20,
+      "elapsed_seconds": 101.34793090499988,
+      "cycles": 382
+    },
+    {
+      "threads": 4,
+      "monotonic": 3618.588160204,
+      "rss_bytes": 93941760,
+      "handles": 20,
+      "elapsed_seconds": 111.6013407659998,
+      "cycles": 420
+    },
+    {
+      "threads": 4,
+      "monotonic": 3628.662008186,
+      "rss_bytes": 94101504,
+      "handles": 20,
+      "elapsed_seconds": 121.67518853799993,
+      "cycles": 457
+    },
+    {
+      "threads": 4,
+      "monotonic": 3638.771787784,
+      "rss_bytes": 94261248,
+      "handles": 20,
+      "elapsed_seconds": 131.78496831599978,
+      "cycles": 494
+    },
+    {
+      "threads": 4,
+      "monotonic": 3648.810272547,
+      "rss_bytes": 94412800,
+      "handles": 20,
+      "elapsed_seconds": 141.82345279899982,
+      "cycles": 531
+    },
+    {
+      "threads": 4,
+      "monotonic": 3658.853573729,
+      "rss_bytes": 94547968,
+      "handles": 20,
+      "elapsed_seconds": 151.86675388100002,
+      "cycles": 568
+    },
+    {
+      "threads": 4,
+      "monotonic": 3668.966102984,
+      "rss_bytes": 94695424,
+      "handles": 20,
+      "elapsed_seconds": 161.97928350599977,
+      "cycles": 605
+    },
+    {
+      "threads": 4,
+      "monotonic": 3679.098469725,
+      "rss_bytes": 94863360,
+      "handles": 20,
+      "elapsed_seconds": 172.11165055799984,
+      "cycles": 642
+    },
+    {
+      "threads": 4,
+      "monotonic": 3689.223623421,
+      "rss_bytes": 95002624,
+      "handles": 20,
+      "elapsed_seconds": 182.23680411399982,
+      "cycles": 679
+    },
+    {
+      "threads": 4,
+      "monotonic": 3699.368584239,
+      "rss_bytes": 95207424,
+      "handles": 20,
+      "elapsed_seconds": 192.38176455099983,
+      "cycles": 716
+    },
+    {
+      "threads": 4,
+      "monotonic": 3709.528266417,
+      "rss_bytes": 95371264,
+      "handles": 20,
+      "elapsed_seconds": 202.54144659899976,
+      "cycles": 753
+    },
+    {
+      "threads": 4,
+      "monotonic": 3719.675034629,
+      "rss_bytes": 95510528,
+      "handles": 20,
+      "elapsed_seconds": 212.68821444999958,
+      "cycles": 790
+    },
+    {
+      "threads": 4,
+      "monotonic": 3729.803056146,
+      "rss_bytes": 95686656,
+      "handles": 20,
+      "elapsed_seconds": 222.81623721899996,
+      "cycles": 827
+    },
+    {
+      "threads": 4,
+      "monotonic": 3739.940249694,
+      "rss_bytes": 95854592,
+      "handles": 20,
+      "elapsed_seconds": 232.95342830399977,
+      "cycles": 864
+    },
+    {
+      "threads": 4,
+      "monotonic": 3750.080860795,
+      "rss_bytes": 95993856,
+      "handles": 20,
+      "elapsed_seconds": 243.09404193799992,
+      "cycles": 901
+    },
+    {
+      "threads": 4,
+      "monotonic": 3760.274850505,
+      "rss_bytes": 96169984,
+      "handles": 20,
+      "elapsed_seconds": 253.28802881399997,
+      "cycles": 938
+    },
+    {
+      "threads": 4,
+      "monotonic": 3770.463106052,
+      "rss_bytes": 96329728,
+      "handles": 20,
+      "elapsed_seconds": 263.47628578299964,
+      "cycles": 975
+    },
+    {
+      "threads": 4,
+      "monotonic": 3780.60975867,
+      "rss_bytes": 96481280,
+      "handles": 20,
+      "elapsed_seconds": 273.6229392619998,
+      "cycles": 1012
+    },
+    {
+      "threads": 4,
+      "monotonic": 3790.839802534,
+      "rss_bytes": 96661504,
+      "handles": 20,
+      "elapsed_seconds": 283.8529811929998,
+      "cycles": 1049
+    },
+    {
+      "threads": 4,
+      "monotonic": 3801.028517285,
+      "rss_bytes": 96788480,
+      "handles": 20,
+      "elapsed_seconds": 294.0416980279997,
+      "cycles": 1086
+    },
+    {
+      "threads": 4,
+      "monotonic": 3811.128037277,
+      "rss_bytes": 96935936,
+      "handles": 20,
+      "elapsed_seconds": 304.14121649699973,
+      "cycles": 1122
+    },
+    {
+      "threads": 4,
+      "monotonic": 3821.362230555,
+      "rss_bytes": 97071104,
+      "handles": 20,
+      "elapsed_seconds": 314.3753863899997,
+      "cycles": 1159
+    },
+    {
+      "threads": 4,
+      "monotonic": 3831.537147524,
+      "rss_bytes": 97222656,
+      "handles": 20,
+      "elapsed_seconds": 324.55032709499983,
+      "cycles": 1196
+    }
+  ],
+  "source_hashes": {
+    "__init__.py": "ea4daa919da0f72cace802b21134392c4f5b8ce3bd059ea608b62fd4342ac815",
+    "app.py": "255c6fdaf1ca6391aa5622f976ad5f3ee4bdd8a7fab358609a7f350729a9c9b5",
+    "appearance.py": "633d5291473d4b241bf5ec7abce63bd84ea127a12ce4407da64bb1c242874063",
+    "auth_dialog.py": "2675e1d7c8d149b485b4fe99c663bd58c49f0ed6d8f0d6bed4c13e663a75b203",
+    "authentication.py": "b3e90012d563ca95bd074dd11eb5255d84948f20ff105a157f0100b00626c846",
+    "automation.py": "688bc07b0132b166688208caabfd2aa784fb4f4e89fa723b4f2acc44efbff609",
+    "batch.py": "899813670a1d8ebe9c80870f640971f496b198eff3ebf78ef9e3f580de76e5b3",
+    "commands.py": "bba31d96bf119438330bafbb278212e989d80a85d9eb488c69236e24b7bb5783",
+    "desktop.py": "22fdc22fc312ac6ac8963e6ca4ed36077e0b1f1aebb3ff50bc659926aabcd1cc",
+    "diagnostics.py": "8b1e83da5d286ed68c459cd07dda4eaebaa3cc6b52071d79d4eebaf20803b478",
+    "endpoint.py": "fbbb01888cba031901ca9dacdd2c7d7046beaf55c455c8a6e2d9af5a820e70bf",
+    "forwarding.py": "28b88606df223f22512c8fa465484ce9b7fee95dad5ba795caae647e529e67ad",
+    "hardware.py": "0fbbb4dea772a58f9cd57b79108aa7bd6a4a2cd4e4b8c7c93c351c1bb2c6c14b",
+    "host_keys.py": "7ad004caca15aad5154d9c889aa0fc9a36c67cf9483ce653865c25a08c9b0100",
+    "journal.py": "c863f8578ba1a5748e0dfe8e33241a9c085a8ecc2c926321625df3f33a50e742",
+    "key_dialogs.py": "a1524ea630365be11ebde2f17d969f9158831c28541766e1d115dada219de0f2",
+    "key_tools.py": "4182e7435fcaccb911e4ca5c4d8766bcde0277fdf8f2176a395409e19a321368",
+    "keyboard.py": "1ca6e71a9b117d83f175fe97db3ab50c7f037305d5cf84359ac82e0f068cf4c8",
+    "local_forward.py": "b35acf674ec67de1718751c1432d1b793523978013212d3c09662f2a46445622",
+    "panels.py": "a09e9190f4c0ff364d32617a9785cac205f1abbce78bec4a90cd87affe64a8a8",
+    "profile_operations.py": "2239cd2cdfc609aa746ac052363bad41233c4dd017d98c7f063908795da7eb8b",
+    "profiles.py": "6d916c1febee2ff7b2a3b92881a87f39856786de4c3f36e1f20ea00bfbbeda7a",
+    "reports.py": "71786002dbed329904f4f4bb4b2ec2bcf121ab8976005c135d80e88e4505acef",
+    "serial_config.py": "f4bf9303320d59ba83e5c69df284af3280ea60ab80ac9cc1b0e7d733f9a9891e",
+    "session.py": "690617e3e481c2c819f9e04ad3e5e3238ba45e84d1fbdab057d4c3176e28a201",
+    "session_manager.py": "04c430ddf8f1188781264b4610aafbf72d3b13a550b5eccc404a95a03bc0c4e1",
+    "session_templates.py": "157767f64b268a456ec4c74fe92d85f3de14d401ba876a19cb4d7d666067a8ce",
+    "sftp.py": "bf70482f1c192bf205e6d1b1ec8732ad078916071f9f120c051b664e1a41c183",
+    "ssh_dialogs.py": "ed7e1d91d3c95a90488be0f7c28b850851eb91e052a5b455966ef7a5e79e0697",
+    "ssh_policy.py": "4372642a212c5d582a7e7dfbf38141ec4f4a137d7c20cd3f812ddc17afd7a862",
+    "startup.py": "1b333052d569cdbcc598d907c3dc8aaafd35f5d15f22a4b1bd7f76891824be9d",
+    "storage.py": "70f18569ac4668663575ae2e748b9e5b53fb4079aa56b0554dfe0023087bdb6c",
+    "terminal.py": "1790f144ebb717e51fc015490fca46601e95f42b034069ef0089e7b710398090",
+    "terminal_model.py": "7b080f92b341f73758b3eefe3973a33b54ab2db2e0dd39b69e777d6ff02fd08a",
+    "terminal_stream.py": "b75e8267a99bfa8149b2268086f0b59c9aa4c61bc8726780348cb428a4426a27",
+    "trace.py": "4928b54fd46fbe9ed2d776fe3fade1622ae3a04ded8033d5b2969432ea679420",
+    "transport.py": "111cfb85adecef4935d9c8fedbabe7691eb0e142e36e2e8286ec657b71fb87ef",
+    "workflow_panel.py": "6689cdb47a4cfb28f42f4411d0ecd7211bf7247d79d5264e4dffbbedc866e1bd"
+  },
+  "resources": {
+    "threads": 4,
+    "monotonic": 3831.537147524,
+    "rss_bytes": 97222656,
+    "handles": 20,
+    "elapsed_seconds": 324.55032709499983,
+    "cycles": 1196
+  }
+}

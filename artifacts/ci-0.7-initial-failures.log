@@ -1,0 +1,276 @@
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	﻿2026-11-07T16:03:01.5034965Z ##[group]Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:03:01.5036403Z [36;1mpython -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml[0m
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:03:01.5109643Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:03:01.5110031Z env:
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:03:01.5110214Z   QT_QPA_PLATFORM: windows
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:03:01.5110525Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.14.10\x64
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:03:01.5110981Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.14.10\x64/lib/pkgconfig
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:03:01.5111436Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.14.10\x64
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:03:01.5111858Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.14.10\x64
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:03:01.5112260Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.14.10\x64
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:03:01.5112571Z ##[endgroup]
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:19.4318038Z .................................s...................................... [ 23%]
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:19.8794484Z ............................................s........................... [ 47%]
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:37.4444629Z ......ss...................................................F............ [ 71%]
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:41.8230137Z .F.............................s........................................ [ 94%]
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1907545Z ..s......s......                                                         [100%]
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1910739Z ================================== FAILURES ===================================
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1912112Z _ test_oversized_or_truncated_ssh_packet_fails_without_hanging[\x00\x00\x03\xe8\x04\x00\x00\x00] _
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1912906Z
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1913306Z trans = 0, key = 0, ov = <_overlapped.Overlapped object at 0x0000026F9FA0FB70>
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1913938Z
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1914071Z     @staticmethod
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1914456Z     def finish_socket_func(trans, key, ov):
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1914939Z         try:
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1915320Z >           return ov.getresult()
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1915730Z                    ^^^^^^^^^^^^^^
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1916352Z E           OSError: [WinError 64] The specified network name is no longer available
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1916944Z
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1917397Z C:\hostedtoolcache\windows\Python\3.14.10\x64\Lib\asyncio\windows_events.py:463: OSError
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1918047Z
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1918373Z During handling of the above exception, another exception occurred:
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1918800Z
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1919494Z tmp_path = WindowsPath('C:/Users/runneradmin/AppData/Local/Temp/pytest-of-runneradmin/pytest-0/test_oversized_or_truncated_ss1')
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1920783Z packet = b'\x00\x00\x03\xe8\x04\x00\x00\x00'
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1921159Z
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1921650Z     @pytest.mark.parametrize('packet',[struct.pack('>I',0xffffffff)+b'\0'*4,struct.pack('>I',1000)+b'\x04\0\0\0'])
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1922752Z     async def test_oversized_or_truncated_ssh_packet_fails_without_hanging(tmp_path,packet):
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1923505Z         async def malformed(reader,writer):
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1923921Z             try:
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1924591Z                 await reader.readline();writer.write(b'SSH-2.0-local-fault-fixture\r\n'+packet);await writer.drain()
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1958080Z             finally:writer.close();await writer.wait_closed()
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1958830Z         server=await asyncio.start_server(malformed,'127.0.0.1',0)
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1959441Z         known=tmp_path/'known';known.write_text('')
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1959902Z         try:
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1960197Z             async with asyncio.timeout(3):
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1960658Z                 with pytest.raises(asyncssh.Error):
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1961437Z >                   await SSHTransport().connect('127.0.0.1','tester',port=server.sockets[0].getsockname()[1],
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1962053Z
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1962203Z tests\test_ssh_security.py:173:
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1966346Z _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1967286Z harbor_terminal\transport.py:43: in connect
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1968328Z     connection = await self._open_ssh(host, username, port=port, ***
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1968977Z harbor_terminal\transport.py:115: in _open_ssh
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1969460Z     if task in done: return await task
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1969858Z                             ^^^^^^^^^^
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1970301Z harbor_terminal\transport.py:107: in establish
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1971114Z     return await asyncssh.connect(host, connect_timeout=None, login_timeout=timeout+auth_timeout,
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1972207Z C:\hostedtoolcache\windows\Python\3.14.10\x64\Lib\site-packages\asyncssh\connection.py:9301: in connect
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1973017Z     return await asyncio.wait_for(
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1973640Z C:\hostedtoolcache\windows\Python\3.14.10\x64\Lib\asyncio\tasks.py:486: in wait_for
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1974306Z     return await fut
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1974604Z            ^^^^^^^^^
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1975248Z C:\hostedtoolcache\windows\Python\3.14.10\x64\Lib\site-packages\asyncssh\connection.py:547: in _connect
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1976032Z     await options.waiter
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1976684Z C:\hostedtoolcache\windows\Python\3.14.10\x64\Lib\asyncio\proactor_events.py:288: in _loop_reading
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1977411Z     length = fut.result()
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1977743Z              ^^^^^^^^^^^^
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1978325Z C:\hostedtoolcache\windows\Python\3.14.10\x64\Lib\asyncio\windows_events.py:807: in _poll
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1979047Z     value = callback(transferred, key, ov)
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1979468Z             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1979959Z _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1980328Z
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1980634Z trans = 0, key = 0, ov = <_overlapped.Overlapped object at 0x0000026F9FA0FB70>
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1981106Z
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1981217Z     @staticmethod
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1981566Z     def finish_socket_func(trans, key, ov):
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1982045Z         try:
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1982343Z             return ov.getresult()
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1982764Z         except OSError as exc:
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1983257Z             if exc.winerror in (_overlapped.ERROR_NETNAME_DELETED,
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1983894Z                                 _overlapped.ERROR_OPERATION_ABORTED):
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1984430Z >               raise ConnectionResetError(*exc.args)
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1985167Z E               ConnectionResetError: [WinError 64] The specified network name is no longer available
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1985765Z
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1986226Z C:\hostedtoolcache\windows\Python\3.14.10\x64\Lib\asyncio\windows_events.py:467: ConnectionResetError
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1987620Z ____ test_jump_compatibility_is_shown_in_plain_text_and_defaults_to_cancel ____
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1988178Z
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1989026Z desktop = (<PySide6.QtWidgets.QApplication(0x26f80689ab0) at 0x0000026F82680740>, <harbor_terminal.app.Window(0x26fa557f570) at 0x0000026F823FE900>)
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1990043Z
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1990474Z     async def test_jump_compatibility_is_shown_in_plain_text_and_defaults_to_cancel(desktop):
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1991378Z         from PySide6.QtWidgets import QLabel,QDialogButtonBox
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1991943Z         from PySide6.QtCore import Qt
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1992371Z         app,window=desktop;seen=[]
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1992792Z         def cancel():
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1993281Z             modal=app.activeModalWidget();labels=modal.findChildren(QLabel)
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1994336Z             seen.append(any('<b>jump.invalid</b>' in label.text() and label.textFormat()==Qt.TextFormat.PlainText for label in labels))
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1995679Z             seen.append(modal.findChild(QDialogButtonBox).button(QDialogButtonBox.StandardButton.Cancel).isDefault())
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1997567Z             modal.reject()
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1997945Z         QTimer.singleShot(20,cancel)
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1998570Z         assert not confirm_compatibility(dict(host='target.invalid',security={},
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.1999453Z             jump=dict(host='<b>jump.invalid</b>',security=dict(ssh_strict_kex='prefer'))),window)
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.2000208Z >       assert seen==[True,True] and not window.workers
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.2000706Z E       assert ([True, False] == [True, True]
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.2001118Z E
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.2001409Z E         At index 1 diff: False != True
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.2001806Z E
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.2002196Z E         Full diff: (-: missing in left side, +: extra in left side)
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.2002699Z E           [
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.2002971Z E               True,
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.2003287Z E         -     True,
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.2003573Z E         +     False,
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.2003872Z E           ])
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.2004042Z
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.2004221Z tests\test_ssh_security_ui.py:77: AssertionError
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.2004801Z ============================== warnings summary ===============================
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.2005727Z tests/test_ssh_security.py::test_legacy_server_requires_explicit_named_algorithms_without_automatic_fallback
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.2008307Z   C:\hostedtoolcache\windows\Python\3.14.10\x64\Lib\site-packages\asyncssh\crypto\dh.py:30: CryptographyDeprecationWarning: Diffie-Hellman over finite fields (FFDH) is deprecated and support will be removed in a future release. Use a more modern key exchange algorithm.
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.2010164Z     self._pn = dh.DHParameterNumbers(p, g)
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.2010477Z
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.2011007Z tests/test_ssh_security.py::test_legacy_server_requires_explicit_named_algorithms_without_automatic_fallback
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.2013180Z   C:\hostedtoolcache\windows\Python\3.14.10\x64\Lib\site-packages\asyncssh\crypto\dh.py:43: CryptographyDeprecationWarning: Diffie-Hellman over finite fields (FFDH) is deprecated and support will be removed in a future release. Use a more modern key exchange algorithm.
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.2015111Z     peer_key = dh.DHPublicNumbers(peer_public, self._pn).public_key()
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.2015561Z
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.2015881Z -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.2016656Z =========================== short test summary info ===========================
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.2018262Z FAILED tests/test_ssh_security.py::test_oversized_or_truncated_ssh_packet_fails_without_hanging[\x00\x00\x03\xe8\x04\x00\x00\x00] - ConnectionResetError: [WinError 64] The specified network name is no longer available
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.2020287Z FAILED tests/test_ssh_security_ui.py::test_jump_compatibility_is_shown_in_plain_text_and_defaults_to_cancel - assert ([True, False] == [True, True]
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.2021321Z
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.2021643Z   At index 1 diff: False != True
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.2022018Z
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.2022419Z   Full diff: (-: missing in left side, +: extra in left side)
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.2022964Z     [
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.2023246Z         True,
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.2023526Z   -     True,
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.2023800Z   +     False,
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.2024065Z     ])
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.2024463Z 2 failed, 295 passed, 7 skipped, 2 warnings in 103.00s (0:01:43)
+tests (windows-latest, 3.14.10)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.14.10.xml	2026-11-07T16:04:46.4772037Z ##[error]Process completed with exit code 1.
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	﻿2026-11-07T16:03:09.0864102Z ##[group]Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:03:09.0864837Z [36;1mpython -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml[0m
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:03:09.0938477Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:03:09.0938832Z env:
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:03:09.0939020Z   QT_QPA_PLATFORM: windows
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:03:09.0939337Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:03:09.0939826Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:03:09.0940289Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:03:09.0940701Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:03:09.0941109Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:03:09.0941446Z ##[endgroup]
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:04:34.9266676Z .................................s...................................... [ 23%]
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:04:45.7246291Z ............................................s........................... [ 47%]
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:14.3043939Z ......ss...................................................F............ [ 71%]
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:19.0606851Z .F.............................s........................................ [ 94%]
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2519107Z ..s......s......                                                         [100%]
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2555501Z ================================== FAILURES ===================================
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2556529Z _ test_oversized_or_truncated_ssh_packet_fails_without_hanging[\x00\x00\x03\xe8\x04\x00\x00\x00] _
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2557333Z
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2557746Z trans = 0, key = 0, ov = <_overlapped.Overlapped object at 0x00000242D28D3270>
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2558321Z
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2558528Z     @staticmethod
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2558992Z     def finish_socket_func(trans, key, ov):
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2559572Z         try:
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2560059Z >           return ov.getresult()
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2560559Z                    ^^^^^^^^^^^^^^
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2561256Z E           OSError: [WinError 64] The specified network name is no longer available
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2561835Z
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2562287Z C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\asyncio\windows_events.py:462: OSError
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2562940Z
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2563315Z During handling of the above exception, another exception occurred:
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2564133Z
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2564915Z tmp_path = WindowsPath('C:/Users/runneradmin/AppData/Local/Temp/pytest-of-runneradmin/pytest-0/test_oversized_or_truncated_ss1')
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2566053Z packet = b'\x00\x00\x03\xe8\x04\x00\x00\x00'
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2566423Z
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2567009Z     @pytest.mark.parametrize('packet',[struct.pack('>I',0xffffffff)+b'\0'*4,struct.pack('>I',1000)+b'\x04\0\0\0'])
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2568261Z     async def test_oversized_or_truncated_ssh_packet_fails_without_hanging(tmp_path,packet):
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2568847Z         async def malformed(reader,writer):
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2569179Z             try:
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2569702Z                 await reader.readline();writer.write(b'SSH-2.0-local-fault-fixture\r\n'+packet);await writer.drain()
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2570375Z             finally:writer.close();await writer.wait_closed()
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2570809Z         server=await asyncio.start_server(malformed,'127.0.0.1',0)
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2571230Z         known=tmp_path/'known';known.write_text('')
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2571593Z         try:
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2571857Z             async with asyncio.timeout(3):
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2572206Z                 with pytest.raises(asyncssh.Error):
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2572731Z >                   await SSHTransport().connect('127.0.0.1','tester',port=server.sockets[0].getsockname()[1],
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2573489Z
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2573639Z tests\test_ssh_security.py:173:
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2577075Z _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2577515Z harbor_terminal\transport.py:43: in connect
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2578571Z     connection = await self._open_ssh(host, username, port=port, ***
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2579030Z harbor_terminal\transport.py:115: in _open_ssh
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2579399Z     if task in done: return await task
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2579719Z                             ^^^^^^^^^^
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2580128Z harbor_terminal\transport.py:107: in establish
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2580693Z     return await asyncssh.connect(host, connect_timeout=None, login_timeout=timeout+auth_timeout,
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2581491Z C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\site-packages\asyncssh\connection.py:9301: in connect
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2582071Z     return await asyncio.wait_for(
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2582519Z C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\asyncio\tasks.py:520: in wait_for
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2582983Z     return await fut
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2583262Z            ^^^^^^^^^
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2583732Z C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\site-packages\asyncssh\connection.py:547: in _connect
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2584745Z     await options.waiter
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2585227Z C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\asyncio\proactor_events.py:286: in _loop_reading
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2585768Z     length = fut.result()
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2586037Z              ^^^^^^^^^^^^
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2586468Z C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\asyncio\windows_events.py:803: in _poll
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2586968Z     value = callback(transferred, key, ov)
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2587325Z             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2587711Z _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2587994Z
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2588200Z trans = 0, key = 0, ov = <_overlapped.Overlapped object at 0x00000242D28D3270>
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2588528Z
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2588653Z     @staticmethod
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2588931Z     def finish_socket_func(trans, key, ov):
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2589245Z         try:
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2589495Z             return ov.getresult()
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2589815Z         except OSError as exc:
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2590175Z             if exc.winerror in (_overlapped.ERROR_NETNAME_DELETED,
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2590618Z                                 _overlapped.ERROR_OPERATION_ABORTED):
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2591019Z >               raise ConnectionResetError(*exc.args)
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2591567Z E               ConnectionResetError: [WinError 64] The specified network name is no longer available
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2591948Z
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2592266Z C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\asyncio\windows_events.py:466: ConnectionResetError
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2592911Z ____ test_jump_compatibility_is_shown_in_plain_text_and_defaults_to_cancel ____
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2593272Z
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2593740Z desktop = (<PySide6.QtWidgets.QApplication(0x242b3b0fd20) at 0x00000242B5384100>, <harbor_terminal.app.Window(0x242d8269440) at 0x00000242D34ECA80>)
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2594337Z
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2594627Z     async def test_jump_compatibility_is_shown_in_plain_text_and_defaults_to_cancel(desktop):
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2595182Z         from PySide6.QtWidgets import QLabel,QDialogButtonBox
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2595580Z         from PySide6.QtCore import Qt
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2595935Z         app,window=desktop;seen=[]
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2596237Z         def cancel():
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2596606Z             modal=app.activeModalWidget();labels=modal.findChildren(QLabel)
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2597332Z             seen.append(any('<b>jump.invalid</b>' in label.text() and label.textFormat()==Qt.TextFormat.PlainText for label in labels))
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2598448Z             seen.append(modal.findChild(QDialogButtonBox).button(QDialogButtonBox.StandardButton.Cancel).isDefault())
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2599680Z             modal.reject()
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2599989Z         QTimer.singleShot(20,cancel)
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2600427Z         assert not confirm_compatibility(dict(host='target.invalid',security={},
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2601073Z             jump=dict(host='<b>jump.invalid</b>',security=dict(ssh_strict_kex='prefer'))),window)
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2601604Z >       assert seen==[True,True] and not window.workers
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2602002Z E       assert ([True, False] == [True, True]
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2602340Z E
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2602628Z E         At index 1 diff: False != True
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2602941Z E
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2603272Z E         Full diff: (-: missing in left side, +: extra in left side)
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2603656Z E           [
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2603918Z E               True,
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2604720Z E         -     True,
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2605044Z E         +     False,
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2605292Z E           ])
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2605425Z
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2605588Z tests\test_ssh_security_ui.py:77: AssertionError
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2605974Z ============================== warnings summary ===============================
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2606599Z tests/test_ssh_security.py::test_legacy_server_requires_explicit_named_algorithms_without_automatic_fallback
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2607926Z   C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\site-packages\asyncssh\crypto\dh.py:30: CryptographyDeprecationWarning: Diffie-Hellman over finite fields (FFDH) is deprecated and support will be removed in a future release. Use a more modern key exchange algorithm.
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2609101Z     self._pn = dh.DHParameterNumbers(p, g)
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2609343Z
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2609674Z tests/test_ssh_security.py::test_legacy_server_requires_explicit_named_algorithms_without_automatic_fallback
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2611013Z   C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\site-packages\asyncssh\crypto\dh.py:43: CryptographyDeprecationWarning: Diffie-Hellman over finite fields (FFDH) is deprecated and support will be removed in a future release. Use a more modern key exchange algorithm.
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2612188Z     peer_key = dh.DHPublicNumbers(peer_public, self._pn).public_key()
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2612503Z
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2612726Z -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2613229Z =========================== short test summary info ===========================
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2614183Z FAILED tests/test_ssh_security.py::test_oversized_or_truncated_ssh_packet_fails_without_hanging[\x00\x00\x03\xe8\x04\x00\x00\x00] - ConnectionResetError: [WinError 64] The specified network name is no longer available
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2615449Z FAILED tests/test_ssh_security_ui.py::test_jump_compatibility_is_shown_in_plain_text_and_defaults_to_cancel - assert ([True, False] == [True, True]
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2616169Z
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2616434Z   At index 1 diff: False != True
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2616727Z
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2617029Z   Full diff: (-: missing in left side, +: extra in left side)
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2617420Z     [
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2617622Z         True,
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2617853Z   -     True,
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2618085Z   +     False,
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2618317Z     ])
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.2618612Z 2 failed, 295 passed, 7 skipped, 2 warnings in 138.18s (0:02:18)
+tests (windows-latest, 3.12)	Run python -m pytest -q --junitxml=artifacts/test-results-Windows-3.12.xml	2026-11-07T16:05:29.5802424Z ##[error]Process completed with exit code 1.

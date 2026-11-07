@@ -1,0 +1,29 @@
+{
+  "observed_utc": "2026-11-07T16:04:20.624823+00:00",
+  "observations": [
+    {
+      "report": "soak-0.5-final-live.json",
+      "snapshot": "soak-0.5-last-observed-at-0.7.json",
+      "sha256": "bf9691f77fdc7a1791a52d62acfdfbeee57e540b9252a70270958079a3951e7a",
+      "recorded_pid": 71745,
+      "pid_present": false,
+      "recorded_status": "running",
+      "last_elapsed_seconds": 10442.914279792,
+      "last_cycles": 51032,
+      "errors": 0,
+      "conclusion": "Restored file only; original test process absent. No completed 72-hour evidence."
+    },
+    {
+      "report": "desktop-soak-0.6-final-live.json",
+      "snapshot": "desktop-soak-0.6-last-observed-at-0.7.json",
+      "sha256": "91ca1cf67fe8f8576d0ecab36ae1bbdd32416ded9f5933ed11d284a0178da063",
+      "recorded_pid": 81151,
+      "pid_present": false,
+      "recorded_status": "running",
+      "last_elapsed_seconds": 5760.548086036004,
+      "last_cycles": 18190,
+      "errors": 0,
+      "conclusion": "Restored file only; original test process absent. No completed 72-hour evidence."
+    }
+  ]
+}

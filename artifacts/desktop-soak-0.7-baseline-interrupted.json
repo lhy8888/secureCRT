@@ -1,0 +1,199 @@
+{
+  "status": "interrupted",
+  "pid": 7179,
+  "version": "0.7.0",
+  "platform": "offscreen",
+  "started": "2026-11-07T16:04:20.882527+00:00",
+  "requested_seconds": 259200.0,
+  "elapsed_seconds": 157.95249572799958,
+  "cycles": 593,
+  "errors": 0,
+  "protocol_queries": 24,
+  "protocol_replies": 24,
+  "configuration_commits": 3,
+  "scope": "Actual Qt window + Worker + loopback SSH + flows + input lock + protocol replies + profile transactions; no physical COM or vendor comparison",
+  "samples": [
+    {
+      "threads": 4,
+      "monotonic": 3207.985811625,
+      "rss_bytes": 91258880,
+      "handles": 16,
+      "elapsed_seconds": 0.18844563899983768,
+      "cycles": 1
+    },
+    {
+      "threads": 4,
+      "monotonic": 3218.2123493,
+      "rss_bytes": 91963392,
+      "handles": 20,
+      "elapsed_seconds": 10.414980879999803,
+      "cycles": 41
+    },
+    {
+      "threads": 4,
+      "monotonic": 3228.223538445,
+      "rss_bytes": 92266496,
+      "handles": 20,
+      "elapsed_seconds": 20.426173690999804,
+      "cycles": 79
+    },
+    {
+      "threads": 4,
+      "monotonic": 3238.295540161,
+      "rss_bytes": 92413952,
+      "handles": 20,
+      "elapsed_seconds": 30.49817375399971,
+      "cycles": 117
+    },
+    {
+      "threads": 4,
+      "monotonic": 3248.552501805,
+      "rss_bytes": 92598272,
+      "handles": 20,
+      "elapsed_seconds": 40.75513711099984,
+      "cycles": 156
+    },
+    {
+      "threads": 4,
+      "monotonic": 3258.656528233,
+      "rss_bytes": 92884992,
+      "handles": 20,
+      "elapsed_seconds": 50.85916357899987,
+      "cycles": 194
+    },
+    {
+      "threads": 4,
+      "monotonic": 3268.847917614,
+      "rss_bytes": 93073408,
+      "handles": 20,
+      "elapsed_seconds": 61.05055360099959,
+      "cycles": 233
+    },
+    {
+      "threads": 4,
+      "monotonic": 3278.966063562,
+      "rss_bytes": 93257728,
+      "handles": 20,
+      "elapsed_seconds": 71.16869829699999,
+      "cycles": 271
+    },
+    {
+      "threads": 4,
+      "monotonic": 3289.037754968,
+      "rss_bytes": 93442048,
+      "handles": 20,
+      "elapsed_seconds": 81.24039058399967,
+      "cycles": 309
+    },
+    {
+      "threads": 4,
+      "monotonic": 3299.209635178,
+      "rss_bytes": 93618176,
+      "handles": 20,
+      "elapsed_seconds": 91.41226965299984,
+      "cycles": 347
+    },
+    {
+      "threads": 4,
+      "monotonic": 3309.217650917,
+      "rss_bytes": 93782016,
+      "handles": 20,
+      "elapsed_seconds": 101.42028549299994,
+      "cycles": 385
+    },
+    {
+      "threads": 4,
+      "monotonic": 3319.233452504,
+      "rss_bytes": 93945856,
+      "handles": 20,
+      "elapsed_seconds": 111.43608561599967,
+      "cycles": 422
+    },
+    {
+      "threads": 4,
+      "monotonic": 3329.275177913,
+      "rss_bytes": 94081024,
+      "handles": 20,
+      "elapsed_seconds": 121.47781238799962,
+      "cycles": 459
+    },
+    {
+      "threads": 4,
+      "monotonic": 3339.529984873,
+      "rss_bytes": 94244864,
+      "handles": 20,
+      "elapsed_seconds": 131.73261787599995,
+      "cycles": 497
+    },
+    {
+      "threads": 4,
+      "monotonic": 3349.760511828,
+      "rss_bytes": 94416896,
+      "handles": 20,
+      "elapsed_seconds": 141.96314642299967,
+      "cycles": 535
+    },
+    {
+      "threads": 4,
+      "monotonic": 3359.900290014,
+      "rss_bytes": 94564352,
+      "handles": 20,
+      "elapsed_seconds": 152.10292416799984,
+      "cycles": 572
+    }
+  ],
+  "source_hashes": {
+    "__init__.py": "ea4daa919da0f72cace802b21134392c4f5b8ce3bd059ea608b62fd4342ac815",
+    "app.py": "255c6fdaf1ca6391aa5622f976ad5f3ee4bdd8a7fab358609a7f350729a9c9b5",
+    "appearance.py": "633d5291473d4b241bf5ec7abce63bd84ea127a12ce4407da64bb1c242874063",
+    "auth_dialog.py": "2675e1d7c8d149b485b4fe99c663bd58c49f0ed6d8f0d6bed4c13e663a75b203",
+    "authentication.py": "b3e90012d563ca95bd074dd11eb5255d84948f20ff105a157f0100b00626c846",
+    "automation.py": "688bc07b0132b166688208caabfd2aa784fb4f4e89fa723b4f2acc44efbff609",
+    "batch.py": "899813670a1d8ebe9c80870f640971f496b198eff3ebf78ef9e3f580de76e5b3",
+    "commands.py": "bba31d96bf119438330bafbb278212e989d80a85d9eb488c69236e24b7bb5783",
+    "desktop.py": "22fdc22fc312ac6ac8963e6ca4ed36077e0b1f1aebb3ff50bc659926aabcd1cc",
+    "diagnostics.py": "e22c42a1e7d8b7669fbb6ae61cb0ebbf7f538f3c7f583780bffadfc8008f06b5",
+    "endpoint.py": "fbbb01888cba031901ca9dacdd2c7d7046beaf55c455c8a6e2d9af5a820e70bf",
+    "forwarding.py": "28b88606df223f22512c8fa465484ce9b7fee95dad5ba795caae647e529e67ad",
+    "hardware.py": "0fbbb4dea772a58f9cd57b79108aa7bd6a4a2cd4e4b8c7c93c351c1bb2c6c14b",
+    "host_keys.py": "7ad004caca15aad5154d9c889aa0fc9a36c67cf9483ce653865c25a08c9b0100",
+    "journal.py": "c863f8578ba1a5748e0dfe8e33241a9c085a8ecc2c926321625df3f33a50e742",
+    "key_dialogs.py": "a1524ea630365be11ebde2f17d969f9158831c28541766e1d115dada219de0f2",
+    "key_tools.py": "4182e7435fcaccb911e4ca5c4d8766bcde0277fdf8f2176a395409e19a321368",
+    "keyboard.py": "1ca6e71a9b117d83f175fe97db3ab50c7f037305d5cf84359ac82e0f068cf4c8",
+    "local_forward.py": "b35acf674ec67de1718751c1432d1b793523978013212d3c09662f2a46445622",
+    "panels.py": "a09e9190f4c0ff364d32617a9785cac205f1abbce78bec4a90cd87affe64a8a8",
+    "profile_operations.py": "2239cd2cdfc609aa746ac052363bad41233c4dd017d98c7f063908795da7eb8b",
+    "profiles.py": "6d916c1febee2ff7b2a3b92881a87f39856786de4c3f36e1f20ea00bfbbeda7a",
+    "reports.py": "71786002dbed329904f4f4bb4b2ec2bcf121ab8976005c135d80e88e4505acef",
+    "serial_config.py": "f4bf9303320d59ba83e5c69df284af3280ea60ab80ac9cc1b0e7d733f9a9891e",
+    "session.py": "690617e3e481c2c819f9e04ad3e5e3238ba45e84d1fbdab057d4c3176e28a201",
+    "session_manager.py": "04c430ddf8f1188781264b4610aafbf72d3b13a550b5eccc404a95a03bc0c4e1",
+    "session_templates.py": "157767f64b268a456ec4c74fe92d85f3de14d401ba876a19cb4d7d666067a8ce",
+    "sftp.py": "bf70482f1c192bf205e6d1b1ec8732ad078916071f9f120c051b664e1a41c183",
+    "ssh_dialogs.py": "3b372951302491a19fde0dd0a972b7dd785835066ba70bf65b229a6f78bbdd85",
+    "ssh_policy.py": "4372642a212c5d582a7e7dfbf38141ec4f4a137d7c20cd3f812ddc17afd7a862",
+    "startup.py": "1b333052d569cdbcc598d907c3dc8aaafd35f5d15f22a4b1bd7f76891824be9d",
+    "storage.py": "70f18569ac4668663575ae2e748b9e5b53fb4079aa56b0554dfe0023087bdb6c",
+    "terminal.py": "1790f144ebb717e51fc015490fca46601e95f42b034069ef0089e7b710398090",
+    "terminal_model.py": "7b080f92b341f73758b3eefe3973a33b54ab2db2e0dd39b69e777d6ff02fd08a",
+    "terminal_stream.py": "b75e8267a99bfa8149b2268086f0b59c9aa4c61bc8726780348cb428a4426a27",
+    "trace.py": "4928b54fd46fbe9ed2d776fe3fade1622ae3a04ded8033d5b2969432ea679420",
+    "transport.py": "111cfb85adecef4935d9c8fedbabe7691eb0e142e36e2e8286ec657b71fb87ef",
+    "workflow_panel.py": "6689cdb47a4cfb28f42f4411d0ecd7211bf7247d79d5264e4dffbbedc866e1bd"
+  },
+  "resources": {
+    "threads": 4,
+    "monotonic": 3359.900290014,
+    "rss_bytes": 94564352,
+    "handles": 20,
+    "elapsed_seconds": 152.10292416799984,
+    "cycles": 572
+  },
+  "final_resources": {
+    "threads": 3,
+    "monotonic": 3365.74985931,
+    "rss_bytes": 94744576,
+    "handles": 12
+  }
+}

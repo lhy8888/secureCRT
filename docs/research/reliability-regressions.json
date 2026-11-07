@@ -3,7 +3,7 @@
     "id": "R01",
     "issue": "SSH 交换恶意包",
     "check": "畸形 KEX 包、分片、取消、超长字段；协议解析失败后进程仍可用",
-    "status": "协议故障注入待做",
+    "status": "0.7有超大/截断SSH原始包和Strict KEX前额外包故障注入；受控失败后后续用例继续。完整KEX fuzz、全部分片/超长字段及厂商私有样本未验（test_ssh_security.py）。",
     "evidence": {
       "id": "73d53c4787cd",
       "release": "9.7.4 (Official)",
@@ -42,7 +42,7 @@
     "id": "R04",
     "issue": "主机公钥与证书指纹区别",
     "check": "同证书 raw-key 与 certificate 模式显示对应公钥指纹",
-    "status": "硬件密钥未实现",
+    "status": "0.7诊断分别显示原始公钥格式/指纹与协商主机签名，OpenSSH主机CA真实连接已测；证书本体指纹切换与硬件密钥仍未实现。",
     "evidence": {
       "id": "6039f180a5fe",
       "release": "9.7.3 (Official)",
@@ -94,7 +94,7 @@
     "id": "R08",
     "issue": "证书算法协商过滤",
     "check": "受控服务端返回不同算法列表，验证禁止使用未协商证书签名",
-    "status": "证书互通未实现",
+    "status": "0.7有RSA主机SHA2及认证server-sig-algs真实签名、Ed25519用户/主机证书测试；完整RSA cert-v01过滤和旧服务矩阵未验。",
     "evidence": {
       "id": "4ca322797ffa",
       "release": "9.7.1 (Official)",
@@ -263,7 +263,7 @@
     "id": "R21",
     "issue": "畸形私钥文件",
     "check": "各格式损坏/超长/加密口令错误，报类型化错误不崩溃",
-    "status": "加密OpenSSH私钥认证和图形选择已实现；畸形/超长私钥语料及全部格式未验证",
+    "status": "0.7限制显式私钥1MiB、OpenSSH bcrypt盐/轮数，恶意KDF参数解密前拒绝；错口令/私钥误粘贴有回归。全部格式损坏语料仍缺（test_key_tools.py）。",
     "evidence": {
       "id": "09252d1038ae",
       "release": "9.5.2 (Official)",
@@ -302,7 +302,7 @@
     "id": "R24",
     "issue": "Strict KEX 与完整性",
     "check": "CVE-2023-48795 场景需双方扩展协商及包序列测试",
-    "status": "协议级测试未做",
+    "status": "0.7真实双方Strict、非Strict认证前拒绝零密码、显式兼容、KEXINIT前注入合法IGNORE包被拒绝；固定2.24.1适配器，未知版本失败关闭。不是完整Terrapin攻击测试套件。",
     "evidence": {
       "id": "35c3e2bda388",
       "release": "9.5 (Beta 3)",
@@ -432,7 +432,7 @@
     "id": "R34",
     "issue": "默认算法变更与升级区分",
     "check": "新安装与升级配置分开测试，已有安全策略不被覆盖",
-    "status": "策略UI/迁移未实现",
+    "status": "0.7有逐会话算法策略、空列表推荐顺序及4→5配置迁移，显式顺序保留，旧算法不自动加入；厂商升级行为/全部历史默认迁移尚未等价（test_profiles.py/test_ssh_security.py）。",
     "evidence": {
       "id": "63baf7224251",
       "release": "9.7 (Beta 1)",

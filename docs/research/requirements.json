@@ -284,14 +284,16 @@
       "id": "F02.07",
       "domain": "认证、主机信任与凭据",
       "capability": "RSA/Ed25519/ECDSA 密钥",
-      "status": "未实现",
+      "status": "已验证子集",
       "acceptance": "生成、导入、签名、算法协商与强度策略测试",
       "priority": "P0",
       "sources": [
         "https://www.vandyke.com/products/securecrt/features.html",
         "https://www.vandyke.com/products/securecrt/faq/index.html",
         "https://www.vandyke.com/products/securecrt/new-in.html"
-      ]
+      ],
+      "implementation_note": "图形后台生成Ed25519/RSA3072或4096/ECDSA-P256或384，bcrypt128加密OpenSSH及公钥，无覆盖发布；三类真实SSH认证及RSA-SHA2签名已测。私钥检查限制大小/KDF参数；Windows ACL继承目录，非DPAPI，PPK转换及硬件密钥未做。",
+      "validation": "tests/test_key_tools.py; tests/test_ssh_security_ui.py"
     },
     {
       "id": "F02.08",
@@ -310,14 +312,16 @@
       "id": "F02.09",
       "domain": "认证、主机信任与凭据",
       "capability": "OpenSSH 用户证书",
-      "status": "未实现",
+      "status": "部分实现",
       "acceptance": "证书与私钥可分路径，验证签名算法列表与旧服务兼容",
       "priority": "P0",
       "sources": [
         "https://www.vandyke.com/products/securecrt/features.html",
         "https://www.vandyke.com/products/securecrt/faq/index.html",
         "https://www.vandyke.com/products/securecrt/new-in.html"
-      ]
+      ],
+      "implementation_note": "可分别指定一个私钥与一个OpenSSH用户证书，本机检查匹配/类型/有效期，服务器验证CA与principal；错误证书不退回裸公钥。有效/过期/错钥/错principal真实连接已测。Agent组合、完整RSA证书签名矩阵及旧服务兼容未验。",
+      "validation": "tests/test_ssh_security.py; harbor_terminal/transport.py"
     },
     {
       "id": "F02.10",
@@ -377,27 +381,31 @@
       "id": "F02.14",
       "domain": "认证、主机信任与凭据",
       "capability": "主机密钥管理界面",
-      "status": "未实现",
+      "status": "已验证子集",
       "acceptance": "可查看 SHA-256 指纹、导入导出、删除、主机别名和端口匹配",
       "priority": "P0",
       "sources": [
         "https://www.vandyke.com/products/securecrt/features.html",
         "https://www.vandyke.com/products/securecrt/faq/index.html",
         "https://www.vandyke.com/products/securecrt/new-in.html"
-      ]
+      ],
+      "implementation_note": "主机公钥库查看/导入/导出/添加/删除、别名/端口/散列模式本地匹配，SHA256指纹与信任范围需勾选核对；修订冲突拒绝覆盖，拒绝私钥输入，无网络扫描或自动信任。复杂企业公钥库仍需互通验收。",
+      "validation": "tests/test_key_tools.py; tests/test_ssh_security_ui.py"
     },
     {
       "id": "F02.15",
       "domain": "认证、主机信任与凭据",
       "capability": "OpenSSH Host CA 信任",
-      "status": "未实现",
+      "status": "已验证子集",
       "acceptance": "CA、主机 principal、有效期、吊销和异常证书均校验",
       "priority": "P0",
       "sources": [
         "https://www.vandyke.com/products/securecrt/features.html",
         "https://www.vandyke.com/products/securecrt/faq/index.html",
         "https://www.vandyke.com/products/securecrt/new-in.html"
-      ]
+      ],
+      "implementation_note": "OpenSSH @cert-authority/@revoked真实验证CA、主机principal、有效期与吊销；有效、错principal、过期、未知CA、吊销CA/主机均有连接回归。未实现X.509/CRL/OCSP或所有证书格式矩阵。",
+      "validation": "tests/test_ssh_security.py"
     },
     {
       "id": "F02.16",
@@ -515,14 +523,14 @@
         "https://www.vandyke.com/products/securecrt/faq/index.html",
         "https://www.vandyke.com/products/securecrt/new-in.html"
       ],
-      "implementation_note": "会话v4白名单仅增加认证预设/通道模式与跳板引用，兼容读取v1/v2/v3；认证回答不写配置或终端日志。命令库/流程及其捕获结果为用户显式保存的明文，不能存秘密。不宣称Python内存可擦除。",
-      "validation": "tests/test_profiles.py; tests/test_authentication.py; tests/test_jump.py"
+      "implementation_note": "会话schema5白名单新增策略与证书路径，读取1–4旧版；密码/私钥内容/认证回答不入配置，身份工具输出只有公共信息或路径。命令/流程捕获为用户明文保存，不能存秘密，不宣称Python内存擦除。",
+      "validation": "tests/test_profiles.py; tests/test_key_tools.py; tests/test_ssh_security_ui.py"
     },
     {
       "id": "F03.01",
       "domain": "密码算法与协商策略",
       "capability": "现代 AEAD/CTR 与 MAC",
-      "status": "依赖能力未验证",
+      "status": "部分实现",
       "acceptance": "明确允许集合、协商结果可观察；各算法需实际互通",
       "priority": "P0",
       "sources": [
@@ -531,13 +539,15 @@
         "https://www.vandyke.com/download/securecrt/9.5/history.txt",
         "https://www.vandyke.com/download/securecrt/9.6/history.txt",
         "https://www.vandyke.com/products/securecrt/history.txt"
-      ]
+      ],
+      "implementation_note": "新增会话级cipher/MAC精确顺序，现代默认仅从实际运行库支持的AEAD/CTR及SHA2算法筛选；真实AES128-CTR/SHA2-ETM与默认ChaCha20连接已测，完整算法/服务器矩阵未验。",
+      "validation": "tests/test_ssh_security.py; artifacts/harbor-0.7.0-ssh-diagnostics.png"
     },
     {
       "id": "F03.02",
       "domain": "密码算法与协商策略",
       "capability": "KEX 选择与排序",
-      "status": "未实现",
+      "status": "已验证子集",
       "acceptance": "覆盖现代曲线与需要的 DH 组，不静默降级",
       "priority": "P0",
       "sources": [
@@ -546,13 +556,15 @@
         "https://www.vandyke.com/download/securecrt/9.5/history.txt",
         "https://www.vandyke.com/download/securecrt/9.6/history.txt",
         "https://www.vandyke.com/products/securecrt/history.txt"
-      ]
+      ],
+      "implementation_note": "逐会话选择与排序KEX，默认现代曲线/SHA2-DH且按实际依赖能力显示，MLKEM混合可用时加入；真实Curve25519协商与默认MLKEM连接有证据，不静默加入未选算法。其余DH/服务器矩阵未验。",
+      "validation": "tests/test_ssh_security.py; artifacts/harbor-0.7.0-ssh-diagnostics.png"
     },
     {
       "id": "F03.03",
       "domain": "密码算法与协商策略",
       "capability": "SHA-2 RSA 与证书算法",
-      "status": "未实现",
+      "status": "部分实现",
       "acceptance": "验证 rsa-sha2 与 cert-v01 协商，尊重 server-sig-algs",
       "priority": "P0",
       "sources": [
@@ -561,13 +573,15 @@
         "https://www.vandyke.com/download/securecrt/9.5/history.txt",
         "https://www.vandyke.com/download/securecrt/9.6/history.txt",
         "https://www.vandyke.com/products/securecrt/history.txt"
-      ]
+      ],
+      "implementation_note": "RSA主机密钥强制rsa-sha2-256真实协商，RSA3072认证在仅允许SHA2-256服务端观测实际签名；公钥格式与签名名称分开展示。Ed25519证书连接已测，完整RSA cert-v01和旧服务矩阵未验。",
+      "validation": "tests/test_ssh_security.py; tests/test_key_tools.py"
     },
     {
       "id": "F03.04",
       "domain": "密码算法与协商策略",
       "capability": "Strict KEX/Terrapin 防护",
-      "status": "未实现",
+      "status": "已验证子集",
       "acceptance": "验证双方协商 Strict KEX；不能由库版本或安装成功推断安全",
       "priority": "P0",
       "sources": [
@@ -576,13 +590,15 @@
         "https://www.vandyke.com/download/securecrt/9.5/history.txt",
         "https://www.vandyke.com/download/securecrt/9.6/history.txt",
         "https://www.vandyke.com/products/securecrt/history.txt"
-      ]
+      ],
+      "implementation_note": "默认认证前要求Strict KEX；真实双方协商、非Strict服务器拒绝且零密码发送、显式兼容、KEXINIT前注入合法IGNORE包失败已测。AsyncSSH2.24.1元数据适配器版本固定，未知版本强制模式拒绝；非完整Terrapin攻击语料验收。",
+      "validation": "tests/test_ssh_security.py"
     },
     {
       "id": "F03.05",
       "domain": "密码算法与协商策略",
       "capability": "弱算法兼容策略",
-      "status": "未实现",
+      "status": "已验证子集",
       "acceptance": "按单会话启用并显示；不得全局自动恢复过时算法",
       "priority": "P0",
       "sources": [
@@ -591,13 +607,15 @@
         "https://www.vandyke.com/download/securecrt/9.5/history.txt",
         "https://www.vandyke.com/download/securecrt/9.6/history.txt",
         "https://www.vandyke.com/products/securecrt/history.txt"
-      ]
+      ],
+      "implementation_note": "旧算法需单会话许可且逐个显式选入，空列表仍现代默认；GUI含跳板范围提示且默认取消，批处理额外显式开关。受控仅旧算法服务器先拒绝再显式连接已测。不支持group1/RC4/MD5。",
+      "validation": "tests/test_ssh_security.py; tests/test_ssh_security_ui.py; tests/test_startup_batch.py"
     },
     {
       "id": "F03.06",
       "domain": "密码算法与协商策略",
       "capability": "重协商/Rekey",
-      "status": "未实现",
+      "status": "已验证子集",
       "acceptance": "长连接按时间/字节重协商，过程中不丢输入或死锁",
       "priority": "P0",
       "sources": [
@@ -606,13 +624,15 @@
         "https://www.vandyke.com/download/securecrt/9.5/history.txt",
         "https://www.vandyke.com/download/securecrt/9.6/history.txt",
         "https://www.vandyke.com/products/securecrt/history.txt"
-      ]
+      ],
+      "implementation_note": "字节/秒数阈值可配置；分别以4096字节与1秒触发实际NEWKEYS，512KiB二进制往返完整。长期真实设备负载、断网及重协商交叉场景未全面验收。",
+      "validation": "tests/test_ssh_security.py"
     },
     {
       "id": "F03.07",
       "domain": "密码算法与协商策略",
       "capability": "认证后压缩",
-      "status": "未实现",
+      "status": "已验证子集",
       "acceptance": "支持需要的 delayed compression，认证前不缓存未加密秘密",
       "priority": "P0",
       "sources": [
@@ -621,7 +641,9 @@
         "https://www.vandyke.com/download/securecrt/9.5/history.txt",
         "https://www.vandyke.com/download/securecrt/9.6/history.txt",
         "https://www.vandyke.com/products/securecrt/history.txt"
-      ]
+      ],
+      "implementation_note": "默认none，只允许认证后zlib@openssh.com；观测认证前未启用、真实压缩协商和二进制往返。认证前zlib策略拒绝，完整负载/服务器矩阵未验。",
+      "validation": "tests/test_ssh_security.py; harbor_terminal/ssh_policy.py"
     },
     {
       "id": "F03.08",
@@ -642,7 +664,7 @@
       "id": "F03.09",
       "domain": "密码算法与协商策略",
       "capability": "畸形 SSH/KEX 包",
-      "status": "未实现",
+      "status": "部分实现",
       "acceptance": "协议库 fuzz/故障注入验证；终端转义过滤不能替代 SSH 包校验",
       "priority": "P0",
       "sources": [
@@ -651,7 +673,9 @@
         "https://www.vandyke.com/download/securecrt/9.5/history.txt",
         "https://www.vandyke.com/download/securecrt/9.6/history.txt",
         "https://www.vandyke.com/products/securecrt/history.txt"
-      ]
+      ],
+      "implementation_note": "增加超大/截断SSH包与Strict KEX前额外包注入，验证受控失败且进程继续执行后续测试。没有完整协议fuzz语料或SecureCRT私有问题样本，不能宣称全部恶意KEX已修复。",
+      "validation": "tests/test_ssh_security.py"
     },
     {
       "id": "F03.10",
@@ -2535,7 +2559,7 @@
       "id": "F11.08",
       "domain": "日志、观察与排障",
       "capability": "SSH 诊断与算法展示",
-      "status": "未实现",
+      "status": "部分实现",
       "acceptance": "协商/失败阶段可诊断，禁止泄漏敏感包内容",
       "priority": "P1",
       "sources": [
@@ -2545,7 +2569,9 @@
         "https://www.vandyke.com/download/securecrt/8.7/history.txt",
         "https://www.vandyke.com/download/securecrt/9.1/history.txt",
         "https://www.vandyke.com/products/securecrt/history.txt"
-      ]
+      ],
+      "implementation_note": "真实协商cipher/MAC/压缩/KEX/Strict与主机签名/公钥指纹按秒刷新并可导出JSON，控制字符界面转义；仅公共元数据，认证答案不导出。完整失败阶段追踪与包级trace未做。",
+      "validation": "tests/test_ssh_security_ui.py; harbor_terminal/ssh_dialogs.py"
     },
     {
       "id": "F11.09",
@@ -2798,17 +2824,17 @@
         "https://www.vandyke.com/download/securecrt/9.6/history.txt",
         "https://www.vandyke.com/products/securecrt/history.txt"
       ],
-      "implementation_note": "0.6本地254测试通过，Linux/Windows×Python3.12/3.14远端执行及实际冻结EXE运行；新增原生文件锁、导入预览/模板/并发检查。Win10/11实机与SecureCRT逐项行为仍未验收。",
-      "validation": "tests; .github/workflows/validate.yml; artifacts/validation-0.6.md"
+      "implementation_note": "0.7云端304测试通过，原生Windows回归及冻结EXE在CI执行；Win10/11用户实机、实体COM和SecureCRT9.7.4同机对照仍未验收，不能由Server2025替代。",
+      "validation": "tests; .github/workflows/validate.yml; artifacts/validation-0.7.md"
     }
   ],
   "counts": {
-    "已验证子集": 33,
-    "依赖能力未验证": 2,
-    "部分实现": 60,
-    "未实现": 85,
+    "已验证子集": 41,
+    "依赖能力未验证": 1,
+    "部分实现": 65,
+    "未实现": 73,
     "仅关闭策略": 1,
     "安全差异": 2
   },
-  "implementation_version": "0.6.0"
+  "implementation_version": "0.7.0"
 }

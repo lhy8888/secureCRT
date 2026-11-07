@@ -1,0 +1,28 @@
+{
+  "status": "passed",
+  "mode": "inventory",
+  "platform": "Windows-2025Server-10.0.26100-SP0",
+  "started": "2026-11-07T16:12:34.875298+00:00",
+  "requested_seconds": 60,
+  "elapsed_seconds": 0.05811009999996486,
+  "port": null,
+  "baudrate": 115200,
+  "frames": 0,
+  "bytes": 0,
+  "errors": 0,
+  "inventory": [
+    {
+      "device": "COM2",
+      "description": "Communications Port (COM2)",
+      "hwid": "ACPI\\PNP0501\\2",
+      "serial_number": ""
+    }
+  ],
+  "samples": [],
+  "resources": {
+    "threads": 1,
+    "monotonic": 305.1692849,
+    "rss_bytes": 69668864,
+    "handles": 237
+  }
+}

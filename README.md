@@ -1,8 +1,19 @@
-# Harbor Terminal 0.6.0
+# Harbor Terminal 0.7.0
 
-面向 Windows 10/11 的独立 SSH / 串口桌面客户端。0.6补充会话管理、CSV/TSV导入、批量编辑、协议默认模板、克隆/重连入口及配置并发保护，保留参照SecureCRT 9.7设计的紧凑界面。已有原生Windows x64 EXE和实际测试，尚未达到SecureCRT 9.7.4全功能等价。
+面向 Windows 10/11 的独立 SSH / 串口桌面客户端。0.7增加SSH算法策略、认证前Strict KEX核验、加密身份密钥工具、主机密钥/CA管理、独立用户证书和协商诊断，保留参照SecureCRT 9.7设计的紧凑界面。尚未达到SecureCRT 9.7.4全功能等价。
 
-[0.6交付记录](docs/releases/0.6.md) · [会话管理说明](docs/session-management.md) · [验证证据](artifacts/validation-0.6.md) · [实体COM测试](docs/windows-hardware-testing.md) · [SecureCRT同机对照](docs/windows-comparison.md)
+[0.7交付记录](docs/releases/0.7.md) · [SSH安全说明](docs/ssh-security.md) · [验证证据](artifacts/validation-0.7.md) · [会话管理](docs/session-management.md) · [实体COM测试](docs/windows-hardware-testing.md) · [SecureCRT同机对照](docs/windows-comparison.md)
+
+## 0.7 SSH安全与身份
+
+- 会话选项中选择/排序KEX、cipher、MAC、主机签名及用户签名算法；空列表使用现代推荐顺序，不自动加入旧算法。
+- 默认在认证前要求Strict KEX；显式兼容需逐会话设置，连接前确认目标和跳板范围，CLI额外使用`--allow-legacy-ssh`。
+- 认证后压缩及按字节/时间重协商；真实协议测试覆盖额外包注入、非Strict拒绝、RSA-SHA2签名与不中断二进制往返。
+- “工具 → 主机密钥管理…”查看/导入/导出/删除known_hosts，SHA-256指纹、别名、端口、散列主机、主机CA及吊销；核对指纹后才能保存，不自动信任。
+- 后台生成Ed25519/RSA/ECDSA加密OpenSSH身份，不覆盖已有文件；独立私钥/用户证书路径，错误证书不退回裸公钥。
+- 当前SSH协商诊断与JSON元数据导出；会话schema5读取旧版1–4，秘密不入配置。
+
+[安全策略](artifacts/harbor-0.7.0-ssh-policy.png) · [主机密钥](artifacts/harbor-0.7.0-host-keys.png) · [信任确认](artifacts/harbor-0.7.0-host-trust-review.png) · [身份工具](artifacts/harbor-0.7.0-identity-tool.png) · [协商诊断](artifacts/harbor-0.7.0-ssh-diagnostics.png)
 
 ## 0.6会话与配置工作流
 
@@ -25,11 +36,11 @@
 - GUI支持`admin@host:2222`、`[IPv6]:port`和SSH URI预填；不自动发送，不接受URI/命令行口令。
 - `--run-flow flow.json --output new-result.json`无界面执行SSH密钥/默认Agent或Serial流程；CLI未实现交互MFA/私钥口令输入。仅通道SSH不打开Shell，可用SFTP/隧道。
 
-183项能力中仍有85项未实现，33项已测子集和60项部分实现也不表示完整模块已完成。实际Windows 10/11、实体COM与长期对照按真实报告验收。
+183项能力中仍有73项未实现，41项已测子集和65项部分实现也不表示完整模块已完成。实际Windows 10/11、实体COM与长期对照按真实报告验收。
 
 完整规格见 [历代累积功能审计](docs/research/README.md)：32 个系列、314 个发布分节、4294 条历史 bullet、183 项能力/验收。每项实现与缺口记录在 [功能矩阵](docs/research/feature-matrix.md)，本次界面变更见 [0.4.1 记录](docs/releases/0.4.1.md)，连接能力见 [0.4](docs/releases/0.4.md) 及 [0.3](docs/releases/0.3.md)。参考公开界面布局，未包含 SecureCRT 代码或品牌素材，工具栏图标独立绘制。
 
-![0.6经典桌面布局，本地SSH/PTY测试数据](artifacts/harbor-0.6.0-terminal.png)
+![0.7经典桌面布局，本地SSH/PTY测试数据](artifacts/harbor-0.7.0-terminal.png)
 
 ## 界面与字体
 
@@ -74,7 +85,7 @@ py -3.14 -m venv .venv
 
 按Alt+Q或点击工具栏快速连接图标，在弹窗填写SSH主机、端口、用户名和本次密码；私钥文件和本次口令在“会话选项 → SSH / 身份”中选择。连接前通过受信任渠道核实主机公钥指纹，再使用 OpenSSH 格式的 `known_hosts` 文件。非默认端口条目为 `[host]:port`。`ssh-keyscan` 只能收集公钥，不能证明可信。没有忽略校验开关。
 
-密码、私钥口令与私钥内容不写入会话配置或诊断日志；只允许保存私钥路径。Python 内存中的秘密副本不能保证擦除。配置v4可读取旧v1/v2/v3文件，读取旧文件时不自动改写；v4增加认证预设与仅通道模式，跳板仍只保存名称引用，不保存跳板密码。
+密码、私钥口令与私钥内容不写入会话配置或诊断日志；只保存身份/证书路径及安全策略等元数据。Python内存中的秘密副本不能保证擦除。配置schema5读取旧1–4文件，读取时不自动改写；跳板只保存名称引用，不保存跳板密码。
 
 使用跳板时，先保存一个独立SSH跳板会话，再加载目标会话，在“会话选项 → SSH / 跳板”中选择跳板并输入本次跳板密码/口令。目标密码在快速连接弹窗输入；两端各用自己的known_hosts。当前拒绝缺失引用和嵌套跳板。连接后的“传输 → SFTP文件”和“工具 → 会话日志 / SSH隧道”固定绑定打开它们的会话，切换标签不会转向其他连接。
 
@@ -103,7 +114,7 @@ QT_QPA_PLATFORM=offscreen /workspace/securecrt-dev-venv/bin/python scripts/captu
 
 运行截图脚本前，修改源码后需重新执行 `python -m pip install --no-deps .`，脚本使用安装后的包。本地真实SSH服务验证加密收发、密钥拒绝、私钥认证、窗口变化、跳板、SFTP、三类转发及Qt输入链路；Linux PTY验证串口字节流。截图均来自生成测试数据，不是真实网络设备或Windows界面。
 
-工具截图：[SFTP](artifacts/harbor-0.6.0-sftp.png) · [SSH隧道](artifacts/harbor-0.6.0-tunnels.png) · [会话日志](artifacts/harbor-0.6.0-log.png) · [串口Hex](artifacts/harbor-0.6.0-hex.png)。复查结果见 [本轮验证](artifacts/validation-0.6.md)。
+工具截图：[SFTP](artifacts/harbor-0.7.0-sftp.png) · [SSH隧道](artifacts/harbor-0.7.0-tunnels.png) · [会话日志](artifacts/harbor-0.7.0-log.png) · [串口Hex](artifacts/harbor-0.7.0-hex.png)。复查结果见 [本轮验证](artifacts/validation-0.7.md)。
 
 ## 实现边界
 

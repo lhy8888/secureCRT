@@ -1,12 +1,12 @@
 # SecureCRT 9.7.4 累积功能基线与实现矩阵
 
-目标平台：Windows 10/11。当前实现版本：0.6.0。
+目标平台：Windows 10/11。当前实现版本：0.7.0。
 
 结合完整官方历史、功能表、FAQ 和脚本资料。“已验证子集”只表示列出的平台/场景证据，不能扩大为全部Windows设备或与SecureCRT等价。验收条件保持为目标规格，旁列实际实现与限制。
 
-[调研总览](README.md) · [历史覆盖](release-coverage.md) · [可靠性场景](reliability-regressions.md) · [0.6 交付记录](../releases/0.6.md)
+[调研总览](README.md) · [历史覆盖](release-coverage.md) · [可靠性场景](reliability-regressions.md) · [0.7 交付记录](../releases/0.7.md)
 
-183 项能力中，未实现 85 项；没有整体产品等价性验收。
+183 项能力中，未实现 73 项；没有整体产品等价性验收。
 
 ## 1. 连接与协议
 
@@ -41,15 +41,15 @@
 | F02.04 | 键盘交互/MFA | 已验证子集 | 真实SSH多轮多提示认证与Qt应答；保留LF、按echo位隐藏输入，跳板/目标分别请求；90秒提示期限、单次UUID回复和轮次/大小上限。取消不回退密码。外部硬件MFA未测。<br>证据：[tests/test_authentication.py](../../tests/test_authentication.py) | 多轮 challenge、多条提示、echo 标记、内嵌 LF 与超时正确 |
 | F02.05 | 认证顺序与跳过方法 | 部分实现 | 可保存auto（公钥优先）、密码优先、交互优先、仅公钥、仅交互的固定顺序预设；没有任意方法排序/GSSAPI。<br>证据：[tests/test_authentication.py](../../tests/test_authentication.py); [tests/test_profiles.py](../../tests/test_profiles.py) | 可选择公钥、交互、密码等顺序；取消不继续猜测认证 |
 | F02.06 | GSSAPI/Kerberos 与 SPN | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 域环境单点登录、服务主体、MIC 和 secured KEX 单独验证 |
-| F02.07 | RSA/Ed25519/ECDSA 密钥 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 生成、导入、签名、算法协商与强度策略测试 |
+| F02.07 | RSA/Ed25519/ECDSA 密钥 | 已验证子集 | 图形后台生成Ed25519/RSA3072或4096/ECDSA-P256或384，bcrypt128加密OpenSSH及公钥，无覆盖发布；三类真实SSH认证及RSA-SHA2签名已测。私钥检查限制大小/KDF参数；Windows ACL继承目录，非DPAPI，PPK转换及硬件密钥未做。<br>证据：[tests/test_key_tools.py](../../tests/test_key_tools.py); [tests/test_ssh_security_ui.py](../../tests/test_ssh_security_ui.py) | 生成、导入、签名、算法协商与强度策略测试 |
 | F02.08 | PPK/PPK3 导入 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 口令、证书键与格式版本识别；畸形文件不导致崩溃 |
-| F02.09 | OpenSSH 用户证书 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 证书与私钥可分路径，验证签名算法列表与旧服务兼容 |
+| F02.09 | OpenSSH 用户证书 | 部分实现 | 可分别指定一个私钥与一个OpenSSH用户证书，本机检查匹配/类型/有效期，服务器验证CA与principal；错误证书不退回裸公钥。有效/过期/错钥/错principal真实连接已测。Agent组合、完整RSA证书签名矩阵及旧服务兼容未验。<br>证据：[tests/test_ssh_security.py](../../tests/test_ssh_security.py); [harbor_terminal/transport.py](../../harbor_terminal/transport.py) | 证书与私钥可分路径，验证签名算法列表与旧服务兼容 |
 | F02.10 | Teleport 证书工作流 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 证书轮换、短期有效期、分离路径及失效提示 |
 | F02.11 | X.509/PKCS#12 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 证书链、有效期、私钥匹配和错误口令处理 |
 | F02.12 | PKCS#11/CAPI/PIV/CAC | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 多智能卡、PIN 取消、卡移除、raw key 与证书公钥指纹区别 |
 | F02.13 | 主机密钥严格校验 | 已验证子集 | 未知/变更密钥拒绝；跳板与目标分别核验已存在的known_hosts文件。没有自动信任或跳过校验选项；证书/CA及密钥管理UI尚未实现。<br>证据：[tests/test_transport.py::test_changed_key_rejected](../../tests/test_transport.py); [tests/test_jump.py::test_untrusted_key_on_either_hop_is_rejected](../../tests/test_jump.py) | 未知与变更密钥拒绝；必须先独立核验 |
-| F02.14 | 主机密钥管理界面 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 可查看 SHA-256 指纹、导入导出、删除、主机别名和端口匹配 |
-| F02.15 | OpenSSH Host CA 信任 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | CA、主机 principal、有效期、吊销和异常证书均校验 |
+| F02.14 | 主机密钥管理界面 | 已验证子集 | 主机公钥库查看/导入/导出/添加/删除、别名/端口/散列模式本地匹配，SHA256指纹与信任范围需勾选核对；修订冲突拒绝覆盖，拒绝私钥输入，无网络扫描或自动信任。复杂企业公钥库仍需互通验收。<br>证据：[tests/test_key_tools.py](../../tests/test_key_tools.py); [tests/test_ssh_security_ui.py](../../tests/test_ssh_security_ui.py) | 可查看 SHA-256 指纹、导入导出、删除、主机别名和端口匹配 |
+| F02.15 | OpenSSH Host CA 信任 | 已验证子集 | OpenSSH @cert-authority/@revoked真实验证CA、主机principal、有效期与吊销；有效、错principal、过期、未知CA、吊销CA/主机均有连接回归。未实现X.509/CRL/OCSP或所有证书格式矩阵。<br>证据：[tests/test_ssh_security.py](../../tests/test_ssh_security.py) | CA、主机 principal、有效期、吊销和异常证书均校验 |
 | F02.16 | X.509 主机证书校验 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 链可信不等同任意主机可信；主机身份与有效期核实 |
 | F02.17 | Agent 生命周期管理 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 显式加/删/预载密钥；退出与锁定策略独立于连接 |
 | F02.18 | Agent 转发 | 仅关闭策略 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 默认关闭，逐会话显式授权，服务端滥用边界可见 |
@@ -58,7 +58,7 @@
 | F02.21 | 个人数据与会话配置分离 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 共享配置不能包含口令、私钥口令和敏感登录脚本 |
 | F02.22 | 配置口令与加密迁移 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 强 KDF、唯一盐、认证加密、迁移回滚及坏口令不覆盖数据 |
 | F02.23 | 凭据发送到按钮/命令/登录动作 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 只按明确目标发送，操作可取消，不记录秘密 |
-| F02.24 | 秘密不落配置或诊断日志 | 已验证子集 | 会话v4白名单仅增加认证预设/通道模式与跳板引用，兼容读取v1/v2/v3；认证回答不写配置或终端日志。命令库/流程及其捕获结果为用户显式保存的明文，不能存秘密。不宣称Python内存可擦除。<br>证据：[tests/test_profiles.py](../../tests/test_profiles.py); [tests/test_authentication.py](../../tests/test_authentication.py); [tests/test_jump.py](../../tests/test_jump.py) | 持久化字段白名单拒绝密码；不宣称 Python 内存可可靠擦除 |
+| F02.24 | 秘密不落配置或诊断日志 | 已验证子集 | 会话schema5白名单新增策略与证书路径，读取1–4旧版；密码/私钥内容/认证回答不入配置，身份工具输出只有公共信息或路径。命令/流程捕获为用户明文保存，不能存秘密，不宣称Python内存擦除。<br>证据：[tests/test_profiles.py](../../tests/test_profiles.py); [tests/test_key_tools.py](../../tests/test_key_tools.py); [tests/test_ssh_security_ui.py](../../tests/test_ssh_security_ui.py) | 持久化字段白名单拒绝密码；不宣称 Python 内存可可靠擦除 |
 
 ## 3. 密码算法与协商策略
 
@@ -66,15 +66,15 @@
 
 | ID | 能力/范围 | Harbor 状态 | 实现与限制 | 目标验收条件 |
 |---|---|---|---|---|
-| F03.01 | 现代 AEAD/CTR 与 MAC | 依赖能力未验证 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 明确允许集合、协商结果可观察；各算法需实际互通 |
-| F03.02 | KEX 选择与排序 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 覆盖现代曲线与需要的 DH 组，不静默降级 |
-| F03.03 | SHA-2 RSA 与证书算法 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 验证 rsa-sha2 与 cert-v01 协商，尊重 server-sig-algs |
-| F03.04 | Strict KEX/Terrapin 防护 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 验证双方协商 Strict KEX；不能由库版本或安装成功推断安全 |
-| F03.05 | 弱算法兼容策略 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 按单会话启用并显示；不得全局自动恢复过时算法 |
-| F03.06 | 重协商/Rekey | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 长连接按时间/字节重协商，过程中不丢输入或死锁 |
-| F03.07 | 认证后压缩 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 支持需要的 delayed compression，认证前不缓存未加密秘密 |
+| F03.01 | 现代 AEAD/CTR 与 MAC | 部分实现 | 新增会话级cipher/MAC精确顺序，现代默认仅从实际运行库支持的AEAD/CTR及SHA2算法筛选；真实AES128-CTR/SHA2-ETM与默认ChaCha20连接已测，完整算法/服务器矩阵未验。<br>证据：[tests/test_ssh_security.py](../../tests/test_ssh_security.py); [artifacts/harbor-0.7.0-ssh-diagnostics.png](../../artifacts/harbor-0.7.0-ssh-diagnostics.png) | 明确允许集合、协商结果可观察；各算法需实际互通 |
+| F03.02 | KEX 选择与排序 | 已验证子集 | 逐会话选择与排序KEX，默认现代曲线/SHA2-DH且按实际依赖能力显示，MLKEM混合可用时加入；真实Curve25519协商与默认MLKEM连接有证据，不静默加入未选算法。其余DH/服务器矩阵未验。<br>证据：[tests/test_ssh_security.py](../../tests/test_ssh_security.py); [artifacts/harbor-0.7.0-ssh-diagnostics.png](../../artifacts/harbor-0.7.0-ssh-diagnostics.png) | 覆盖现代曲线与需要的 DH 组，不静默降级 |
+| F03.03 | SHA-2 RSA 与证书算法 | 部分实现 | RSA主机密钥强制rsa-sha2-256真实协商，RSA3072认证在仅允许SHA2-256服务端观测实际签名；公钥格式与签名名称分开展示。Ed25519证书连接已测，完整RSA cert-v01和旧服务矩阵未验。<br>证据：[tests/test_ssh_security.py](../../tests/test_ssh_security.py); [tests/test_key_tools.py](../../tests/test_key_tools.py) | 验证 rsa-sha2 与 cert-v01 协商，尊重 server-sig-algs |
+| F03.04 | Strict KEX/Terrapin 防护 | 已验证子集 | 默认认证前要求Strict KEX；真实双方协商、非Strict服务器拒绝且零密码发送、显式兼容、KEXINIT前注入合法IGNORE包失败已测。AsyncSSH2.24.1元数据适配器版本固定，未知版本强制模式拒绝；非完整Terrapin攻击语料验收。<br>证据：[tests/test_ssh_security.py](../../tests/test_ssh_security.py) | 验证双方协商 Strict KEX；不能由库版本或安装成功推断安全 |
+| F03.05 | 弱算法兼容策略 | 已验证子集 | 旧算法需单会话许可且逐个显式选入，空列表仍现代默认；GUI含跳板范围提示且默认取消，批处理额外显式开关。受控仅旧算法服务器先拒绝再显式连接已测。不支持group1/RC4/MD5。<br>证据：[tests/test_ssh_security.py](../../tests/test_ssh_security.py); [tests/test_ssh_security_ui.py](../../tests/test_ssh_security_ui.py); [tests/test_startup_batch.py](../../tests/test_startup_batch.py) | 按单会话启用并显示；不得全局自动恢复过时算法 |
+| F03.06 | 重协商/Rekey | 已验证子集 | 字节/秒数阈值可配置；分别以4096字节与1秒触发实际NEWKEYS，512KiB二进制往返完整。长期真实设备负载、断网及重协商交叉场景未全面验收。<br>证据：[tests/test_ssh_security.py](../../tests/test_ssh_security.py) | 长连接按时间/字节重协商，过程中不丢输入或死锁 |
+| F03.07 | 认证后压缩 | 已验证子集 | 默认none，只允许认证后zlib@openssh.com；观测认证前未启用、真实压缩协商和二进制往返。认证前zlib策略拒绝，完整负载/服务器矩阵未验。<br>证据：[tests/test_ssh_security.py](../../tests/test_ssh_security.py); [harbor_terminal/ssh_policy.py](../../harbor_terminal/ssh_policy.py) | 支持需要的 delayed compression，认证前不缓存未加密秘密 |
 | F03.08 | FIPS 工作模式 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 需明确经验证模块及适用平台；算法选择不等同 FIPS 认证 |
-| F03.09 | 畸形 SSH/KEX 包 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 协议库 fuzz/故障注入验证；终端转义过滤不能替代 SSH 包校验 |
+| F03.09 | 畸形 SSH/KEX 包 | 部分实现 | 增加超大/截断SSH包与Strict KEX前额外包注入，验证受控失败且进程继续执行后续测试。没有完整协议fuzz语料或SecureCRT私有问题样本，不能宣称全部恶意KEX已修复。<br>证据：[tests/test_ssh_security.py](../../tests/test_ssh_security.py) | 协议库 fuzz/故障注入验证；终端转义过滤不能替代 SSH 包校验 |
 | F03.10 | SSH1 兼容记录 | 安全差异 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 列入差异清单，但新安全客户端默认不提供 SSH1 |
 
 ## 4. 代理、跳板与转发
@@ -251,7 +251,7 @@
 | F11.05 | 跨日轮转和大小限制 | 部分实现 | 大小/段数限制、exclusive创建不覆盖旧段、队列满与I/O错误停止日志；无跨日轮转。<br>证据：[tests/test_journal.py](../../tests/test_journal.py) | 午夜、休眠跨日、磁盘满、并发重名处理 |
 | F11.06 | 暂停/继续同一日志 | 已验证子集 | 暂停/继续同一文件，间隙有标记，解码器不跨间隙误拼字符；真实PTY流程有测试。<br>证据：[tests/test_journal.py](../../tests/test_journal.py); [tests/test_service_panels.py](../../tests/test_service_panels.py) | 9.7 行为单列，恢复不会静默换文件或重复内容 |
 | F11.07 | 日志脱敏与凭据排除 | 部分实现 | 默认RX，TX显式选择，认证选项不进入日志且控制字符转义；远端输出仍可能含秘密，无通用脱敏。<br>证据：[tests/test_journal.py](../../tests/test_journal.py) | 不默认记录用户输入、认证挑战响应和脚本秘密 |
-| F11.08 | SSH 诊断与算法展示 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 协商/失败阶段可诊断，禁止泄漏敏感包内容 |
+| F11.08 | SSH 诊断与算法展示 | 部分实现 | 真实协商cipher/MAC/压缩/KEX/Strict与主机签名/公钥指纹按秒刷新并可导出JSON，控制字符界面转义；仅公共元数据，认证答案不导出。完整失败阶段追踪与包级trace未做。<br>证据：[tests/test_ssh_security_ui.py](../../tests/test_ssh_security_ui.py); [harbor_terminal/ssh_dialogs.py](../../harbor_terminal/ssh_dialogs.py) | 协商/失败阶段可诊断，禁止泄漏敏感包内容 |
 | F11.09 | Hex 排障窗口 | 已验证子集 | 新增固定绑定串口会话的Hex工具，限定保留量、原始ASCII安全显示、TX/RX区分与偏移。<br>证据：[tests/test_trace.py](../../tests/test_trace.py); [tests/test_service_panels.py](../../tests/test_service_panels.py) | 区分接收/发送、会话与时间，限制保留量 |
 | F11.10 | 正则/关键词/临时高亮 | 部分实现 | 查找词持续字面高亮；无正则、多关键词样式及保存的关键词列表。<br>证据：[tests/test_terminal_widget.py](../../tests/test_terminal_widget.py) | 匹配范围、大小写、优先级、颜色属性及计算预算 |
 | F11.11 | 活动/静默通知与音效 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 阈值、蜂鸣/音频、后台通知可设置 |
@@ -273,18 +273,18 @@
 | F12.09 | 企业策略禁用开关 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 可控制脚本、明文传输、转发、打印、TFTP、自动登录和凭据保存 |
 | F12.10 | 依赖 SBOM 与供应链维护 | 部分实现 | 21个Python发行包锁版本；Windows包带发行包/许可证文件与哈希、Python许可和构建提交号，非完整原生DLL SBOM。签名与公告治理未实现。<br>证据：[scripts/collect_licenses.py](../../scripts/collect_licenses.py); [scripts/build-windows.ps1](../../scripts/build-windows.ps1) | 版本、许可证、安全公告与签名验证纳入发布 |
 | F12.11 | 长期稳定性与故障注入 | 部分实现 | 保留0.5传输/PTY持续运行，独立0.6 Qt/Worker/SSH/流程/输入锁/应答/配置持续测试已启动；两者各自保存源码哈希与实际时长，均未完成72小时。无实体COM或SecureCRT长期对照结论。<br>证据：[scripts/soak.py](../../scripts/soak.py); [scripts/soak_desktop.py](../../scripts/soak_desktop.py); [artifacts/validation-0.6.md](../../artifacts/validation-0.6.md) | 24/72小时、资源趋势、多窗口同时关闭、网断与睡眠恢复 |
-| F12.12 | 兼容性与回归基线 | 部分实现 | 0.6本地254测试通过，Linux/Windows×Python3.12/3.14远端执行及实际冻结EXE运行；新增原生文件锁、导入预览/模板/并发检查。Win10/11实机与SecureCRT逐项行为仍未验收。<br>证据：[tests](../../tests); [.github/workflows/validate.yml](../../.github/workflows/validate.yml); [artifacts/validation-0.6.md](../../artifacts/validation-0.6.md) | Win10/11、SSH 服务矩阵、串口适配器与终端回放留原始结果 |
+| F12.12 | 兼容性与回归基线 | 部分实现 | 0.7云端304测试通过，原生Windows回归及冻结EXE在CI执行；Win10/11用户实机、实体COM和SecureCRT9.7.4同机对照仍未验收，不能由Server2025替代。<br>证据：[tests](../../tests); [.github/workflows/validate.yml](../../.github/workflows/validate.yml); [artifacts/validation-0.7.md](../../artifacts/validation-0.7.md) | Win10/11、SSH 服务矩阵、串口适配器与终端回放留原始结果 |
 
 ## 状态统计
 
-- 已验证子集：33 项。
-- 依赖能力未验证：2 项。
-- 部分实现：60 项。
-- 未实现：85 项。
+- 已验证子集：41 项。
+- 依赖能力未验证：1 项。
+- 部分实现：65 项。
+- 未实现：73 项。
 - 仅关闭策略：1 项。
 - 安全差异：2 项。
 
-原始0.1调研时为163项未实现。0.2补终端/串口，0.3补SFTP/日志/Hex，0.4补单级跳板/转发，0.4.1重做界面/字体，0.5补MFA/命令与JSON流程及原生Windows包，0.6补会话导入/批量/模板/并发与输入锁；仍不能据子集测试宣称完整模块已经完成。
+原始0.1调研时为163项未实现。0.2补终端/串口，0.3补SFTP/日志/Hex，0.4补单级跳板/转发，0.4.1重做界面/字体，0.5补MFA/命令与JSON流程及原生Windows包，0.6补会话导入/批量/模板/并发与输入锁，0.7补SSH策略/证书/主机CA与身份工具；仍不能据子集测试宣称完整模块已经完成。
 
-后续仍包括证书/凭据库、完整脚本对象、传输/日志高级功能、多级跳板/代理、布局快照/配置迁移、Windows 10/11实机、实体硬件及长期对照。
+后续仍包括完整证书/硬件密钥与凭据库、完整脚本对象、传输/日志高级功能、多级跳板/代理、布局快照/配置迁移、Windows 10/11实机、实体硬件及长期对照。
 百万行历史、横向重排、完整仿真/鼠标协议、原生Windows IME/DPI仍未验收。历史中的弱协议/命令行秘密/自动信任不会作为安全默认值。

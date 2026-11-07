@@ -8,3 +8,4 @@ dist/
 *.spec
 artifacts/*-live.json
 artifacts/*.samples.jsonl
+artifacts/*-process.log

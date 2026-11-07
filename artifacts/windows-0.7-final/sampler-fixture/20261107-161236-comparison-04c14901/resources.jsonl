@@ -1,0 +1,2 @@
+{"utc":"2026-11-07T16:12:37.0033116Z","process_name":"HarborTerminal","process_id":8328,"working_set_bytes":104861696,"handles":657,"private_bytes":55144448,"cpu_total_ms":500.0,"elapsed_seconds":0.0040771,"threads":7}
+{"utc":"2026-11-07T16:12:38.0248006Z","process_name":"HarborTerminal","process_id":8328,"working_set_bytes":104861696,"handles":657,"private_bytes":55144448,"cpu_total_ms":531.25,"elapsed_seconds":1.0260929,"threads":7}
