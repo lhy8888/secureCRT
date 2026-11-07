@@ -1,12 +1,12 @@
 # SecureCRT 9.7.4 累积功能基线与实现矩阵
 
-目标平台：Windows 10/11。当前实现版本：0.7.0。
+目标平台：Windows 10/11。当前实现版本：0.8.0。
 
 结合完整官方历史、功能表、FAQ 和脚本资料。“已验证子集”只表示列出的平台/场景证据，不能扩大为全部Windows设备或与SecureCRT等价。验收条件保持为目标规格，旁列实际实现与限制。
 
-[调研总览](README.md) · [历史覆盖](release-coverage.md) · [可靠性场景](reliability-regressions.md) · [0.7 交付记录](../releases/0.7.md)
+[调研总览](README.md) · [历史覆盖](release-coverage.md) · [可靠性场景](reliability-regressions.md) · [0.8 交付记录](../releases/0.8.md)
 
-183 项能力中，未实现 73 项；没有整体产品等价性验收。
+183 项能力中，未实现 67 项；没有整体产品等价性验收。
 
 ## 1. 连接与协议
 
@@ -58,7 +58,7 @@
 | F02.21 | 个人数据与会话配置分离 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 共享配置不能包含口令、私钥口令和敏感登录脚本 |
 | F02.22 | 配置口令与加密迁移 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 强 KDF、唯一盐、认证加密、迁移回滚及坏口令不覆盖数据 |
 | F02.23 | 凭据发送到按钮/命令/登录动作 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 只按明确目标发送，操作可取消，不记录秘密 |
-| F02.24 | 秘密不落配置或诊断日志 | 已验证子集 | 会话schema5白名单新增策略与证书路径，读取1–4旧版；密码/私钥内容/认证回答不入配置，身份工具输出只有公共信息或路径。命令/流程捕获为用户明文保存，不能存秘密，不宣称Python内存擦除。<br>证据：[tests/test_profiles.py](../../tests/test_profiles.py); [tests/test_key_tools.py](../../tests/test_key_tools.py); [tests/test_ssh_security_ui.py](../../tests/test_ssh_security_ui.py) | 持久化字段白名单拒绝密码；不宣称 Python 内存可可靠擦除 |
+| F02.24 | 秘密不落配置或诊断日志 | 已验证子集 | schema6新增输入策略，读取旧1–5版；密码/私钥内容/认证回答不入配置。ASCII文件及捕获为用户选择的明文，不能存秘密；不宣称Python内存擦除。<br>证据：[tests/test_profiles.py](../../tests/test_profiles.py); [tests/test_input_ui.py](../../tests/test_input_ui.py); [tests/test_ssh_security_ui.py](../../tests/test_ssh_security_ui.py) | 持久化字段白名单拒绝密码；不宣称 Python 内存可可靠擦除 |
 
 ## 3. 密码算法与协商策略
 
@@ -122,7 +122,7 @@
 | F05.19 | 有界控制序列解析 | 已验证子集 | 除CSI/控制串限长外，保存光标栈限制16项、组合字符限制32码点、每次feed估算操作预算20万；异常停止会话。不是通用CPU/内存隔离。<br>证据：[tests/test_terminal_stream.py](../../tests/test_terminal_stream.py); [tests/test_terminal_model.py](../../tests/test_terminal_model.py); [tests/test_ui.py](../../tests/test_ui.py) | 未结束控制串不累计，CSI 限长，异常关闭连接 |
 | F05.20 | DCS/图形/终端扩展差异 | 安全差异 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 记录当前全部丢弃的兼容性损失，不算全 Xterm 支持 |
 | F05.21 | 光标形状、闪烁与可访问性 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 本地选择与远端控制状态一致，屏幕阅读器能跟踪 |
-| F05.22 | 滚动清除策略 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 区分清屏/清历史，允许保留历史策略 |
+| F05.22 | 滚动清除策略 | 已验证子集 | 本地清屏/清历史分别操作；远端ED2保留历史，ED3及RIS按会话允许/保留策略处理。主/备用屏幕及历史保留有回归；仍限2000行，不代表百万行能力。<br>证据：[tests/test_input_ui.py](../../tests/test_input_ui.py); [harbor_terminal/terminal_model.py](../../harbor_terminal/terminal_model.py) | 区分清屏/清历史，允许保留历史策略 |
 | F05.23 | 字体/缩放/DPI/行间距 | 部分实现 | 默认优先Consolas11pt，界面Segoe UI9pt；按已安装等宽字体回退。字体/字号选择独立保存并应用所有标签，按真实advance绘制，调整字格/PTY；Ctrl+滚轮临时缩放当前标签。Windows高DPI/多显示器和可配置行距尚未验收。<br>证据：[tests/test_desktop.py::test_font_and_color_changes_preserve_screen_and_resize_real_ssh](../../tests/test_desktop.py); [scripts/capture_services.py](../../scripts/capture_services.py) | 多显示器切换、125%–300%、缩放后光标与行列一致 |
 | F05.24 | 界面深浅色与会话主题 | 部分实现 | 实现全局经典浅色/深色界面及黑底/浅色/深蓝终端，独立显示偏好存储；已采集两种UI主题并验证配色变化保持屏幕内容。逐会话主题、完整系统跟随和Windows原生验证待做。<br>证据：[tests/test_desktop.py](../../tests/test_desktop.py); [scripts/capture_services.py](../../scripts/capture_services.py) | 系统主题和自定义会话主题互不错误覆盖 |
 
@@ -135,7 +135,7 @@
 | F06.01 | 逐会话键盘映射 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 任意组合键映射字符串/菜单/命令，编辑器可导出 |
 | F06.02 | Xterm216+/R6/VT 键盘模式 | 部分实现 | 支持普通/应用光标、数字小键盘模式与常用 xterm 修饰键；未实现完整 Xterm216+/R6/VT 键盘配置。<br>证据：[tests/test_keyboard.py](../../tests/test_keyboard.py); [tests/test_terminal_model.py::test_application_keypad_mode_switches_from_escape_sequences](../../tests/test_terminal_model.py) | 应用光标/数字小键盘、修饰键和模式切换 |
 | F06.03 | F1–F24/Home/End/Insert/Delete | 部分实现 | F1–F12、Home/End/Insert/Delete/PageUp/PageDown、方向键和修饰键已有编码；F13–F24 和图形键映射待实现。<br>证据：[tests/test_keyboard.py](../../tests/test_keyboard.py); [tests/test_terminal_widget.py](../../tests/test_terminal_widget.py) | 修饰键、功能键在目标终端编码一致 |
-| F06.04 | Emacs Alt Meta | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | Alt/AltGr 与国际键盘区别，不能吞掉输入法 |
+| F06.04 | Emacs Alt Meta | 部分实现 | 逐会话ESC Meta或仅布局文本，Qt可打印Ctrl+Alt/GroupSwitch作为AltGr，IME提交独立；实际Qt合成事件已测。应用菜单快捷键仍优先，真实国际键盘/输入法布局矩阵未验。<br>证据：[tests/test_input_ui.py](../../tests/test_input_ui.py); [harbor_terminal/terminal.py](../../harbor_terminal/terminal.py) | Alt/AltGr 与国际键盘区别，不能吞掉输入法 |
 | F06.05 | 鼠标跟踪与滚轮 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 远端 mouse reporting 与 Shift 本地操作切换 |
 | F06.06 | 字符/词/行/矩形选择 | 部分实现 | 网格行内/跨行拖选、CJK stub 选择与普通复制；词/矩形选择和自动复制尚未实现。<br>证据：[tests/test_terminal_widget.py::test_wide_character_copy_and_literal_search_do_not_rewrite_output](../../tests/test_terminal_widget.py) | 宽字符、末尾换行、自动复制和鼠标拖选一致 |
 | F06.07 | ANSI 格式复制 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 普通文本与带色复制分开，字体和颜色可信 |
@@ -143,9 +143,9 @@
 | F06.09 | 粘贴预览与编辑 | 已验证子集 | 多行确认框可编辑并调整大小，编辑后重新校验控制字符/大小；取消不发送。换行策略仍为固定规则。<br>证据：[tests/test_terminal_widget.py::test_edited_paste_is_revalidated_and_remote_bracket_mode_is_honored](../../tests/test_terminal_widget.py) | 确认框可以编辑内容、调整大小并选择换行策略 |
 | F06.10 | Bracketed Paste | 已验证子集 | 仅在远端启用2004模式时包裹粘贴，拒绝ESC/C1控制字符与过大数据；有编码/终止符回归。<br>证据：[tests/test_keyboard.py](../../tests/test_keyboard.py); [tests/test_terminal_widget.py](../../tests/test_terminal_widget.py) | 只在远端已启用模式时包裹；内部粘贴终止符不能逃逸 |
 | F06.11 | 右键/中键/Shift-Insert 粘贴 | 部分实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 所有入口都经过相同检查，无默认菜单旁路 |
-| F06.12 | 逐字/逐行发送延迟 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 慢串口不丢字，可等待特定提示再发送下一行 |
+| F06.12 | 逐字/逐行发送延迟 | 已验证子集 | 逐编码字节/逐行延迟，CRLF一行，普通输入/流程/ASCII共用发送器；协议应答在间隔中优先。ASCII逐行只匹配新RX的字面提示，超时/取消抑制后续数据；真实SSH/PTY测试，不是实体慢设备全部验收。<br>证据：[tests/test_input_transfer.py](../../tests/test_input_transfer.py); [harbor_terminal/session.py](../../harbor_terminal/session.py) | 慢串口不丢字，可等待特定提示再发送下一行 |
 | F06.13 | 发送 BREAK/控制键 | 部分实现 | 新增250ms BREAK操作，通过专用控制队列调用SSH/串口接口；真实串口电平和SSH服务端 BREAK 尚未验收。<br>证据：[harbor_terminal/session.py](../../harbor_terminal/session.py); [harbor_terminal/transport.py](../../harbor_terminal/transport.py) | SSH break 与串口 break 有协议区别；持续时间有上限 |
-| F06.14 | 引号粘贴、路径粘贴和换行规则 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 明确数据变换，不在用户无感情况下执行本地命令 |
+| F06.14 | 引号粘贴、路径粘贴和换行规则 | 已验证子集 | 粘贴CR/LF/CRLF/保持原样及POSIX/PowerShell引用；编辑原文与实际字节预览，未编辑时保留原始CRLF。文件路径只作为文本发送，取消无发送；重新校验控制符/编码/64KiB。无CMD引用或全部Shell矩阵。<br>证据：[tests/test_input_ui.py](../../tests/test_input_ui.py); [tests/test_input_transfer.py](../../tests/test_input_transfer.py) | 明确数据变换，不在用户无感情况下执行本地命令 |
 
 ## 7. 串口与设备操作
 
@@ -156,7 +156,7 @@
 | F07.01 | COM 设备枚举 | 部分实现 | 后台调用系统设备枚举，可手填设备；测试确认不按COM数字过滤Moxa/虚拟COM样例。真实Windows驱动未验证。<br>证据：[tests/test_serial_settings.py::test_vendor_virtual_port_inventory_is_not_filtered_by_name](../../tests/test_serial_settings.py) | 显示真实设备、友好名称、USB标识；支持 Moxa/虚拟 COM |
 | F07.02 | 波特率/数据位/校验/停止位 | 部分实现 | 可配置50–4,000,000 baud、5–8数据位、N/E/O/M/S、1/1.5/2 stopbits；参数验证/传入驱动测试通过，物理参数互通待测。<br>证据：[tests/test_serial_settings.py](../../tests/test_serial_settings.py); [tests/test_transport.py](../../tests/test_transport.py) | 常见 5–8 位及 N/E/O/M/S、1/1.5/2 stopbits 与驱动验证 |
 | F07.03 | 硬件与软件流控 | 部分实现 | none/RTSCTS/DSRDTR/XONXOFF四种互斥选择已接入配置及驱动参数；没有进行实际握手电平验证。<br>证据：[tests/test_serial_settings.py](../../tests/test_serial_settings.py) | RTS/CTS、DSR/DTR、XON/XOFF 可选且互斥规则明确 |
-| F07.04 | DTR/RTS 控制与调制解调状态 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 可操作线路并观察 CTS/DSR/RI/CD；注明复位副作用 |
+| F07.04 | DTR/RTS 控制与调制解调状态 | 部分实现 | 串口线路界面每500ms读DTR/RTS输出设定及CTS/DSR/RI/CD；未知不伪装正常。输出变化确认且回车取消，流控占用线在界面和传输层拒绝覆盖。受控驱动替身/PTY不支持分支已测，实体USB线路/电压/复位副作用未验。<br>证据：[tests/test_input_transfer.py](../../tests/test_input_transfer.py); [tests/test_input_ui.py](../../tests/test_input_ui.py) | 可操作线路并观察 CTS/DSR/RI/CD；注明复位副作用 |
 | F07.05 | 串口读写与字节流分片 | 已验证子集 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 部分读取累计，部分写入报错，读写超时 |
 | F07.06 | 串口连接取消与独占占用 | 部分实现 | 连接取消与资源关闭路径已整理，实际PTY和模拟阻塞连接测试通过；无法宣称可强制终止挂死的Windows驱动调用。<br>证据：[tests/test_session.py](../../tests/test_session.py); [tests/test_transport.py](../../tests/test_transport.py) | 无设备、被占用、驱动无响应时可取消且资源收敛 |
 | F07.07 | 热拔插与重枚举 | 部分实现 | 独立只读诊断观察移除/返回，优先按唯一设备序列号跟随端口改名，重复序列号拒绝判断；无序列号仅按端口名。枚举模拟已测；实体Windows拔插未执行，未实现自动重连。<br>证据：[tests/test_diagnostics.py](../../tests/test_diagnostics.py); [docs/windows-hardware-testing.md](../../docs/windows-hardware-testing.md) | 识别设备身份变更，不自动把命令发给另一设备 |
@@ -176,7 +176,7 @@
 | F08.02 | 层级会话树/描述/自然排序 | 部分实现 | 层级树和管理对话框支持会话/文件夹路径重命名，大小写冲突拒绝，单JSON事务更新所有跳板引用；可选依赖范围删除。不支持拖放、描述和自然排序。<br>证据：[tests/test_profile_operations.py](../../tests/test_profile_operations.py); [harbor_terminal/session_manager.py](../../harbor_terminal/session_manager.py) | 目录、复制移动、重命名、大小写冲突和持久化 |
 | F08.03 | 按会话/主机/目录/描述过滤 | 部分实现 | 支持按会话路径、主机、用户名的不区分大小写子串过滤；描述、通配符和大型数据库索引待实现。<br>证据：[tests/test_terminal_widget.py::test_saved_session_tree_filters_nested_profiles](../../tests/test_terminal_widget.py) | 通配符、输入节流、大量会话与无结果状态 |
 | F08.04 | 批量编辑会话 | 已验证子集 | 固定选择范围，只修改明确勾选字段，空值须勾选；协议切换保留未勾选字段，跨协议参数不合法则整体拒绝。预览原/新值后CAS提交，取消无写入。<br>证据：[tests/test_profile_operations.py::test_batch_changes_are_atomic_and_unselected_fields_and_profiles_are_preserved](../../tests/test_profile_operations.py); [tests/test_session_management_ui.py](../../tests/test_session_management_ui.py) | 只修改显式变化的字段，协议切换保留无关配置 |
-| F08.05 | 默认会话模板 | 已验证子集 | 独立SSH/Serial默认模板编辑与并发保护；新建连接采用模板，已有会话不自动改写。批量编辑可填入模板，再明确勾选字段/范围与预览。不包含全套SecureCRT默认选项。<br>证据：[harbor_terminal/session_templates.py](../../harbor_terminal/session_templates.py); [tests/test_session_management_ui.py](../../tests/test_session_management_ui.py) | 应用到已有会话需要范围确认；支持按协议默认 |
+| F08.05 | 默认会话模板 | 已验证子集 | 独立SSH/Serial默认模板与并发保护，新建采用模板、已有会话不自动变化。0.8补齐批量安全/输入字段，仍需明确勾选范围与字段后预览；无全套SecureCRT默认选项。<br>证据：[harbor_terminal/session_templates.py](../../harbor_terminal/session_templates.py); [tests/test_session_management_ui.py](../../tests/test_session_management_ui.py); [tests/test_input_ui.py](../../tests/test_input_ui.py) | 应用到已有会话需要范围确认；支持按协议默认 |
 | F08.06 | 连接/重连/克隆/复用传输 | 部分实现 | 当前连接保存非秘密参数快照，克隆/手动重连只载入快速连接并要求本次凭据；各标签独立SSH连接，关闭克隆不误断原连接。无传输复用或自动重连；跳板引用按当前保存配置解析。<br>证据：[tests/test_session_management_ui.py::test_clone_is_independent_and_requires_fresh_credentials_and_lock_guards_input](../../tests/test_session_management_ui.py) | 标签身份与底层连接生命周期分离，关闭一个不误断其他 |
 | F08.07 | 活动会话管理器 | 已验证子集 | 活动列表支持名称/主机/状态筛选、状态计数、多选及固定目标预览后的批量断开/输入锁；状态刷新保留UUID选择。输入锁只防误触，不是口令安全锁。<br>证据：[harbor_terminal/desktop.py::active_sessions_action](../../harbor_terminal/desktop.py); [tests/test_session_management_ui.py](../../tests/test_session_management_ui.py) | 筛选、活动标志、状态计数与批量断开/锁定 |
 | F08.08 | 标签组、平铺和层叠 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 侧对侧监控、拖动分组、缩放/焦点不丢失 |
@@ -231,7 +231,7 @@
 | F10.06 | 拖放传输与协议选择 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 文件/目录支持范围可见，误拖不执行本地文件 |
 | F10.07 | 覆盖/冲突/原子落盘 | 已验证子集 | 临时文件+校验+安全提交；默认不覆盖，显式覆盖、校验失败保留原文件、提交结果未知不重试均有测试。需服务器扩展。<br>证据：[tests/test_sftp.py](../../tests/test_sftp.py) | 目标存在需明确策略，中途失败不破坏原文件 |
 | F10.08 | SFTP 协议扩展兼容 | 部分实现 | 遇到不支持安全提交扩展时明确失败，不做删除目标后重命名降级；尚无广泛服务器/版本互通矩阵。<br>证据：[tests/test_sftp.py::test_unsupported_atomic_operation_fails_without_unsafe_fallback](../../tests/test_sftp.py) | 不同服务端 SFTP 版本和扩展可降级，不混入登录脚本输出 |
-| F10.09 | ASCII 收发 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 编码/行尾/发送节流可设置，不能当成二进制传输 |
+| F10.09 | ASCII 收发 | 已验证子集 | 固定会话文本发送/接收、源/目标编码及行尾、冻结预览、节流/提示/取消；发送1MiB/行64KiB，RX严格增量转码/过滤控制序列，排他新文件、队列1MiB和文件配额。真实SSH双向及PTY发送已测；非二进制、无远端结束/CRC/重传/续传保证。<br>证据：[tests/test_input_transfer.py](../../tests/test_input_transfer.py); [tests/test_input_ui.py](../../tests/test_input_ui.py); [docs/input-and-serial.md](../../docs/input-and-serial.md) | 编码/行尾/发送节流可设置，不能当成二进制传输 |
 | F10.10 | Xmodem/Ymodem/Zmodem/Kermit | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | CRC/重试/取消/批量/文件名/路径穿越单独测试 |
 | F10.11 | Send Binary | 部分实现 | 串口可发送4096字节以内Hex原始数据；不是完整二进制文件传输。<br>证据：[tests/test_service_panels.py](../../tests/test_service_panels.py) | 按原字节发送，不做字符编码或换行替换 |
 | F10.12 | 内置 TFTP 服务 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 只在显式授权地址提供目录，路径限制、IP限制、生命周期控制 |
@@ -273,18 +273,18 @@
 | F12.09 | 企业策略禁用开关 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 可控制脚本、明文传输、转发、打印、TFTP、自动登录和凭据保存 |
 | F12.10 | 依赖 SBOM 与供应链维护 | 部分实现 | 21个Python发行包锁版本；Windows包带发行包/许可证文件与哈希、Python许可和构建提交号，非完整原生DLL SBOM。签名与公告治理未实现。<br>证据：[scripts/collect_licenses.py](../../scripts/collect_licenses.py); [scripts/build-windows.ps1](../../scripts/build-windows.ps1) | 版本、许可证、安全公告与签名验证纳入发布 |
 | F12.11 | 长期稳定性与故障注入 | 部分实现 | 保留0.5传输/PTY持续运行，独立0.6 Qt/Worker/SSH/流程/输入锁/应答/配置持续测试已启动；两者各自保存源码哈希与实际时长，均未完成72小时。无实体COM或SecureCRT长期对照结论。<br>证据：[scripts/soak.py](../../scripts/soak.py); [scripts/soak_desktop.py](../../scripts/soak_desktop.py); [artifacts/validation-0.6.md](../../artifacts/validation-0.6.md) | 24/72小时、资源趋势、多窗口同时关闭、网断与睡眠恢复 |
-| F12.12 | 兼容性与回归基线 | 部分实现 | 0.7云端304测试通过，原生Windows回归及冻结EXE在CI执行；Win10/11用户实机、实体COM和SecureCRT9.7.4同机对照仍未验收，不能由Server2025替代。<br>证据：[tests](../../tests); [.github/workflows/validate.yml](../../.github/workflows/validate.yml); [artifacts/validation-0.7.md](../../artifacts/validation-0.7.md) | Win10/11、SSH 服务矩阵、串口适配器与终端回放留原始结果 |
+| F12.12 | 兼容性与回归基线 | 部分实现 | 0.8云端336测试通过，Windows原生矩阵与实际冻结EXE检查；Win10/11用户实机/实体COM/国际键盘/完整DPI和供应商同机对照仍未验收。<br>证据：[tests](../../tests); [.github/workflows/validate.yml](../../.github/workflows/validate.yml); [artifacts/validation-0.8.md](../../artifacts/validation-0.8.md) | Win10/11、SSH 服务矩阵、串口适配器与终端回放留原始结果 |
 
 ## 状态统计
 
-- 已验证子集：41 项。
+- 已验证子集：45 项。
 - 依赖能力未验证：1 项。
-- 部分实现：65 项。
-- 未实现：73 项。
+- 部分实现：67 项。
+- 未实现：67 项。
 - 仅关闭策略：1 项。
 - 安全差异：2 项。
 
-原始0.1调研时为163项未实现。0.2补终端/串口，0.3补SFTP/日志/Hex，0.4补单级跳板/转发，0.4.1重做界面/字体，0.5补MFA/命令与JSON流程及原生Windows包，0.6补会话导入/批量/模板/并发与输入锁，0.7补SSH策略/证书/主机CA与身份工具；仍不能据子集测试宣称完整模块已经完成。
+原始0.1调研时为163项未实现。0.2补终端/串口，0.3补SFTP/日志/Hex，0.4补单级跳板/转发，0.4.1重做界面/字体，0.5补MFA/命令与JSON流程及原生Windows包，0.6补会话管理，0.7补SSH安全与身份，0.8补节流/ASCII/串口线路/粘贴/历史控制；仍不能据子集测试宣称完整模块已经完成。
 
 后续仍包括完整证书/硬件密钥与凭据库、完整脚本对象、传输/日志高级功能、多级跳板/代理、布局快照/配置迁移、Windows 10/11实机、实体硬件及长期对照。
 百万行历史、横向重排、完整仿真/鼠标协议、原生Windows IME/DPI仍未验收。历史中的弱协议/命令行秘密/自动信任不会作为安全默认值。

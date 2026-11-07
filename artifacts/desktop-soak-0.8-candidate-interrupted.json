@@ -1,0 +1,140 @@
+{
+  "status": "interrupted",
+  "pid": 14617,
+  "version": "0.8.0",
+  "platform": "offscreen",
+  "started": "2026-11-07T16:57:20.647161+00:00",
+  "requested_seconds": 259200.0,
+  "elapsed_seconds": 68.83574593899993,
+  "cycles": 247,
+  "errors": 0,
+  "protocol_queries": 10,
+  "protocol_replies": 10,
+  "configuration_commits": 1,
+  "text_sends": 3,
+  "scope": "Actual Qt + Worker + loopback SSH + paced flows/text sends + text capture + input lock + protocol replies + profile transactions; no physical COM or vendor comparison",
+  "samples": [
+    {
+      "threads": 5,
+      "monotonic": 6387.776212106,
+      "rss_bytes": 91525120,
+      "handles": 17,
+      "elapsed_seconds": 0.21453260799989948,
+      "cycles": 1
+    },
+    {
+      "threads": 5,
+      "monotonic": 6397.967583898,
+      "rss_bytes": 92250112,
+      "handles": 21,
+      "elapsed_seconds": 10.405903978999959,
+      "cycles": 38
+    },
+    {
+      "threads": 5,
+      "monotonic": 6407.980734192,
+      "rss_bytes": 92581888,
+      "handles": 21,
+      "elapsed_seconds": 20.419055585000024,
+      "cycles": 74
+    },
+    {
+      "threads": 5,
+      "monotonic": 6418.082746738,
+      "rss_bytes": 92741632,
+      "handles": 21,
+      "elapsed_seconds": 30.52106939300029,
+      "cycles": 110
+    },
+    {
+      "threads": 5,
+      "monotonic": 6428.342253883,
+      "rss_bytes": 92966912,
+      "handles": 21,
+      "elapsed_seconds": 40.78057605699996,
+      "cycles": 147
+    },
+    {
+      "threads": 5,
+      "monotonic": 6438.537567762,
+      "rss_bytes": 93237248,
+      "handles": 21,
+      "elapsed_seconds": 50.97589022700049,
+      "cycles": 184
+    },
+    {
+      "threads": 5,
+      "monotonic": 6448.576977901,
+      "rss_bytes": 93380608,
+      "handles": 21,
+      "elapsed_seconds": 61.01530042600007,
+      "cycles": 220
+    }
+  ],
+  "source_hashes": {
+    "__init__.py": "ea4daa919da0f72cace802b21134392c4f5b8ce3bd059ea608b62fd4342ac815",
+    "app.py": "9305d45ba1ebb327be377227e6434a832fcb1afdcde8105dbb2a16986c5530f4",
+    "appearance.py": "633d5291473d4b241bf5ec7abce63bd84ea127a12ce4407da64bb1c242874063",
+    "auth_dialog.py": "2675e1d7c8d149b485b4fe99c663bd58c49f0ed6d8f0d6bed4c13e663a75b203",
+    "authentication.py": "b3e90012d563ca95bd074dd11eb5255d84948f20ff105a157f0100b00626c846",
+    "automation.py": "688bc07b0132b166688208caabfd2aa784fb4f4e89fa723b4f2acc44efbff609",
+    "batch.py": "568f8fad0125810d881b8f4709c22269abc82201bc0cad5a75d8b53887c85fe4",
+    "commands.py": "bba31d96bf119438330bafbb278212e989d80a85d9eb488c69236e24b7bb5783",
+    "desktop.py": "579318081ae89e708a77300da9780371490a61ada39400692ece8a52d6565bb8",
+    "diagnostics.py": "f3c5dc782f2860ab8ef2124459e04a9154d8a471013c41bc37c6cbc732664ab5",
+    "endpoint.py": "fbbb01888cba031901ca9dacdd2c7d7046beaf55c455c8a6e2d9af5a820e70bf",
+    "forwarding.py": "28b88606df223f22512c8fa465484ce9b7fee95dad5ba795caae647e529e67ad",
+    "hardware.py": "0fbbb4dea772a58f9cd57b79108aa7bd6a4a2cd4e4b8c7c93c351c1bb2c6c14b",
+    "host_keys.py": "7ad004caca15aad5154d9c889aa0fc9a36c67cf9483ce653865c25a08c9b0100",
+    "input_dialogs.py": "4682ea750cfa7706fcea2e65752fb3f490c72d9e5a2e5f0128c270ae929df514",
+    "input_policy.py": "7bd4b2c28c5acec06c3209a5237e3da35e56bcc12948553790834833b6bd8b3c",
+    "journal.py": "c863f8578ba1a5748e0dfe8e33241a9c085a8ecc2c926321625df3f33a50e742",
+    "key_dialogs.py": "a1524ea630365be11ebde2f17d969f9158831c28541766e1d115dada219de0f2",
+    "key_tools.py": "4182e7435fcaccb911e4ca5c4d8766bcde0277fdf8f2176a395409e19a321368",
+    "keyboard.py": "80725bfcc91d4293aa94ed33523fd804529057e71c6a46f1f12e3ea04167f2e2",
+    "local_forward.py": "b35acf674ec67de1718751c1432d1b793523978013212d3c09662f2a46445622",
+    "panels.py": "a09e9190f4c0ff364d32617a9785cac205f1abbce78bec4a90cd87affe64a8a8",
+    "profile_operations.py": "3dbba5ad86f4600de6dcb1ad0b384f1fa5e7f3e21e459ab6522c2bdfdd1e1e80",
+    "profiles.py": "256b5529302790689534ebba012f3fdefcaafcccf86db856ac9b0043847848e3",
+    "reports.py": "71786002dbed329904f4f4bb4b2ec2bcf121ab8976005c135d80e88e4505acef",
+    "serial_config.py": "f4bf9303320d59ba83e5c69df284af3280ea60ab80ac9cc1b0e7d733f9a9891e",
+    "session.py": "ac6638a19d7fb5a6a2b6b7de083f612e07c2ea10b76319ab190b74fc2db08839",
+    "session_manager.py": "8adb4e26e4e1521dd90034c47c9d739b73441e0e4c4147479d07b330ca731f23",
+    "session_templates.py": "2ed58a25276d160e0c755cd3f88056e79fb7ff0671e020026f38c3d58d01453c",
+    "sftp.py": "bf70482f1c192bf205e6d1b1ec8732ad078916071f9f120c051b664e1a41c183",
+    "ssh_dialogs.py": "ed7e1d91d3c95a90488be0f7c28b850851eb91e052a5b455966ef7a5e79e0697",
+    "ssh_policy.py": "4372642a212c5d582a7e7dfbf38141ec4f4a137d7c20cd3f812ddc17afd7a862",
+    "startup.py": "1b333052d569cdbcc598d907c3dc8aaafd35f5d15f22a4b1bd7f76891824be9d",
+    "storage.py": "70f18569ac4668663575ae2e748b9e5b53fb4079aa56b0554dfe0023087bdb6c",
+    "terminal.py": "8d48d9682748a6dac88cb9bfc6c959bd3f9c2b8c9af8b06662c4283a4bfaddb8",
+    "terminal_model.py": "dbe4d7c8c157f6c99e53403416bcd1b0d79d9bf6906591734ceaa16c77eb5cfa",
+    "terminal_stream.py": "b75e8267a99bfa8149b2268086f0b59c9aa4c61bc8726780348cb428a4426a27",
+    "text_files.py": "2e4c31edbd185e66e560ad077bdec975b5ac02af4f651f43a5acbd39f8ae9ec2",
+    "trace.py": "4928b54fd46fbe9ed2d776fe3fade1622ae3a04ded8033d5b2969432ea679420",
+    "transport.py": "f23a5ea63606a5a03b9149cc4cb5fa24580d6d9a85f21f7d1cc2d7b8ce5957e5",
+    "workflow_panel.py": "6689cdb47a4cfb28f42f4411d0ecd7211bf7247d79d5264e4dffbbedc866e1bd"
+  },
+  "resources": {
+    "threads": 5,
+    "monotonic": 6448.576977901,
+    "rss_bytes": 93380608,
+    "handles": 21,
+    "elapsed_seconds": 61.01530042600007,
+    "cycles": 220
+  },
+  "text_capture": {
+    "state": "running",
+    "error": "",
+    "queued": 0,
+    "written": 4840,
+    "accepted": 6856,
+    "path": "/tmp/harbor-desktop-soak-q2dmcv17/text-capture.txt",
+    "alive": true
+  },
+  "final_resources": {
+    "threads": 3,
+    "monotonic": 6456.397421911,
+    "rss_bytes": 93634560,
+    "handles": 12
+  }
+}

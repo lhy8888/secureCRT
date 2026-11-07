@@ -1,8 +1,19 @@
-# Harbor Terminal 0.7.0
+# Harbor Terminal 0.8.0
 
-面向 Windows 10/11 的独立 SSH / 串口桌面客户端。0.7增加SSH算法策略、认证前Strict KEX核验、加密身份密钥工具、主机密钥/CA管理、独立用户证书和协商诊断，保留参照SecureCRT 9.7设计的紧凑界面。尚未达到SecureCRT 9.7.4全功能等价。
+面向 Windows 10/11 的独立 SSH / 串口桌面客户端。0.8补充慢速发送、ASCII文本收发、串口线路控制、粘贴/Alt Meta与历史清除策略，保留参照SecureCRT 9.7设计的紧凑界面和0.7安全功能。尚未达到SecureCRT 9.7.4全功能等价。
 
-[0.7交付记录](docs/releases/0.7.md) · [SSH安全说明](docs/ssh-security.md) · [验证证据](artifacts/validation-0.7.md) · [会话管理](docs/session-management.md) · [实体COM测试](docs/windows-hardware-testing.md) · [SecureCRT同机对照](docs/windows-comparison.md)
+[0.8交付记录](docs/releases/0.8.md) · [输入与串口说明](docs/input-and-serial.md) · [SSH安全说明](docs/ssh-security.md) · [验证证据](artifacts/validation-0.8.md) · [会话管理](docs/session-management.md) · [实体COM测试](docs/windows-hardware-testing.md)
+
+## 0.8 输入与设备操作
+
+- 逐编码字节/逐行延迟，CRLF按一行，协议应答在输入间隔中优先；文本任务取消抑制未写出的数据，不重试。
+- “传输 → ASCII / 文本文件收发…”支持编码、行尾、冻结预览、逐行字面提示、进度与取消。RX可严格转码接收为纯文本新文件，不覆盖已有文件。
+- “工具 → 串口线路控制…”显示DTR/RTS设定及CTS/DSR/RI/CD；未知不当作正常，流控占用的输出禁止手动覆盖，变化先确认。
+- 粘贴换行/保持原样、POSIX/PowerShell引用、路径文本粘贴及实际发送预览；没有本地文件执行。
+- Alt Meta与AltGr/输入法提交分别处理；本地清屏/清历史及远端ED3/RIS历史保留策略。
+- 会话schema6兼容读取1–5版；安全/输入字段进入协议默认模板与显式批量编辑。
+
+[发送文本](artifacts/harbor-0.8.0-text-send.png) · [接收文本](artifacts/harbor-0.8.0-text-receive.png) · [输入设置](artifacts/harbor-0.8.0-input-policy.png) · [串口线路（PTY）](artifacts/harbor-0.8.0-serial-lines.png)
 
 ## 0.7 SSH安全与身份
 
@@ -36,11 +47,11 @@
 - GUI支持`admin@host:2222`、`[IPv6]:port`和SSH URI预填；不自动发送，不接受URI/命令行口令。
 - `--run-flow flow.json --output new-result.json`无界面执行SSH密钥/默认Agent或Serial流程；CLI未实现交互MFA/私钥口令输入。仅通道SSH不打开Shell，可用SFTP/隧道。
 
-183项能力中仍有73项未实现，41项已测子集和65项部分实现也不表示完整模块已完成。实际Windows 10/11、实体COM与长期对照按真实报告验收。
+183项能力中仍有67项未实现，45项已测子集和67项部分实现也不表示完整模块已完成。实际Windows 10/11、实体COM与长期对照按真实报告验收。
 
 完整规格见 [历代累积功能审计](docs/research/README.md)：32 个系列、314 个发布分节、4294 条历史 bullet、183 项能力/验收。每项实现与缺口记录在 [功能矩阵](docs/research/feature-matrix.md)，本次界面变更见 [0.4.1 记录](docs/releases/0.4.1.md)，连接能力见 [0.4](docs/releases/0.4.md) 及 [0.3](docs/releases/0.3.md)。参考公开界面布局，未包含 SecureCRT 代码或品牌素材，工具栏图标独立绘制。
 
-![0.7经典桌面布局，本地SSH/PTY测试数据](artifacts/harbor-0.7.0-terminal.png)
+![0.8经典桌面布局，本地SSH/PTY测试数据](artifacts/harbor-0.8.0-terminal.png)
 
 ## 界面与字体
 
@@ -85,7 +96,7 @@ py -3.14 -m venv .venv
 
 按Alt+Q或点击工具栏快速连接图标，在弹窗填写SSH主机、端口、用户名和本次密码；私钥文件和本次口令在“会话选项 → SSH / 身份”中选择。连接前通过受信任渠道核实主机公钥指纹，再使用 OpenSSH 格式的 `known_hosts` 文件。非默认端口条目为 `[host]:port`。`ssh-keyscan` 只能收集公钥，不能证明可信。没有忽略校验开关。
 
-密码、私钥口令与私钥内容不写入会话配置或诊断日志；只保存身份/证书路径及安全策略等元数据。Python内存中的秘密副本不能保证擦除。配置schema5读取旧1–4文件，读取时不自动改写；跳板只保存名称引用，不保存跳板密码。
+密码、私钥口令与私钥内容不写入会话配置或诊断日志；只保存身份/证书路径及策略等元数据。Python内存中的秘密副本不能保证擦除。配置schema6读取旧1–5文件，读取时不自动改写；跳板只保存名称引用，不保存跳板密码。文本发送/接收文件是用户明确选择的明文。
 
 使用跳板时，先保存一个独立SSH跳板会话，再加载目标会话，在“会话选项 → SSH / 跳板”中选择跳板并输入本次跳板密码/口令。目标密码在快速连接弹窗输入；两端各用自己的known_hosts。当前拒绝缺失引用和嵌套跳板。连接后的“传输 → SFTP文件”和“工具 → 会话日志 / SSH隧道”固定绑定打开它们的会话，切换标签不会转向其他连接。
 
@@ -114,7 +125,7 @@ QT_QPA_PLATFORM=offscreen /workspace/securecrt-dev-venv/bin/python scripts/captu
 
 运行截图脚本前，修改源码后需重新执行 `python -m pip install --no-deps .`，脚本使用安装后的包。本地真实SSH服务验证加密收发、密钥拒绝、私钥认证、窗口变化、跳板、SFTP、三类转发及Qt输入链路；Linux PTY验证串口字节流。截图均来自生成测试数据，不是真实网络设备或Windows界面。
 
-工具截图：[SFTP](artifacts/harbor-0.7.0-sftp.png) · [SSH隧道](artifacts/harbor-0.7.0-tunnels.png) · [会话日志](artifacts/harbor-0.7.0-log.png) · [串口Hex](artifacts/harbor-0.7.0-hex.png)。复查结果见 [本轮验证](artifacts/validation-0.7.md)。
+工具截图：[SFTP](artifacts/harbor-0.8.0-sftp.png) · [SSH隧道](artifacts/harbor-0.8.0-tunnels.png) · [会话日志](artifacts/harbor-0.8.0-log.png) · [串口Hex](artifacts/harbor-0.8.0-hex.png)。复查结果见 [本轮验证](artifacts/validation-0.8.md)。
 
 ## 实现边界
 

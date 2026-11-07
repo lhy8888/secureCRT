@@ -37,7 +37,7 @@ async def soak(output,duration,interval):
         platform=app.platformName(),started=datetime.now(timezone.utc).isoformat(),requested_seconds=duration,
         elapsed_seconds=0,cycles=0,errors=0,protocol_queries=0,protocol_replies=0,configuration_commits=0,text_sends=0,
         scope='Actual Qt + Worker + loopback SSH + paced flows/text sends + text capture + input lock + protocol replies + profile transactions; no physical COM or vendor comparison',
-        samples=[],source_hashes={})
+        samples=[],source_hashes={},runner_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest())
     import harbor_terminal
     package=Path(harbor_terminal.__file__).parent
     for source in sorted(package.glob('*.py')):report['source_hashes'][source.name]=hashlib.sha256(source.read_bytes()).hexdigest()
@@ -130,6 +130,10 @@ async def soak(output,duration,interval):
             for worker in window.workers:worker.stop_event.set()
             try:await until(lambda:all(not worker.isRunning() for worker in window.workers),8)
             except TimeoutError:report['status']='failed';report['cleanup_timeout']=True
+            captures=[worker.text_capture.snapshot() for worker in window.workers if worker.text_capture]
+            report['final_text_captures']=captures
+            if any(capture['alive'] or capture['state']!='closed' for capture in captures):
+                report['status']='failed';report['errors']+=1;report['capture_cleanup_failed']=True
             window.close();app.processEvents()
         if server:
             server.close()

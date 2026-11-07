@@ -1,0 +1,19 @@
+{
+  "ended_processes": [],
+  "status": "completed",
+  "started_utc": "2026-11-07T17:01:23.7099819Z",
+  "processes": [
+    {
+      "id": 3880,
+      "started_utc": "2026-11-07T17:01:21.6522158Z",
+      "name": "HarborTerminal",
+      "file_version": null
+    }
+  ],
+  "logical_processors": 4,
+  "samples": 2,
+  "elapsed_seconds": 1.0284547,
+  "requested_seconds": 1,
+  "schema": 1,
+  "scope": "Local process resource observations during a user-operated workload; not a protocol pass or product ranking"
+}

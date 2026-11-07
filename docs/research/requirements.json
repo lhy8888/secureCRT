@@ -523,8 +523,8 @@
         "https://www.vandyke.com/products/securecrt/faq/index.html",
         "https://www.vandyke.com/products/securecrt/new-in.html"
       ],
-      "implementation_note": "会话schema5白名单新增策略与证书路径，读取1–4旧版；密码/私钥内容/认证回答不入配置，身份工具输出只有公共信息或路径。命令/流程捕获为用户明文保存，不能存秘密，不宣称Python内存擦除。",
-      "validation": "tests/test_profiles.py; tests/test_key_tools.py; tests/test_ssh_security_ui.py"
+      "implementation_note": "schema6新增输入策略，读取旧1–5版；密码/私钥内容/认证回答不入配置。ASCII文件及捕获为用户选择的明文，不能存秘密；不宣称Python内存擦除。",
+      "validation": "tests/test_profiles.py; tests/test_input_ui.py; tests/test_ssh_security_ui.py"
     },
     {
       "id": "F03.01",
@@ -1142,14 +1142,16 @@
       "id": "F05.22",
       "domain": "终端仿真、渲染与国际化",
       "capability": "滚动清除策略",
-      "status": "未实现",
+      "status": "已验证子集",
       "acceptance": "区分清屏/清历史，允许保留历史策略",
       "priority": "P0",
       "sources": [
         "https://www.vandyke.com/products/securecrt/features.html",
         "https://www.vandyke.com/download/securecrt/9.6/history.txt",
         "https://www.vandyke.com/products/securecrt/history.txt"
-      ]
+      ],
+      "implementation_note": "本地清屏/清历史分别操作；远端ED2保留历史，ED3及RIS按会话允许/保留策略处理。主/备用屏幕及历史保留有回归；仍限2000行，不代表百万行能力。",
+      "validation": "tests/test_input_ui.py; harbor_terminal/terminal_model.py"
     },
     {
       "id": "F05.23",
@@ -1231,7 +1233,7 @@
       "id": "F06.04",
       "domain": "键盘、鼠标与剪贴板",
       "capability": "Emacs Alt Meta",
-      "status": "未实现",
+      "status": "部分实现",
       "acceptance": "Alt/AltGr 与国际键盘区别，不能吞掉输入法",
       "priority": "P0",
       "sources": [
@@ -1239,7 +1241,9 @@
         "https://www.vandyke.com/download/securecrt/8.3/history.txt",
         "https://www.vandyke.com/download/securecrt/8.5/history.txt",
         "https://www.vandyke.com/download/securecrt/9.4/history.txt"
-      ]
+      ],
+      "implementation_note": "逐会话ESC Meta或仅布局文本，Qt可打印Ctrl+Alt/GroupSwitch作为AltGr，IME提交独立；实际Qt合成事件已测。应用菜单快捷键仍优先，真实国际键盘/输入法布局矩阵未验。",
+      "validation": "tests/test_input_ui.py; harbor_terminal/terminal.py"
     },
     {
       "id": "F06.05",
@@ -1349,7 +1353,7 @@
       "id": "F06.12",
       "domain": "键盘、鼠标与剪贴板",
       "capability": "逐字/逐行发送延迟",
-      "status": "未实现",
+      "status": "已验证子集",
       "acceptance": "慢串口不丢字，可等待特定提示再发送下一行",
       "priority": "P0",
       "sources": [
@@ -1357,7 +1361,9 @@
         "https://www.vandyke.com/download/securecrt/8.3/history.txt",
         "https://www.vandyke.com/download/securecrt/8.5/history.txt",
         "https://www.vandyke.com/download/securecrt/9.4/history.txt"
-      ]
+      ],
+      "implementation_note": "逐编码字节/逐行延迟，CRLF一行，普通输入/流程/ASCII共用发送器；协议应答在间隔中优先。ASCII逐行只匹配新RX的字面提示，超时/取消抑制后续数据；真实SSH/PTY测试，不是实体慢设备全部验收。",
+      "validation": "tests/test_input_transfer.py; harbor_terminal/session.py"
     },
     {
       "id": "F06.13",
@@ -1379,7 +1385,7 @@
       "id": "F06.14",
       "domain": "键盘、鼠标与剪贴板",
       "capability": "引号粘贴、路径粘贴和换行规则",
-      "status": "未实现",
+      "status": "已验证子集",
       "acceptance": "明确数据变换，不在用户无感情况下执行本地命令",
       "priority": "P0",
       "sources": [
@@ -1387,7 +1393,9 @@
         "https://www.vandyke.com/download/securecrt/8.3/history.txt",
         "https://www.vandyke.com/download/securecrt/8.5/history.txt",
         "https://www.vandyke.com/download/securecrt/9.4/history.txt"
-      ]
+      ],
+      "implementation_note": "粘贴CR/LF/CRLF/保持原样及POSIX/PowerShell引用；编辑原文与实际字节预览，未编辑时保留原始CRLF。文件路径只作为文本发送，取消无发送；重新校验控制符/编码/64KiB。无CMD引用或全部Shell矩阵。",
+      "validation": "tests/test_input_ui.py; tests/test_input_transfer.py"
     },
     {
       "id": "F07.01",
@@ -1438,14 +1446,16 @@
       "id": "F07.04",
       "domain": "串口与设备操作",
       "capability": "DTR/RTS 控制与调制解调状态",
-      "status": "未实现",
+      "status": "部分实现",
       "acceptance": "可操作线路并观察 CTS/DSR/RI/CD；注明复位副作用",
       "priority": "P0",
       "sources": [
         "https://www.vandyke.com/products/securecrt/features.html",
         "https://www.vandyke.com/download/securecrt/9.6/history.txt",
         "https://www.vandyke.com/products/securecrt/history.txt"
-      ]
+      ],
+      "implementation_note": "串口线路界面每500ms读DTR/RTS输出设定及CTS/DSR/RI/CD；未知不伪装正常。输出变化确认且回车取消，流控占用线在界面和传输层拒绝覆盖。受控驱动替身/PTY不支持分支已测，实体USB线路/电压/复位副作用未验。",
+      "validation": "tests/test_input_transfer.py; tests/test_input_ui.py"
     },
     {
       "id": "F07.05",
@@ -1653,8 +1663,8 @@
         "https://www.vandyke.com/download/securecrt/9.6/history.txt",
         "https://www.vandyke.com/products/securecrt/history.txt"
       ],
-      "implementation_note": "独立SSH/Serial默认模板编辑与并发保护；新建连接采用模板，已有会话不自动改写。批量编辑可填入模板，再明确勾选字段/范围与预览。不包含全套SecureCRT默认选项。",
-      "validation": "harbor_terminal/session_templates.py; tests/test_session_management_ui.py"
+      "implementation_note": "独立SSH/Serial默认模板与并发保护，新建采用模板、已有会话不自动变化。0.8补齐批量安全/输入字段，仍需明确勾选范围与字段后预览；无全套SecureCRT默认选项。",
+      "validation": "harbor_terminal/session_templates.py; tests/test_session_management_ui.py; tests/test_input_ui.py"
     },
     {
       "id": "F08.06",
@@ -2349,7 +2359,7 @@
       "id": "F10.09",
       "domain": "文件传输",
       "capability": "ASCII 收发",
-      "status": "未实现",
+      "status": "已验证子集",
       "acceptance": "编码/行尾/发送节流可设置，不能当成二进制传输",
       "priority": "P1",
       "sources": [
@@ -2357,7 +2367,9 @@
         "https://www.vandyke.com/download/securecrt/5.0/history.txt",
         "https://www.vandyke.com/download/securecrt/7.1/history.txt",
         "https://www.vandyke.com/products/securecrt/history.txt"
-      ]
+      ],
+      "implementation_note": "固定会话文本发送/接收、源/目标编码及行尾、冻结预览、节流/提示/取消；发送1MiB/行64KiB，RX严格增量转码/过滤控制序列，排他新文件、队列1MiB和文件配额。真实SSH双向及PTY发送已测；非二进制、无远端结束/CRC/重传/续传保证。",
+      "validation": "tests/test_input_transfer.py; tests/test_input_ui.py; docs/input-and-serial.md"
     },
     {
       "id": "F10.10",
@@ -2824,17 +2836,17 @@
         "https://www.vandyke.com/download/securecrt/9.6/history.txt",
         "https://www.vandyke.com/products/securecrt/history.txt"
       ],
-      "implementation_note": "0.7云端304测试通过，原生Windows回归及冻结EXE在CI执行；Win10/11用户实机、实体COM和SecureCRT9.7.4同机对照仍未验收，不能由Server2025替代。",
-      "validation": "tests; .github/workflows/validate.yml; artifacts/validation-0.7.md"
+      "implementation_note": "0.8云端336测试通过，Windows原生矩阵与实际冻结EXE检查；Win10/11用户实机/实体COM/国际键盘/完整DPI和供应商同机对照仍未验收。",
+      "validation": "tests; .github/workflows/validate.yml; artifacts/validation-0.8.md"
     }
   ],
   "counts": {
-    "已验证子集": 41,
+    "已验证子集": 45,
     "依赖能力未验证": 1,
-    "部分实现": 65,
-    "未实现": 73,
+    "部分实现": 67,
+    "未实现": 67,
     "仅关闭策略": 1,
     "安全差异": 2
   },
-  "implementation_version": "0.7.0"
+  "implementation_version": "0.8.0"
 }
