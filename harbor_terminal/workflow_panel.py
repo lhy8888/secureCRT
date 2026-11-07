@@ -106,7 +106,7 @@ class WorkflowPanel(QDockWidget):
         selected={worker.session_id for worker,_,_ in self.selected_targets()}
         current=self.owner.tabs.currentWidget();self.targets.clear()
         for worker,terminal in self.owner.sessions.items():
-            if worker.status!='Connected' or worker.stop_event.is_set():continue
+            if worker.status!='Connected' or worker.stop_event.is_set() or not worker.interactive:continue
             item=QTreeWidgetItem([terminal.session_label,worker.mode]);item.setData(0,Qt.ItemDataRole.UserRole,worker.session_id)
             checked=worker.session_id in selected if self.refreshed else terminal is current
             item.setCheckState(0,Qt.CheckState.Checked if checked else Qt.CheckState.Unchecked)

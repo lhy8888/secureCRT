@@ -19,7 +19,7 @@ async def sftp_endpoint(tmp_path):
     root=tmp_path/'remote';root.mkdir()
     controls=SimpleNamespace(corrupt_reads=False,deny_atomic=False,stall_commit=False,
                              write_delay=0,authentications=0,allowed_destinations=set(),
-                             tiny_reads=False,read_cutoff=None)
+                             tiny_reads=False,read_cutoff=None,processes=0)
     class Server(asyncssh.SSHServer):
         def begin_auth(self,username):return True
         def password_auth_supported(self):return True
@@ -55,6 +55,7 @@ async def sftp_endpoint(tmp_path):
             value=super().posix_rename(oldpath,newpath)
             return await value if inspect.isawaitable(value) else value
     async def shell(process):
+        controls.processes+=1
         while True:
             try:data=await process.stdin.read(1024)
             except asyncssh.TerminalSizeChanged:continue

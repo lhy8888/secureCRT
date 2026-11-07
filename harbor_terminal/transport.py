@@ -23,9 +23,10 @@ class SSHTransport:
     async def connect(self, host, username, *, port=22, password=None,
                       known_hosts=None, client_keys=None, passphrase=None,
                       term_size=(100, 30), timeout=15, jump=None, status=None,
-                      auth_method='auto', auth_prompt=None, auth_timeout=180):
+                      auth_method='auto', auth_prompt=None, auth_timeout=180, shell=True):
         if self.connection is not None:
             raise RuntimeError("Already connected")
+        if type(shell) is not bool:raise ValueError('Invalid SSH shell mode')
         connection = hop = None
         try:
             if jump:
@@ -41,7 +42,7 @@ class SSHTransport:
                 timeout=timeout, tunnel=hop, auth_method=auth_method, auth_prompt=auth_prompt,
                 auth_timeout=auth_timeout, status=status, stage='target')
             process = await asyncio.wait_for(connection.create_process(
-                term_type='xterm-256color', term_size=term_size, encoding=None, stderr=asyncssh.STDOUT), timeout)
+                term_type='xterm-256color', term_size=term_size, encoding=None, stderr=asyncssh.STDOUT), timeout) if shell else None
         except BaseException:
             await asyncio.gather(*(self._close_connection(item) for item in (connection,hop) if item),
                                  return_exceptions=True)
@@ -62,9 +63,12 @@ class SSHTransport:
         if auth_method not in AUTH_METHODS or not 0<timeout<=600 or not 0<auth_timeout<=600:
             raise ValueError('Invalid authentication method or deadline')
         options = dict(port=int(port), username=username, password=password, known_hosts=str(path),
-            client_keys=client_keys, passphrase=passphrase, tunnel=tunnel,
+            config=None, passphrase=passphrase, tunnel=tunnel,
             keepalive_interval=15, keepalive_count_max=3, agent_forwarding=False,
             preferred_auth=AUTH_METHODS[auth_method])
+        # None at this application's API means no explicit key selection, not
+        # AsyncSSH's "disable all public-key authentication" sentinel.
+        if client_keys is not None:options['client_keys']=client_keys
         if auth_prompt is None:
             return await asyncio.wait_for(asyncssh.connect(host, connect_timeout=timeout,
                 login_timeout=timeout, **options), timeout)
@@ -88,9 +92,14 @@ class SSHTransport:
             raise
 
     async def read(self):
+        if self.process is None:
+            connection=self.connection
+            if connection:await connection.wait_closed()
+            return b''
         return await self.process.stdout.read(16384)
 
     async def write(self, data):
+        if self.process is None:raise RuntimeError('This SSH connection has no interactive shell')
         self.process.stdin.write(data)
         await self.process.stdin.drain()
 
@@ -101,6 +110,7 @@ class SSHTransport:
     async def send_break(self, duration=0.25):
         if not 0 < duration <= 2:
             raise ValueError('BREAK duration must be at most two seconds')
+        if self.process is None:raise RuntimeError('This SSH connection has no interactive shell')
         self.process.channel.send_break(int(duration * 1000))
 
     async def close(self):

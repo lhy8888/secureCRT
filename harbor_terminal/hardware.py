@@ -2,7 +2,6 @@
 from collections import deque
 from datetime import datetime, timezone
 from pathlib import Path
-import hashlib
 import os
 import platform
 import time
@@ -38,13 +37,17 @@ def serial_diagnostic(report_path, *, mode='inventory', port=None, baudrate=1152
         elif mode == 'hotplug':
             original = next((p for p in result['inventory'] if p['device'].casefold() == port.casefold()), None)
             if original is None: raise ValueError('Port is not present in the initial inventory')
+            identity = original.get('serial_number')
+            if identity and sum(p.get('serial_number') == identity for p in result['inventory']) != 1:
+                raise ValueError('Serial identity is ambiguous; disconnect duplicate adapters before testing')
             removed = False; returned = False
             events = []
             while time.monotonic() - started < seconds:
                 inventory = discover_ports()
-                identity = original.get('serial_number')
-                match = next((p for p in inventory if (identity and p.get('serial_number') == identity)
-                    or (not identity and p['device'].casefold() == port.casefold())), None)
+                matches = [p for p in inventory if (identity and p.get('serial_number') == identity)
+                    or (not identity and p['device'].casefold() == port.casefold())]
+                if len(matches)>1:raise ValueError('Serial identity became ambiguous during observation')
+                match = matches[0] if matches else None
                 if not match and not removed:
                     removed = True; events.append(dict(event='removed', elapsed=time.monotonic()-started))
                 if match and removed:

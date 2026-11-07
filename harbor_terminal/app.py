@@ -17,7 +17,7 @@ from .appearance import icon, terminal_font
 from .auth_dialog import AuthenticationDialog
 
 DEFAULTS = dict(bytesize='8', parity='N', stopbits='1', flow_control='none',
-                encoding='utf-8', backspace='del', private_key='', jump_profile='', auth_method='auto')
+                encoding='utf-8', backspace='del', private_key='', jump_profile='', auth_method='auto', ssh_mode='shell')
 STATES = dict(Connecting='连接中', ConnectingJump='连接跳板中', ConnectingTarget='连接目标中',
               AuthenticatingJump='跳板交互认证', AuthenticatingTarget='目标交互认证',
               Connected='已连接', Closing='关闭中', Disconnected='已断开')
@@ -182,7 +182,7 @@ class Window(QMainWindow, DesktopShell):
                 options = dict(host=self.host.text().strip(),username=self.user.text().strip(),
                                port=number,password=self.password.text() or None,
                                passphrase=self.passphrase,known_hosts=self.known.text().strip() or None,
-                               auth_method=self.options['auth_method'])
+                               auth_method=self.options['auth_method'],shell=self.options.get('ssh_mode','shell')=='shell')
                 if self.options['private_key']: options['client_keys'] = [self.options['private_key']]
                 reference = self.options.get('jump_profile')
                 if reference:
@@ -305,7 +305,7 @@ class Window(QMainWindow, DesktopShell):
         for action in (self.copy_action, self.paste_action, self.find_action, self.close_action): action.setEnabled(bool(terminal))
         for action in (self.sftp_button, self.forward_button): action.setEnabled(connected and terminal.worker.mode == 'SSH')
         self.hex_button.setEnabled(connected and terminal.worker.mode == 'Serial')
-        self.log_button.setEnabled(connected); self.break_button.setEnabled(connected)
+        self.log_button.setEnabled(connected); self.break_button.setEnabled(connected and terminal.worker.interactive)
         if not terminal:
             self.activity.clear(); self.dimensions.clear(); self.connection_info.setText('未连接'); return
         worker = terminal.worker
@@ -322,9 +322,9 @@ class Window(QMainWindow, DesktopShell):
         flow = worker.flow_progress()
         if flow.get('phase') in ('starting','running'):notes.append(f"流程：{flow.get('step',0)}/{flow.get('total',0)}")
         self.activity.setText(' · '.join(notes))
-        self.dimensions.setText(f'{terminal.screen.lines} 行 × {terminal.screen.columns} 列')
+        self.dimensions.setText(f'{terminal.screen.lines} 行 × {terminal.screen.columns} 列' if worker.interactive else '')
         protocol = 'SSH2' if worker.mode == 'SSH' else 'Serial'
-        self.connection_info.setText(f'{protocol} · {terminal.encoding.upper()}' if connected else STATES.get(worker.status, worker.status))
+        self.connection_info.setText((f'{protocol} · {terminal.encoding.upper()}' if worker.interactive else 'SSH2 · 仅SFTP/隧道') if connected else STATES.get(worker.status, worker.status))
 
     def session_state(self, worker, state):
         terminal = self.sessions.get(worker)
@@ -336,6 +336,9 @@ class Window(QMainWindow, DesktopShell):
             self.tabs.setTabIcon(index,icon('connected' if state == 'Connected' else 'disconnected' if state == 'Disconnected' else 'pending'))
         if self.tabs.currentWidget() is terminal:
             self.status.setText(terminal.session_label+' · '+STATES.get(state,state))
+        if not worker.interactive:
+            terminal.notice='仅 SFTP / SSH 隧道 · '+STATES.get(state,state)+'\n此连接不打开远程 Shell。'
+            terminal.viewport().update()
         self.rebuild_active_sessions(); self.update_activity()
 
     def session_error(self, worker, message):
@@ -423,25 +426,30 @@ class Window(QMainWindow, DesktopShell):
 
 
 def main():
-    import argparse
-    parser = argparse.ArgumentParser(description='Harbor Terminal')
-    parser.add_argument('--smoke-test-report', type=Path)
-    parser.add_argument('--serial-report', type=Path)
-    parser.add_argument('--serial-mode', choices=('inventory','loopback','hotplug'), default='inventory')
-    parser.add_argument('--serial-port')
-    parser.add_argument('--seconds', type=float, default=60)
-    parser.add_argument('--baudrate', type=int, default=115200)
-    parser.add_argument('--loopback-only', action='store_true')
+    from .startup import argument_parser, populate_window
+    parser=argument_parser()
     args = parser.parse_args()
+    if args.run_flow:
+        import asyncio
+        from .batch import run_batch
+        try:status=asyncio.run(run_batch(args))
+        except (OSError,ValueError,KeyError):parser.error('Invalid batch configuration')
+        sys.exit(status)
     if args.serial_report:
         from .hardware import serial_diagnostic
-        sys.exit(serial_diagnostic(args.serial_report, mode=args.serial_mode, port=args.serial_port,
-            baudrate=args.baudrate, seconds=args.seconds, loopback_only=args.loopback_only))
+        try:status=serial_diagnostic(args.serial_report, mode=args.serial_mode, port=args.serial_port,
+            baudrate=args.baudrate if args.baudrate is not None else 115200, seconds=args.seconds, loopback_only=args.loopback_only)
+        except (OSError,ValueError):parser.error('Invalid serial diagnostic configuration')
+        sys.exit(status)
     app = QApplication(sys.argv)
     if args.smoke_test_report:
         from .diagnostics import desktop_smoke
         sys.exit(desktop_smoke(app, args.smoke_test_report))
-    window = Window(); window.show()
+    window = Window(profile_path=args.sessions)
+    try:open_connect=populate_window(window,args)
+    except (ValueError,OSError):window.close();parser.error('Invalid destination configuration')
+    window.show()
+    if open_connect:window.show_quick_connect()
     sys.exit(app.exec())
 
 

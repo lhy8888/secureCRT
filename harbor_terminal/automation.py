@@ -3,6 +3,7 @@ import asyncio
 import codecs
 from dataclasses import dataclass
 import math
+import inspect
 import threading
 import time
 
@@ -142,7 +143,9 @@ async def run_flow(stream,cursor,steps,send,*,encoding='utf-8',progress=lambda v
                 text=step['text']
                 if step['newline'] and not text.endswith(('\r','\n')):text+='\n'
                 data=prepare_paste(text,encoding=encoding)
-                if not send(data):raise BufferError('Send queue unavailable; no replay')
+                accepted=send(data)
+                if inspect.isawaitable(accepted):accepted=await accepted
+                if not accepted:raise BufferError('Send queue unavailable; no replay')
                 sent+=1
             elif step['action']=='wait':
                 match=await stream.read_until(cursor,step['patterns'],step['timeout'])

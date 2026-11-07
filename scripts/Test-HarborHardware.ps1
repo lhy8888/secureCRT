@@ -16,7 +16,7 @@ if ($Mode -eq 'Loopback' -and !$ConfirmLoopback) {
     if ((Read-Host 'Type LOOPBACK after preparing the loopback cable') -cne 'LOOPBACK') { throw 'Loopback was not selected.' }
 }
 if ($Mode -eq 'Hotplug') { Write-Host 'Unplug and reconnect the chosen adapter during the observation period. No serial bytes are sent.' }
-$output = Join-Path $PSScriptRoot ('Diagnostics/' + (Get-Date -Format 'yyyyMMdd-HHmmss') + '-' + $Mode)
+$output = Join-Path $PSScriptRoot ('Diagnostics/' + (Get-Date -Format 'yyyyMMdd-HHmmss') + '-' + $Mode + '-' + [guid]::NewGuid().ToString('N').Substring(0,8))
 New-Item -ItemType Directory -Force $output | Out-Null
 $report = Join-Path $output 'serial-report.json'
 $nativeArgs = @('--serial-report', ('"' + $report + '"'), '--serial-mode', $Mode.ToLowerInvariant(),

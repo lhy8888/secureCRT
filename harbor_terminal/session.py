@@ -31,6 +31,7 @@ class Worker(QThread):
         super().__init__()
         self.mode, self.options = mode, dict(options)
         self.session_id = uuid.uuid4().hex
+        self.interactive = mode!='SSH' or self.options.get('shell',True)
         self.stop_event = threading.Event()
         self.lock = threading.Lock()
         self.incoming, self.outgoing = bytearray(), bytearray()
@@ -117,7 +118,7 @@ class Worker(QThread):
 
     def send(self, data, *, owner=None):
         with self.lock:
-            if self.status != 'Connected' or self.stop_event.is_set():
+            if self.status != 'Connected' or self.stop_event.is_set() or not self.interactive:
                 return False
             job = self._flow_job
             if job:
@@ -137,7 +138,7 @@ class Worker(QThread):
         for step in steps:
             if step['action']=='send': step['text'].encode(encoding)
         with self.lock:
-            if self.status!='Connected' or self.stop_event.is_set() or self._flow_job or self.outgoing: return None
+            if self.status!='Connected' or self.stop_event.is_set() or not self.interactive or self._flow_job or self.outgoing: return None
             identifier = uuid.uuid4().hex
             self._flow_job = dict(id=identifier,steps=steps,cursor=self.receive_stream.cursor(),
                 encoding=encoding,cancel=threading.Event())
@@ -161,7 +162,7 @@ class Worker(QThread):
 
     def send_break(self):
         with self.lock:
-            if self.status != 'Connected' or self.stop_event.is_set() or len(self._controls) >= 16:
+            if self.status != 'Connected' or self.stop_event.is_set() or not self.interactive or len(self._controls) >= 16:
                 return False
             self._controls.append(('break', 0.25))
         return True

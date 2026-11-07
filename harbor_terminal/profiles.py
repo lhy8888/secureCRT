@@ -11,7 +11,7 @@ V1_FIELDS = frozenset(('mode', 'host', 'port', 'username', 'known_hosts'))
 V2_FIELDS = V1_FIELDS | {'bytesize', 'parity', 'stopbits', 'flow_control',
                       'encoding', 'backspace', 'private_key'}
 V3_FIELDS = V2_FIELDS | {'jump_profile'}
-FIELDS = V3_FIELDS | {'auth_method'}
+FIELDS = V3_FIELDS | {'auth_method','ssh_mode'}
 
 
 def validate(sessions, *, version=4):
@@ -38,6 +38,7 @@ def validate(sessions, *, version=4):
             raise ValueError('Invalid jump profile reference')
         if profile.get('auth_method','auto') not in ('auto','password-first','interactive-first','publickey-only','interactive-only'):
             raise ValueError('Invalid authentication method')
+        if profile.get('ssh_mode','shell') not in ('shell','channels'):raise ValueError('Invalid SSH shell mode')
         if mode == 'Serial':
             SerialSettings(int(profile.get('port', '115200')),
                            int(profile.get('bytesize', '8')), profile.get('parity', 'N'),

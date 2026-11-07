@@ -6,11 +6,12 @@ from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QFormLayout,
     QLineEdit, QComboBox, QPushButton, QLabel, QTabWidget, QDialog,
     QDialogButtonBox, QGroupBox, QFileDialog, QDockWidget, QTreeWidget,
     QTreeWidgetItem, QToolBar, QToolButton, QStackedWidget, QListWidget,
-    QMenu, QMessageBox, QFontDialog)
+    QMenu, QMessageBox, QFontDialog, QCheckBox)
 
 from .appearance import Preferences, SCHEMES, apply_desktop_style, icon, terminal_font
 from .terminal_model import ENCODINGS
 from .authentication import AUTH_METHODS
+from .endpoint import parse_destination
 
 
 class ConnectionOptions(QDialog):
@@ -47,6 +48,9 @@ class ConnectionOptions(QDialog):
             self.auth_method.addItem(label, value)
         self.auth_method.setCurrentIndex(max(0, self.auth_method.findData(options.get('auth_method','auto'))))
         form.addRow('认证方式：', self.auth_method)
+        self.channels_only=QCheckBox('仅建立SSH连接，启用SFTP / 隧道，不打开远程Shell')
+        self.channels_only.setChecked(options.get('ssh_mode','shell')=='channels')
+        form.addRow(self.channels_only)
         self.private_key = QLineEdit(options['private_key'])
         key_row = QHBoxLayout(); key_row.addWidget(self.private_key, 1)
         choose = QPushButton('浏览…'); choose.clicked.connect(self.choose_key); key_row.addWidget(choose)
@@ -96,6 +100,7 @@ class ConnectionOptions(QDialog):
         return dict(encoding=self.encoding.currentText(), backspace=self.backspace.currentText(),
                     private_key=self.private_key.text().strip(), jump_profile=self.jump_profile.currentData(),
                     auth_method=self.auth_method.currentData(),
+                    ssh_mode='channels' if self.channels_only.isChecked() else 'shell',
                     **{key: field.currentText() for key, field in self.serial_fields.items()})
 
 
@@ -304,7 +309,10 @@ class DesktopShell:
     def show_quick_connect(self, host=None):
         if self._closing: return
         if isinstance(host, str) and host.strip():
-            self.mode.setCurrentText('SSH'); self.host.setText(host.strip()); self._loaded_profile = None
+            try:endpoint=parse_destination(host.strip(),username=self.user.text())
+            except ValueError:self.status.setText('目标格式无效；支持 user@host:port 或 [IPv6]:port，不接受URL口令');return
+            self.mode.setCurrentText('SSH');self.host.setText(endpoint.host);self.port.setText(str(endpoint.port))
+            self.user.setText(endpoint.username);self._loaded_profile = None
         self.quick_dialog.error.clear(); self.quick_dialog.show(); self.quick_dialog.raise_()
         self.quick_dialog.activateWindow()
         (self.password if self.host.text().strip() and self.user.text().strip() else self.host).setFocus()

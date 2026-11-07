@@ -47,6 +47,7 @@ class Terminal(QAbstractScrollArea):
         self.search_text = ''
         self._last_match = None
         self._error_text = ''
+        self.notice = ''
         self._last_alternate = False
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.setAttribute(Qt.WidgetAttribute.WA_InputMethodEnabled)
@@ -131,7 +132,7 @@ class Terminal(QAbstractScrollArea):
         QApplication.inputMethod().update(Qt.InputMethodQuery.ImCursorRectangle)
 
     def toPlainText(self):
-        return self._error_text or self.model.text()
+        return self._error_text or self.notice or self.model.text()
 
     def _selected(self, row, column):
         if not self.selection:
@@ -143,9 +144,9 @@ class Terminal(QAbstractScrollArea):
         painter = QPainter(self.viewport())
         painter.fillRect(self.viewport().rect(), self.background)
         painter.setFont(self.font())
-        if self._error_text:
+        if self._error_text or self.notice:
             painter.setPen(self.foreground)
-            painter.drawText(self.viewport().rect(), Qt.TextFlag.TextWordWrap, self._error_text)
+            painter.drawText(self.viewport().rect().adjusted(8,8,-8,-8), Qt.TextFlag.TextWordWrap, self._error_text or self.notice)
             return
         first = self.verticalScrollBar().value()
         visible = min(self.screen.lines, math.ceil(self.viewport().height() / self.cell_height))

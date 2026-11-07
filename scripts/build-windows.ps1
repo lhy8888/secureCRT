@@ -16,6 +16,16 @@ Assert-NativeSuccess
 Assert-NativeSuccess
 Copy-Item scripts/Test-HarborHardware.ps1 dist/HarborTerminal/
 Copy-Item docs/windows-hardware-testing.md dist/HarborTerminal/HARDWARE-TESTING.md
+$sourceCommit = (& git rev-parse HEAD).Trim()
+Assert-NativeSuccess
+$sourceDirty = [bool](& git status --porcelain --untracked-files=no)
+@{
+    source_commit = $sourceCommit
+    source_dirty = $sourceDirty
+    built_utc = [DateTime]::UtcNow.ToString('o')
+    python = (& .\.venv-build-win\Scripts\python.exe -c "import platform; print(platform.python_version())").Trim()
+    signing = 'unsigned development build'
+} | ConvertTo-Json | Set-Content -Encoding UTF8 dist/HarborTerminal/BUILD-INFO.json
 & .\.venv-build-win\Scripts\python.exe scripts/collect_licenses.py --out dist/HarborTerminal/ThirdParty
 Assert-NativeSuccess
 $exe = (Resolve-Path dist/HarborTerminal/HarborTerminal.exe).Path

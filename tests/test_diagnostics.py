@@ -61,3 +61,12 @@ def test_packaged_desktop_smoke_exercises_real_dialogs_and_writes_report(tmp_pat
     assert data['status']=='passed' and all(data['checks'].values())
     assert data['checks']['nested_options'] and data['checks']['font_dialog']
     assert report.with_suffix('.png').is_file()
+
+
+def test_hotplug_refuses_duplicate_serial_numbers_instead_of_false_identity_match(tmp_path,monkeypatch):
+    monkeypatch.setattr('harbor_terminal.hardware.discover_ports',lambda:[
+        dict(device='COM3',serial_number='duplicate'),dict(device='COM9',serial_number='duplicate')])
+    report=tmp_path/'ambiguous.json'
+    assert serial_diagnostic(report,mode='hotplug',port='COM3',seconds=1)==1
+    data=json.loads(report.read_text())
+    assert data['status']=='failed' and data['error_type']=='ValueError'
