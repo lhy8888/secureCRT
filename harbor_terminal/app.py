@@ -18,6 +18,7 @@ from .auth_dialog import AuthenticationDialog
 from . import session_templates
 from .storage import StorageConflict, CommitUncertain, ANY_REVISION
 from .ssh_policy import POLICY_FIELDS
+from .input_policy import INPUT_FIELDS
 
 DEFAULTS = session_templates.BASE_OPTIONS
 STATES = dict(Connecting='连接中', ConnectingJump='连接跳板中', ConnectingTarget='连接目标中',
@@ -281,9 +282,10 @@ class Window(QMainWindow, DesktopShell):
                 self.status.setText('已取消本次兼容连接');return
         self.password.clear(); self.passphrase = None
         self.jump_password = self.jump_passphrase = None
-        worker = Worker(self.mode.currentText(),options)
+        input_policy={key:self.options[key] for key in INPUT_FIELDS}
+        worker = Worker(self.mode.currentText(),options,input_policy=input_policy)
         worker.receive_stream.configure(self.options['encoding'])
-        terminal = Terminal(worker,encoding=self.options['encoding'],backspace=self.options['backspace'])
+        terminal = Terminal(worker,encoding=self.options['encoding'],backspace=self.options['backspace'],input_policy=input_policy)
         terminal.set_appearance(self.preferences.scheme, terminal_font(self.preferences.family, self.preferences.size))
         terminal.connection_profile = dict(mode=self.mode.currentText(),host=self.host.text().strip(),port=self.port.text(),
             username=self.user.text().strip(),known_hosts=self.known.text().strip(),**self.options)
@@ -375,7 +377,7 @@ class Window(QMainWindow, DesktopShell):
         worker = terminal.worker
         if kind in ('sftp', 'forward','diagnostics') and worker.mode != 'SSH':
             self.status.setText('此工具仅用于当前SSH会话'); return None
-        if kind == 'hex' and worker.mode != 'Serial':
+        if kind in ('hex','serial') and worker.mode != 'Serial':
             self.status.setText('当前Hex视图用于串口原始字节'); return None
         key = (worker, kind)
         if key not in self.service_panels:
@@ -388,6 +390,12 @@ class Window(QMainWindow, DesktopShell):
             elif kind=='diagnostics':
                 from .ssh_dialogs import DiagnosticsDialog
                 panel=DiagnosticsDialog(worker,terminal.session_label,self)
+            elif kind=='serial':
+                from .input_dialogs import SerialLinesDialog
+                panel=SerialLinesDialog(worker,terminal.session_label,self)
+            elif kind=='text':
+                from .input_dialogs import TextFilesDialog
+                panel=TextFilesDialog(worker,terminal.session_label,terminal.encoding,self)
             else:
                 panel = LogDialog(worker, terminal.session_label, terminal.encoding, self)
             self.service_panels[key] = panel
@@ -410,6 +418,8 @@ class Window(QMainWindow, DesktopShell):
         self.service_panel('forward')
 
     def open_diagnostics(self):self.service_panel('diagnostics')
+    def open_text_files(self):self.service_panel('text')
+    def open_serial_lines(self):self.service_panel('serial')
 
     def open_host_keys(self):
         from .key_dialogs import HostKeysDialog
@@ -428,6 +438,8 @@ class Window(QMainWindow, DesktopShell):
         terminal = self.tabs.currentWidget()
         connected = bool(terminal and terminal.worker.status == 'Connected' and not terminal.worker.stop_event.is_set())
         self.diagnostics_action.setEnabled(bool(terminal and terminal.worker.mode=='SSH'))
+        self.text_files_action.setEnabled(connected and terminal.worker.interactive)
+        self.serial_lines_action.setEnabled(connected and terminal.worker.mode=='Serial')
         for action in (self.clone_action,self.rename_tab_action,self.input_lock_action):action.setEnabled(bool(terminal))
         self.reconnect_action.setEnabled(bool(terminal and terminal.worker.status=='Disconnected'))
         self.input_lock_action.setChecked(bool(terminal and terminal.worker.input_locked))

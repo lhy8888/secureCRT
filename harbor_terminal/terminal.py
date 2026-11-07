@@ -11,6 +11,7 @@ from PySide6.QtWidgets import (QAbstractScrollArea, QApplication, QDialog,
 from .keyboard import encode_key, prepare_paste
 from .terminal_model import TerminalModel, MAX_COLUMNS, MAX_ROWS
 from .appearance import SCHEMES, terminal_font
+from .input_policy import InputPolicy
 
 PALETTE = dict(zip(
     ('black', 'red', 'green', 'brown', 'blue', 'magenta', 'cyan', 'white',
@@ -36,10 +37,11 @@ def cell_colors(cell, default_fg=FG, default_bg=BG):
 
 
 class Terminal(QAbstractScrollArea):
-    def __init__(self, worker, *, encoding='utf-8', backspace='del'):
+    def __init__(self, worker, *, encoding='utf-8', backspace='del',input_policy=None):
         super().__init__()
         self.worker = worker
-        self.model = TerminalModel(encoding=encoding, response=self._respond)
+        self.input_policy=InputPolicy.parse(input_policy).values
+        self.model = TerminalModel(encoding=encoding, response=self._respond,clear_history=self.input_policy['remote_clear_history'])
         self.screen, self.stream = self.model.screen, self.model.stream
         self.encoding, self.backspace = encoding, backspace
         self.selection = None
@@ -127,6 +129,7 @@ class Terminal(QAbstractScrollArea):
         if before == self.screen.history.top.maxlen and before and data:
             # History eviction can invalidate selection row indices. Fail closed.
             self.selection = None
+        if len(self.screen.history.top)<before:self.selection=None;self._last_match=None
         self._sync_scroll(follow)
         self.viewport().update()
         QApplication.inputMethod().update(Qt.InputMethodQuery.ImCursorRectangle)
@@ -301,10 +304,14 @@ class Terminal(QAbstractScrollArea):
             self.copy()
             return
         key = event.key()
+        alt=bool(modifiers & Qt.KeyboardModifier.AltModifier)
+        altgr=bool(modifiers & Qt.KeyboardModifier.GroupSwitchModifier) or control and alt and event.text() and event.text().isprintable()
+        if altgr:control=False;alt=False
+        elif self.input_policy['alt_meta']=='text':alt=False
         name = Qt.Key(key).name.removeprefix('Key_') if key in Qt.Key._value2member_map_ else ''
         try:
             data = encode_key(name, event.text(), shift=shift, control=control,
-                              alt=bool(modifiers & Qt.KeyboardModifier.AltModifier),
+                              alt=alt,
                               application_cursor=1 in self.screen.input_modes,
                               application_keypad=66 in self.screen.input_modes,
                               keypad=bool(modifiers & Qt.KeyboardModifier.KeypadModifier),
@@ -341,36 +348,59 @@ class Terminal(QAbstractScrollArea):
 
     def confirm_multiline(self, text):
         dialog = QDialog(self)
-        dialog.setWindowTitle('确认多行粘贴')
-        dialog.resize(650, 360)
+        dialog.setWindowTitle('确认粘贴内容')
+        dialog.resize(700, 500)
         layout = QVBoxLayout(dialog)
         layout.addWidget(QLabel('请检查或编辑内容；多行粘贴可能执行远端命令。'))
         edit = QPlainTextEdit(text)
+        edit.document().setModified(False)
         layout.addWidget(edit)
+        label=QLabel('发送预览：␍表示CR，␊表示LF；只按当前会话编码/换行/引用设置发送文本。');label.setWordWrap(True);layout.addWidget(label)
+        preview=QPlainTextEdit();preview.setReadOnly(True);layout.addWidget(preview)
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
         buttons.accepted.connect(dialog.accept)
         buttons.rejected.connect(dialog.reject)
         layout.addWidget(buttons)
-        result = edit.toPlainText() if dialog.exec() == QDialog.DialogCode.Accepted else None
+        def refresh_preview():
+            try:
+                content=edit.toPlainText() if edit.document().isModified() else text
+                raw=prepare_paste(content,encoding=self.encoding,bracketed=2004 in self.screen.input_modes,
+                    newline=self.input_policy['paste_newline'],quote=self.input_policy['paste_quote'])
+                shown=raw.decode(self.encoding).replace('\x1b','␛').replace('\r','␍').replace('\n','␊\n')
+                preview.setPlainText(shown);buttons.button(QDialogButtonBox.StandardButton.Ok).setEnabled(True)
+            except (ValueError,UnicodeError):
+                preview.setPlainText('内容包含控制字符、不能用当前编码表示或超过64KiB。');buttons.button(QDialogButtonBox.StandardButton.Ok).setEnabled(False)
+        edit.textChanged.connect(refresh_preview);refresh_preview()
+        result = (edit.toPlainText() if edit.document().isModified() else text) if dialog.exec() == QDialog.DialogCode.Accepted else None
         edit.clear()
         dialog.deleteLater()
         return result
 
-    def paste_confirmed(self):
-        text = QApplication.clipboard().text()
+    def paste_confirmed(self,text=None,*,review=False):
+        text = QApplication.clipboard().text() if text is None else text
         try:
             prepare_paste(text, encoding=self.encoding)
-            if '\n' in text or '\r' in text:
+            if review or '\n' in text or '\r' in text or self.input_policy['paste_quote']!='none':
                 text = self.confirm_multiline(text)
                 if text is None:
                     return
             # Revalidate after editing; bracket terminators are prohibited in input.
-            data = prepare_paste(text, encoding=self.encoding, bracketed=2004 in self.screen.input_modes)
+            data = prepare_paste(text, encoding=self.encoding, bracketed=2004 in self.screen.input_modes,
+                                 newline=self.input_policy['paste_newline'],quote=self.input_policy['paste_quote'])
         except (ValueError, UnicodeEncodeError) as exc:
             QMessageBox.warning(self, '无法粘贴', str(exc))
             return
         if data and not self.worker.send(data):
             QApplication.beep()
+
+    def paste_path(self):
+        from PySide6.QtWidgets import QFileDialog
+        path,_=QFileDialog.getOpenFileName(self,'选择要粘贴为文本的路径（不读取或执行文件）')
+        if path:self.paste_confirmed(path,review=True)
+
+    def clear_local(self,history=False):
+        self.model.screen.clear_local(history);self.selection=None;self._last_match=None
+        self._sync_scroll(True);self.viewport().update()
 
     def wheelEvent(self, event):
         if event.modifiers() & Qt.KeyboardModifier.ControlModifier:
@@ -387,5 +417,8 @@ class Terminal(QAbstractScrollArea):
     def contextMenuEvent(self, event):
         menu = QMenu(self)
         menu.addAction('复制  Ctrl+Shift+C', self.copy)
-        menu.addAction('粘贴（检查） Ctrl+Shift+V', self.paste_confirmed)
+        menu.addAction('粘贴（检查） Ctrl+Shift+V', lambda:self.paste_confirmed())
+        menu.addAction('粘贴文件路径…',self.paste_path)
+        menu.addSeparator();menu.addAction('清除当前屏幕（本地）',self.clear_local)
+        menu.addAction('清除历史（本地）',lambda:self.clear_local(True))
         menu.exec(event.globalPos())

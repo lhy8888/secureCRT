@@ -81,7 +81,7 @@ def test_window_close_cancels_connect_and_finishes_without_second_click(tmp_path
         async def connect(self,**options):await asyncio.Event().wait()
         async def close(self):pass
     actual=Worker
-    monkeypatch.setattr(shell,'Worker',lambda mode,options:actual(mode,options,transport_factory=Stalled))
+    monkeypatch.setattr(shell,'Worker',lambda mode,options,**kwargs:actual(mode,options,transport_factory=Stalled,**kwargs))
     app=QApplication.instance() or QApplication([])
     window=Window(profile_path=tmp_path/'sessions.json');window.show()
     window.host.setText('example.invalid');window.user.setText('test-only')

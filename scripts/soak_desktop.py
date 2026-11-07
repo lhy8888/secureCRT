@@ -35,8 +35,8 @@ async def soak(output,duration,interval):
         except NotImplementedError:pass
     report=dict(status='running',pid=os.getpid(),version=version('harbor-terminal'),
         platform=app.platformName(),started=datetime.now(timezone.utc).isoformat(),requested_seconds=duration,
-        elapsed_seconds=0,cycles=0,errors=0,protocol_queries=0,protocol_replies=0,configuration_commits=0,
-        scope='Actual Qt window + Worker + loopback SSH + flows + input lock + protocol replies + profile transactions; no physical COM or vendor comparison',
+        elapsed_seconds=0,cycles=0,errors=0,protocol_queries=0,protocol_replies=0,configuration_commits=0,text_sends=0,
+        scope='Actual Qt + Worker + loopback SSH + paced flows/text sends + text capture + input lock + protocol replies + profile transactions; no physical COM or vendor comparison',
         samples=[],source_hashes={})
     import harbor_terminal
     package=Path(harbor_terminal.__file__).parent
@@ -81,14 +81,19 @@ async def soak(output,duration,interval):
         window=Window(profile_path=root/'sessions.json');window.show();app.processEvents()
         window.host.setText('127.0.0.1');window.port.setText(str(server.get_port()))
         window.user.setText('gui-soak');window.password.setText('local-gui-fixture-only');window.known.setText(str(known))
+        window.options.update(send_char_delay_ms='1',send_line_delay_ms='10')
         window.connect_session();terminal=window.tabs.currentWidget();worker=terminal.worker
         await until(lambda:worker.status in ('Connected','Disconnected') and (worker.status=='Connected' or not worker.isRunning()))
         if worker.status!='Connected':raise ConnectionError('Local GUI fixture did not connect')
+        if not worker.start_text_capture(root/'text-capture.txt',max_bytes=64*1048576):raise RuntimeError('Text capture did not start')
+        await until(lambda:worker.text_capture.snapshot()['state']=='running')
         atomic_json(output,report);print('Desktop soak started:',output,flush=True)
         last_sample=started-10
         while time.monotonic()-started<duration and not stop.is_set():
             index=report['cycles'];marker=f'gui-{index:08d}-世界#'
-            identifier=worker.submit_flow([dict(action='send',text=marker),dict(action='wait',patterns=[marker],timeout=3)])
+            if index%100==0:
+                identifier=worker.submit_text((marker+'\r').encode(),prompt=marker,timeout=3);report['text_sends']+=1
+            else:identifier=worker.submit_flow([dict(action='send',text=marker),dict(action='wait',patterns=[marker],timeout=3)])
             if not identifier:raise RuntimeError('Flow not accepted')
             worker.set_input_locked(True)
             await until(lambda:worker.flow_progress().get('phase') in ('success','error','cancelled'))
@@ -98,6 +103,8 @@ async def soak(output,duration,interval):
             await until(lambda:marker in terminal.toPlainText())
             if index%25==0:await until(lambda:report['protocol_replies']==report['protocol_queries'])
             if worker.stop_event.is_set():raise ConnectionError('Terminal response interrupted the connection')
+            capture=worker.text_capture.snapshot()
+            if capture['state']!='running':raise RuntimeError('Text capture stopped unexpectedly')
             worker.set_input_locked(False)
             if index%250==0:
                 if not window.commit_profiles({'fixture':dict(terminal.connection_profile)}):raise RuntimeError('Profile commit failed')
@@ -110,7 +117,7 @@ async def soak(output,duration,interval):
                     if sample.get('handles',0)>baseline.get('handles',0)+64:raise RuntimeError('Handle budget exceeded')
                     if sample.get('rss_bytes',0)>baseline.get('rss_bytes',0)+128*1024*1024:raise RuntimeError('Memory budget exceeded')
                 report['samples']=(report['samples']+[sample])[-360:]
-                report.update(elapsed_seconds=now-started,resources=sample)
+                report.update(elapsed_seconds=now-started,resources=sample,text_capture=capture)
                 samples.write(json.dumps(sample)+'\n');samples.flush();os.fsync(samples.fileno())
                 atomic_json(output,report);last_sample=now
             deadline=min(time.monotonic()+interval,started+duration)

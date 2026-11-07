@@ -18,6 +18,8 @@ from .forwarding import ForwardSpec, ForwardManager
 from .authentication import AuthenticationBroker, AuthenticationCancelled, AuthenticationTimeout, AuthenticationLimit
 from .automation import ReceiveStream, run_flow, validate_steps
 from .ssh_policy import SecurityPolicyError
+from .input_policy import InputPolicy
+from .text_files import TextCapture,prepare_file
 
 
 class Worker(QThread):
@@ -27,8 +29,9 @@ class Worker(QThread):
     forward_result = Signal(dict)
     auth_requested = Signal(dict)
     flow_result = Signal(dict)
+    control_result = Signal(dict)
 
-    def __init__(self, mode, options, *, transport_factory=None):
+    def __init__(self, mode, options, *, transport_factory=None,input_policy=None):
         super().__init__()
         self.mode, self.options = mode, dict(options)
         self.session_id = uuid.uuid4().hex
@@ -39,6 +42,8 @@ class Worker(QThread):
         self.incoming, self.outgoing = bytearray(), bytearray()
         self._protocol_outgoing = bytearray()
         self._ssh_diagnostics = {}
+        self.input_policy=InputPolicy.parse(input_policy);self._writing=False;self._writing_job=None
+        self.text_capture=None;self._serial_snapshot={}
         self.status = 'Disconnected'
         self._size = (100, 30)
         self._resize = True
@@ -100,9 +105,29 @@ class Worker(QThread):
 
     def _observe(self, direction, data):
         if direction == 'RX': self.receive_stream.append(data)
+        if direction=='RX' and self.text_capture:self.text_capture.record(data)
         self.trace.append(direction, data)
         if self.journal:
             self.journal.record(direction, data)
+
+    def start_text_capture(self,path,**options):
+        with self.lock:
+            if self.status!='Connected' or self.stop_event.is_set() or not self.interactive:return False
+            if self.text_capture and self.text_capture.snapshot()['alive']:return False
+            self.text_capture=TextCapture(path,**options);self.text_capture.start();return True
+
+    def stop_text_capture(self):
+        with self.lock:
+            if self.text_capture:self.text_capture.close()
+
+    def serial_snapshot(self):
+        with self.lock:return dict(self._serial_snapshot)
+
+    def set_serial_line(self,name,value):
+        if name not in ('dtr','rts') or type(value) is not bool:raise ValueError('Invalid serial line operation')
+        with self.lock:
+            if self.mode!='Serial' or self.status!='Connected' or self.stop_event.is_set() or self.input_locked or len(self._controls)>=16:return None
+            identifier=uuid.uuid4().hex;self._controls.append(('line',(identifier,name,value)));return identifier
 
     def submit_forward(self, action, **options):
         if action == 'start':
@@ -156,11 +181,23 @@ class Worker(QThread):
         for step in steps:
             if step['action']=='send': step['text'].encode(encoding)
         with self.lock:
-            if self.status!='Connected' or self.stop_event.is_set() or not self.interactive or self.input_locked or self._flow_job or self.outgoing: return None
+            if self.status!='Connected' or self.stop_event.is_set() or not self.interactive or self.input_locked or self._flow_job or self.outgoing or self._writing: return None
             identifier = uuid.uuid4().hex
             self._flow_job = dict(id=identifier,steps=steps,cursor=self.receive_stream.cursor(),
                 encoding=encoding,cancel=threading.Event())
             self._flow_progress = dict(id=identifier,phase='starting',step=0,total=len(steps))
+            return identifier
+
+    def submit_text(self,payload,*,encoding='utf-8',prompt='',timeout=30):
+        payload=prepare_file(payload,encoding,encoding,'keep')
+        if not isinstance(prompt,str) or len(prompt)>1024 or any(ord(c)<32 for c in prompt):raise ValueError('Invalid literal prompt')
+        if type(timeout) not in (int,float) or not .1<=timeout<=120:raise ValueError('Invalid prompt deadline')
+        with self.lock:
+            if self.status!='Connected' or self.stop_event.is_set() or not self.interactive or self.input_locked or self._flow_job or self.outgoing or self._writing:return None
+            identifier=uuid.uuid4().hex
+            self._flow_job=dict(id=identifier,kind='text',payload=payload,prompt=prompt,timeout=timeout,sent=0,queued=0,
+                                encoding=encoding,cancel=threading.Event())
+            self._flow_progress=dict(id=identifier,phase='starting',current=0,total=len(payload))
             return identifier
 
     def cancel_flow(self, identifier):
@@ -223,21 +260,52 @@ class Worker(QThread):
                 owned_job = self._flow_job if self._flow_job and self._flow_job['id']==owner else None
                 self.outgoing.clear()
                 self._outgoing_owner = None
+                self._writing=bool(outgoing)
+                self._writing_job=owned_job if outgoing else None
             if protocol or outgoing:
-                for index,payload in enumerate((protocol,outgoing)):
-                    if not payload:continue
-                    with self.lock:
-                        if self.stop_event.is_set():return
-                        if index==1 and owned_job and owned_job['cancel'].is_set():continue
-                    try:await asyncio.wait_for(transport.write(payload),5)
-                    except IncompleteWriteError as exc:
-                        self._observe('TX',payload[:exc.sent]);raise
-                    self._observe('TX',payload)
+                try:
+                    if protocol:await self._write_piece(transport,protocol)
+                    for payload,delay in self.input_policy.chunks(outgoing):
+                        if self.stop_event.is_set() or owned_job and owned_job['cancel'].is_set():break
+                        if payload:await self._write_piece(transport,payload,owned_job)
+                        if delay and not await self._pause_input(transport,delay,owned_job):break
+                finally:
+                    with self.lock:self._writing=False;self._writing_job=None
             else:
                 await asyncio.sleep(.01)
 
+    async def _write_piece(self,transport,payload,job=None):
+        sent=0
+        try:
+            await asyncio.wait_for(transport.write(payload),5);sent=len(payload)
+        except IncompleteWriteError as exc:
+            sent=exc.sent
+            if job and job.get('kind')=='text':job['write_error']=type(exc).__name__
+            raise
+        except asyncio.CancelledError:
+            if job and job.get('kind')=='text':job['write_uncertain']=True
+            raise
+        except Exception as exc:
+            if job and job.get('kind')=='text':job.update(write_uncertain=True,write_error=type(exc).__name__)
+            raise
+        finally:
+            if sent:self._observe('TX',payload[:sent])
+            if job and job.get('kind')=='text':
+                with self.lock:
+                    job['sent']+=sent;self._flow_progress=dict(self._flow_progress,current=job['sent'])
+
+    async def _pause_input(self,transport,seconds,job):
+        deadline=asyncio.get_running_loop().time()+seconds
+        while True:
+            if self.stop_event.is_set() or job and job['cancel'].is_set():return False
+            with self.lock:protocol=bytes(self._protocol_outgoing);self._protocol_outgoing.clear()
+            if protocol:await self._write_piece(transport,protocol)
+            remaining=deadline-asyncio.get_running_loop().time()
+            if remaining<=0:return True
+            await asyncio.sleep(min(.01,remaining))
+
     async def _control(self, transport):
-        last_diagnostics=0
+        last_diagnostics=0;last_serial=0
         while True:
             with self.lock:
                 if self.stop_event.is_set():
@@ -249,12 +317,21 @@ class Worker(QThread):
             if size and self.mode == 'SSH':
                 await transport.resize(*size)
             if control:
-                await asyncio.wait_for(transport.send_break(control[1]), 3)
+                if control[0]=='break':await asyncio.wait_for(transport.send_break(control[1]), 3)
+                else:
+                    identifier,name,value=control[1];event=dict(id=identifier,status='success',line=name)
+                    try:await transport.set_line(name,value)
+                    except Exception as exc:event.update(status='error',code=type(exc).__name__)
+                    self.control_result.emit(event)
             now=asyncio.get_running_loop().time()
             if self.mode=='SSH' and hasattr(transport,'diagnostics') and now-last_diagnostics>=1:
                 snapshot=transport.diagnostics()
                 with self.lock:self._ssh_diagnostics=snapshot
                 last_diagnostics=now
+            if self.mode=='Serial' and hasattr(transport,'modem_status') and now-last_serial>=.5:
+                snapshot=await transport.modem_status()
+                with self.lock:self._serial_snapshot=snapshot
+                last_serial=now
             await asyncio.sleep(.025)
 
     async def _file_operations(self, transport):
@@ -358,8 +435,9 @@ class Worker(QThread):
             identifier = job['id']
             def progress(value):
                 with self.lock:self._flow_progress = dict(id=identifier,phase='running',**value)
-            operation = asyncio.create_task(run_flow(self.receive_stream,job['cursor'],job['steps'],
-                lambda data:self.send(data,owner=identifier),encoding=job['encoding'],progress=progress))
+            operation = asyncio.create_task(self._send_text(job) if job.get('kind')=='text' else
+                run_flow(self.receive_stream,job['cursor'],job['steps'],
+                    lambda data:self.send(data,owner=identifier),encoding=job['encoding'],progress=progress))
             async def cancellation():
                 while not job['cancel'].is_set():await asyncio.sleep(.02)
             monitor = asyncio.create_task(cancellation())
@@ -378,14 +456,43 @@ class Worker(QThread):
                 event['message']=type(exc).__name__+'：流程停止；已发送内容无法撤回，不会自动重试'
             finally:
                 monitor.cancel();await asyncio.gather(monitor,return_exceptions=True)
+                if job.get('kind')=='text' and event['status']!='success':
+                    job['cancel'].set()
+                    with self.lock:
+                        if self._outgoing_owner==identifier:self.outgoing.clear();self._outgoing_owner=None
+                    while True:
+                        with self.lock:writing=self._writing_job is job
+                        if not writing:break
+                        await asyncio.sleep(.01)
                 with self.lock:
                     if event['status']!='success':job['cancel'].set()
+                    if job.get('kind')=='text':event.update(bytes_sent=job['sent'],write_uncertain=job.get('write_uncertain',False))
                     event['sends_queued']=event['result'].get('sends_queued',self._flow_progress.get('sends_queued',0))
+                    if job.get('kind')=='text':
+                        event['sends_queued']=job['queued']
+                        if job.get('write_error'):event.update(status='error',code=job['write_error'])
                     if self._flow_job is job:self._flow_job=None
                     if self._outgoing_owner==identifier and event['status']!='success':
                         self.outgoing.clear();self._outgoing_owner=None
                     self._flow_progress=dict(self._flow_progress,phase=event['status'])
                 self.flow_result.emit(event)
+
+    async def _send_text(self,job):
+        lines=job['payload'].splitlines(keepends=True)
+        async with asyncio.timeout(3600):
+            for index,line in enumerate(lines):
+                cursor=self.receive_stream.cursor()
+                if job['cancel'].is_set():raise asyncio.CancelledError()
+                if not self.send(line,owner=job['id']):raise RuntimeError('Text send queue unavailable')
+                job['queued']+=1
+                while True:
+                    if job['cancel'].is_set():raise asyncio.CancelledError()
+                    with self.lock:pending=bool(self.outgoing) or self._writing
+                    if not pending:break
+                    await asyncio.sleep(.01)
+                if job['prompt']:await self.receive_stream.read_until(cursor,[job['prompt']],job['timeout'])
+                with self.lock:self._flow_progress=dict(self._flow_progress,line=index+1,lines=len(lines),current=job['sent'])
+        return dict(sends_queued=job['queued'],bytes_sent=job['sent'])
 
     async def session(self):
         transport = self._factory()
@@ -482,6 +589,8 @@ class Worker(QThread):
                 self.journal.event('disconnected')
                 if not await asyncio.to_thread(self.journal.close, 5):
                     self.failed.emit('日志未能在5秒内关闭，文件可能未完全写入')
+            if self.text_capture:
+                if not await asyncio.to_thread(self.text_capture.close,5):self.failed.emit('文本接收文件未能在5秒内关闭，请核对部分输出')
             self._set_state('Disconnected')
 
     def run(self):

@@ -22,7 +22,7 @@ class ConnectionOptions(QDialog):
         outer = QVBoxLayout(self)
         row = QHBoxLayout(); outer.addLayout(row, 1)
         categories = QListWidget(); categories.setFixedWidth(145)
-        categories.addItems(['终端 / 编码', 'SSH / 身份', 'SSH / 跳板', '串口', 'SSH / 安全策略'])
+        categories.addItems(['终端 / 编码', 'SSH / 身份', 'SSH / 跳板', '串口', 'SSH / 安全策略','输入 / 发送'])
         self.categories=categories
         pages = QStackedWidget(); row.addWidget(categories); row.addWidget(pages, 1)
 
@@ -90,6 +90,8 @@ class ConnectionOptions(QDialog):
         form.addRow(QLabel('设备和波特率在“快速连接”中设置。'))
         from .ssh_dialogs import PolicyEditor
         self.policy=PolicyEditor(options,self);scroll=QScrollArea();scroll.setWidgetResizable(True);scroll.setWidget(self.policy);pages.addWidget(scroll)
+        from .input_dialogs import InputPolicyEditor
+        self.input_policy=InputPolicyEditor(options,self);scroll=QScrollArea();scroll.setWidgetResizable(True);scroll.setWidget(self.input_policy);pages.addWidget(scroll)
         categories.currentRowChanged.connect(pages.setCurrentIndex); categories.setCurrentRow(0)
         outer.addWidget(QLabel('连接参数在下次连接时生效。'))
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
@@ -109,6 +111,8 @@ class ConnectionOptions(QDialog):
     def accept(self):
         try:self.policy.values()
         except ValueError:self.categories.setCurrentRow(4);self.policy.status.setText('策略无效：检查算法名称、旧算法许可及重协商范围。');return
+        try:self.input_policy.values()
+        except ValueError:self.categories.setCurrentRow(5);self.input_policy.status.setText('发送间隔或输入策略无效。');return
         super().accept()
 
     def values(self):
@@ -116,7 +120,7 @@ class ConnectionOptions(QDialog):
                     private_key=self.private_key.text().strip(), jump_profile=self.jump_profile.currentData(),
                     auth_method=self.auth_method.currentData(),
                     ssh_mode='channels' if self.channels_only.isChecked() else 'shell',
-                    client_certificate=self.certificate.text().strip(),**self.policy.values(),
+                    client_certificate=self.certificate.text().strip(),**self.policy.values(),**self.input_policy.values(),
                     **{key: field.currentText() for key, field in self.serial_fields.items()})
 
 
@@ -264,6 +268,8 @@ class DesktopShell:
         self.host_keys_action=self._action('settings','主机密钥管理…',self.open_host_keys)
         self.key_tools_action=self._action('settings','生成 / 检查身份密钥…',self.open_key_tools)
         self.diagnostics_action=self._action('log','SSH协商诊断…',self.open_diagnostics)
+        self.text_files_action=self._action('transfer','ASCII / 文本文件收发…',self.open_text_files)
+        self.serial_lines_action=self._action('terminal','串口线路控制…',self.open_serial_lines)
 
     def _build_toolbar(self):
         self.toolbar = QToolBar('标准工具栏', self); self.toolbar.setObjectName('standardToolbar')
@@ -304,12 +310,12 @@ class DesktopShell:
         for key, (label, _, _) in SCHEMES.items():
             action = colors.addAction(label); action.setCheckable(True); action.setChecked(self.preferences.scheme == key)
             group.addAction(action); action.triggered.connect(lambda checked, value=key: self.set_terminal_scheme(value))
-        transfer = bar.addMenu('传输(&T)'); transfer.addAction(self.sftp_button)
+        transfer = bar.addMenu('传输(&T)'); transfer.addActions([self.sftp_button,self.text_files_action])
         tools = bar.addMenu('工具(&U)'); tools.addActions([self.log_button, self.hex_button, self.forward_button, self.break_button])
         tools.addAction(self.command_action)
         tools.addAction(self.input_lock_action)
         tools.addAction(self.rename_tab_action)
-        tools.addSeparator();tools.addActions([self.host_keys_action,self.key_tools_action,self.diagnostics_action])
+        tools.addSeparator();tools.addActions([self.host_keys_action,self.key_tools_action,self.diagnostics_action,self.serial_lines_action])
         self.windows_menu = bar.addMenu('窗口(&W)'); self.windows_menu.aboutToShow.connect(self.populate_windows_menu)
         help_menu = bar.addMenu('帮助(&H)')
         help_menu.addAction('快捷键', lambda: QMessageBox.information(self, '快捷键',

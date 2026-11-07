@@ -67,7 +67,9 @@ class Grid(pyte.HistoryScreen):
 
 class ScreenMux:
     """Dispatch each parser event to the current grid, even after a screen swap."""
-    def __init__(self, columns=100, lines=30, response=None):
+    def __init__(self, columns=100, lines=30, response=None,clear_history='allow'):
+        if clear_history not in ('allow','preserve'):raise ValueError('Invalid remote history policy')
+        self.clear_history=clear_history
         self.main = Grid(columns, lines, response)
         self.alternate = Grid(columns, lines, response, history=0)
         self.active = self.main
@@ -137,12 +139,24 @@ class ScreenMux:
         self.active.reset_mode(*normal, **kwargs)
 
     def reset(self):
+        retained=list(self.main.history.top) if self.clear_history=='preserve' else []
         self.main.reset()
         self.alternate.reset()
         self.active = self.main
         self.input_modes.clear()
         self.saved_for_alt = False
         self.last_character = ' '
+        self.main.history.top.extend(retained)
+
+    def erase_in_display(self,how=0,*args,**kwargs):
+        if how==3 and self.clear_history=='preserve':return
+        self._charge(self.columns*self.lines)
+        self.active.erase_in_display(how,*args,**kwargs)
+
+    def clear_local(self,history=False):
+        if history:
+            for grid in (self.main,self.alternate):grid._reset_history()
+        else:self.active.erase_in_display(2)
 
     def set_application_keypad(self):
         self.input_modes.add(66)
@@ -203,10 +217,10 @@ class ScreenMux:
 
 
 class TerminalModel:
-    def __init__(self, columns=100, lines=30, encoding='utf-8', response=None):
+    def __init__(self, columns=100, lines=30, encoding='utf-8', response=None,clear_history='allow'):
         if encoding not in ENCODINGS:
             raise ValueError('Unsupported encoding')
-        self.screen = ScreenMux(columns, lines, response)
+        self.screen = ScreenMux(columns, lines, response,clear_history)
         self.stream = SafeTerminalStream(self.screen)
         self.decoder = codecs.getincrementaldecoder(encoding)(errors='replace')
         self.encoding = encoding

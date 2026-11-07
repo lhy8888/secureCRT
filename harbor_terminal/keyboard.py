@@ -47,12 +47,12 @@ def encode_key(name, text='', *, shift=False, control=False, alt=False,
     return (b'\x1b' if alt and text else b'') + text.encode(encoding)
 
 
-def prepare_paste(text, *, encoding='utf-8', bracketed=False):
+def prepare_paste(text, *, encoding='utf-8', bracketed=False, newline='auto',quote='none'):
+    from .input_policy import convert_newlines,quote_text
     if any((ord(c) < 32 and c not in '\r\n\t') or 127 <= ord(c) < 160 for c in text):
         raise ValueError('Clipboard contains terminal control characters')
-    text = text.replace('\r\n', '\n').replace('\r', '\n')
-    if not bracketed:
-        text = text.replace('\n', '\r')
+    text=convert_newlines(text,('lf' if bracketed else 'cr') if newline=='auto' else newline)
+    text=quote_text(text,quote)
     payload = text.encode(encoding)
     if bracketed:
         payload = b'\x1b[200~' + payload + b'\x1b[201~'

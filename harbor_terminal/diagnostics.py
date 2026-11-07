@@ -23,6 +23,7 @@ async def protocol_probe(root):
     from .batch import run_batch
     from .key_tools import generate_identity,public_info
     from . import host_keys
+    from .session import Worker
     checks={};remote=root/'remote';remote.mkdir()
     private=root/'encrypted-key'
     generated=await asyncio.to_thread(generate_identity,private,'Ed25519','local-fixture-only')
@@ -110,6 +111,30 @@ async def protocol_probe(root):
         args=argument_parser().parse_args([f'smoke@127.0.0.1:{server.get_port()}',
             '--identity-file',str(plain),'--known-hosts',str(known),'--run-flow',str(flow),'--output',str(batch_result)])
         checks['batch_flow']=await run_batch(args)==0
+        # Run the same Worker/text/capture path used by the desktop, including
+        # byte pacing, cancellation, and priority terminal replies.
+        paced=Worker('SSH',options,input_policy=dict(send_char_delay_ms='2',send_line_delay_ms='20'))
+        events=[];paced.flow_result.connect(events.append);session=asyncio.create_task(paced.session())
+        async def until(predicate,seconds=8):
+            async with asyncio.timeout(seconds):
+                while not predicate():await asyncio.sleep(.005)
+        try:
+            await until(lambda:paced.status=='Connected')
+            capture=root/'receive-text.txt'
+            assert paced.start_text_capture(capture,source_encoding='utf-8',output_encoding='utf-8',newline='lf')
+            payload='text-世界\r\nsecond\r\n'.encode()
+            assert paced.submit_text(payload)
+            await until(lambda:events and payload.decode() in paced.receive_stream.text)
+            checks['paced_ascii_real_ssh']=events[-1]['status']=='success' and events[-1]['bytes_sent']==len(payload)
+            paced.stop_text_capture();await until(lambda:not paced.text_capture.snapshot()['alive'])
+            checks['ascii_receive_capture']=capture.read_bytes()=='text-世界\nsecond\n'.encode()
+            events.clear();cancel_payload=b'NEVER-COMPLETE-THIS-LONG-LINE'*100
+            identifier=paced.submit_text(cancel_payload)
+            await until(lambda:paced.flow_progress().get('current',0)>0)
+            assert paced.cancel_flow(identifier);await until(lambda:events)
+            checks['paced_cancel_stops_tail']=events[-1]['status']=='cancelled' and events[-1]['bytes_sent']<len(cancel_payload)
+            checks['paced_cancel_queue_empty']=not paced.outgoing
+        finally:paced.stop_event.set();await asyncio.wait_for(session,8)
     finally:
         if manager:await manager.close_all()
         await client.close();server.close();await server.wait_closed();tcp.close();await tcp.wait_closed()
@@ -174,6 +199,33 @@ def desktop_smoke(app, report_path):
             app.processEvents()
             result['checks']['background_identity_inspection']=bool(key_tools.last_result) and not key_tools.password.text() and 'PRIVATE KEY' not in key_tools.output.toPlainText()
             key_tools.close()
+            from .input_dialogs import TextFilesDialog,SerialLinesDialog
+            preview_worker=Worker('Serial',{});preview_worker._set_state('Connected')
+            text_files=TextFilesDialog(preview_worker,'local fixture','utf-8',window)
+            fixture=Path(temporary)/'preview.txt';fixture.write_text('local\nfixture',encoding='utf-8')
+            text_files.path.setText(str(fixture));text_files.load();text_files.show();app.processEvents()
+            result['checks']['ascii_file_dialog']=text_files.payload==b'local\rfixture' and text_files.send_button.isEnabled()
+            text_files.close();text_files.deleteLater()
+            preview_worker._serial_snapshot=dict(flow_control='dsrdtr',dtr=True,rts=False,cts=None)
+            lines=SerialLinesDialog(preview_worker,'driver fixture',window);lines.show();app.processEvents()
+            result['checks']['serial_controls_flow_guard']=not lines.apply.isEnabled() and lines.tree.topLevelItem(2).text(1)=='不支持 / 未知'
+            lines.close();lines.deleteLater()
+            from .terminal import Terminal
+            from PySide6.QtGui import QKeyEvent
+            terminal=Terminal(preview_worker,input_policy=dict(paste_newline='keep',paste_quote='powershell',remote_clear_history='preserve'))
+            terminal.show();app.processEvents()
+            def approve_paste():app.activeModalWidget().accept()
+            QTimer.singleShot(50,approve_paste);terminal.paste_confirmed("a'b\r\nnext")
+            result['checks']['paste_quote_keeps_crlf']=bytes(preview_worker.outgoing)==b"'a''b\r\nnext'"
+            preview_worker.outgoing.clear()
+            QApplication.sendEvent(terminal,QKeyEvent(QKeyEvent.Type.KeyPress,Qt.Key.Key_At,
+                Qt.KeyboardModifier.ControlModifier|Qt.KeyboardModifier.AltModifier,'@'))
+            result['checks']['altgr_text_preserved']=bytes(preview_worker.outgoing)==b'@'
+            terminal.model.resize(20,3);terminal.model.feed(b'old\r\n1\r\n2\r\n3\r\n4')
+            history=terminal.model.history;terminal.model.feed(b'\x1b[3J\x1bc')
+            result['checks']['remote_history_preserved']=bool(history) and terminal.model.history==history
+            terminal.clear_local(True);result['checks']['local_history_clear']=not terminal.model.history
+            terminal.close();terminal.deleteLater()
             from .session_manager import SessionManager,ImportDialog,TemplateDialog
             from .profile_operations import plan_import,export_sessions,parse_import
             from .storage import StorageConflict
@@ -200,6 +252,7 @@ def desktop_smoke(app, report_path):
                 modal = app.activeModalWidget()
                 result['checks']['nested_options'] = isinstance(modal, ConnectionOptions) and modal.parentWidget() is window.quick_dialog
                 result['checks']['ssh_policy_options'] = isinstance(modal, ConnectionOptions) and modal.policy.values()['ssh_strict_kex']=='require'
+                result['checks']['input_policy_options'] = isinstance(modal, ConnectionOptions) and modal.input_policy.values()['send_char_delay_ms']=='0'
                 if modal: modal.reject()
             QTimer.singleShot(50, dismiss_options); window.edit_options()
             window.quick_dialog.reject(); app.processEvents()

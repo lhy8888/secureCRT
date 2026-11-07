@@ -85,8 +85,8 @@ def parse_import(text, kind, *, mapping=None):
                 else:depth-=1
         parser.close()
     except ET.ParseError: raise ValueError('Malformed XML') from None
-    if root is None or root.tag!='harbor-sessions' or root.attrib not in ({'version':'4'},{'version':'5'}) or (root.text or '').strip():
-        raise ValueError('Expected Harbor session XML version 4 or 5')
+    if root is None or root.tag!='harbor-sessions' or root.attrib not in ({'version':'4'},{'version':'5'},{'version':'6'}) or (root.text or '').strip():
+        raise ValueError('Expected Harbor session XML version 4, 5 or 6')
     sessions={}
     for item in root:
         if item.tag!='session' or set(item.attrib)!={'name'} or (item.text or '').strip(): raise ValueError('Invalid XML session')
@@ -111,7 +111,7 @@ def export_sessions(sessions, kind):
     for name,profile in sessions.items():
         if any(any(ord(c)<32 and c not in '\t\r\n' for c in value) for value in [name,*profile.values()]):
             raise ValueError('XML cannot represent control characters in this configuration')
-    root=ET.Element('harbor-sessions',version='5')
+    root=ET.Element('harbor-sessions',version='6')
     for name,profile in sorted(sessions.items()):
         item=ET.SubElement(root,'session',name=name)
         for key,value in sorted(profile.items()): ET.SubElement(item,'field',name=key).text=value

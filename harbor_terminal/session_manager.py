@@ -29,6 +29,10 @@ LABELS.update(POLICY_LABELS,client_certificate='OpenSSH用户证书路径',ssh_c
     ssh_strict_kex='Strict KEX',ssh_allow_legacy='本会话旧算法许可',ssh_rekey_bytes='重协商字节阈值',ssh_rekey_seconds='重协商秒数')
 CHOICES.update(ssh_compression=('none','delayed'),ssh_strict_kex=('require','prefer'),ssh_allow_legacy=('false','true'))
 CHOICE_LABELS.update(delayed='仅认证后压缩',require='必须核验',prefer='兼容协商',false='不允许',true='明确允许')
+LABELS.update(send_char_delay_ms='字节间隔(ms)',send_line_delay_ms='行间隔(ms)',paste_newline='粘贴换行',
+    paste_quote='粘贴引用',alt_meta='Alt Meta',remote_clear_history='远端清历史')
+CHOICES.update(paste_newline=('auto','keep','cr','lf','crlf'),paste_quote=('none','posix','powershell'),
+    alt_meta=('escape','text'),remote_clear_history=('allow','preserve'))
 STRATEGIES=(('仅新增，冲突跳过','add-only'),('替换同名会话','replace'),('合并已提供字段','merge'),('创建副本','copy'))
 
 
@@ -98,6 +102,7 @@ class BatchEditor(QDialog):
         fill=QPushButton('填入该协议默认值');row.addWidget(fill);layout.addLayout(row)
         fields=('mode','port','username','known_hosts','private_key','auth_method','ssh_mode','jump_profile',
                 'encoding','backspace','bytesize','parity','stopbits','flow_control')
+        fields+=tuple(sorted(profiles.FIELDS-set(fields)-{'host'}))
         defaults=dict(session_templates.BASE_OPTIONS,mode='SSH',port='22',username='',known_hosts='')
         self.editor=FieldEditor(fields,defaults,checkable=True)
         scroll=QScrollArea();scroll.setWidgetResizable(True);scroll.setWidget(self.editor);layout.addWidget(scroll,1)

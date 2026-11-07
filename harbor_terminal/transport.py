@@ -172,6 +172,7 @@ class SSHTransport:
 class SerialTransport:
     def __init__(self):
         self.port = None
+        self._flow_control='none'
 
     async def connect(self, device, baudrate=115200, bytesize=8, parity='N',
                       stopbits=1, flow_control='none'):
@@ -179,6 +180,7 @@ class SerialTransport:
             raise RuntimeError("Already connected")
         settings = SerialSettings(int(baudrate), int(bytesize), parity,
                                   float(stopbits), flow_control)
+        self._flow_control=flow_control
         # Cancellation must close a port opened by the worker after cancellation.
         task = asyncio.create_task(asyncio.to_thread(serial.Serial, device,
             timeout=0.1, write_timeout=2, **settings.port_options()))
@@ -223,6 +225,33 @@ class SerialTransport:
         except asyncio.CancelledError:
             await task
             raise
+
+    async def _line_call(self,operation):
+        task=asyncio.create_task(asyncio.to_thread(operation))
+        try:return await asyncio.shield(task)
+        except asyncio.CancelledError:await task;raise
+
+    async def set_line(self,name,value):
+        if name not in ('dtr','rts') or type(value) is not bool:raise ValueError('Invalid serial output line')
+        if self.port is None:raise RuntimeError('Serial port is closed')
+        if name=='rts' and self._flow_control=='rtscts' or name=='dtr' and self._flow_control=='dsrdtr':
+            raise ValueError('Output line is managed by hardware flow control')
+        port=self.port
+        await self._line_call(lambda:setattr(port,name,value))
+
+    async def modem_status(self):
+        port=self.port
+        if port is None:return dict(available=False)
+        def query():
+            result=dict(available=True,flow_control=self._flow_control,errors={})
+            for name in ('dtr','rts','cts','dsr','ri','cd'):
+                try:
+                    value=getattr(port,name)
+                    if value is None:raise ValueError('Unavailable serial signal')
+                    result[name]=bool(value)
+                except (OSError,ValueError,AttributeError) as exc:result[name]=None;result['errors'][name]=type(exc).__name__
+            return result
+        return await self._line_call(query)
 
     async def close(self):
         port, self.port = self.port, None

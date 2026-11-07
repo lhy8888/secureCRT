@@ -142,7 +142,7 @@ def test_v3_session_remains_readable_and_v4_authentication_options_roundtrip(tmp
     assert load(path)==sessions
     sessions['target'].update(auth_method='interactive-first',ssh_mode='channels')
     save(path,sessions)
-    assert load(path)==sessions and json.loads(path.read_text())['version']==5
+    assert load(path)==sessions and json.loads(path.read_text())['version']==6
 
 
 @pytest.mark.parametrize('jump_compatibility',[False,True])

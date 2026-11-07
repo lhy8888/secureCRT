@@ -225,6 +225,7 @@ async def capture(output):
             settings = ConnectionOptions(window.options, window, profiles=window.profiles)
             settings.show(); app.processEvents(); save(settings, 'options')
             settings.categories.setCurrentRow(4);app.processEvents();save(settings,'ssh-policy')
+            settings.categories.setCurrentRow(5);app.processEvents();save(settings,'input-policy')
             settings.close(); settings.deleteLater()
             from harbor_terminal.key_dialogs import HostKeysDialog,TrustReview
             keys=HostKeysDialog(window);keys.show();app.processEvents();save(keys,'host-keys')
@@ -238,6 +239,20 @@ async def capture(output):
             window.open_diagnostics();diagnostic=window.service_panels[(worker,'diagnostics')]
             await until(app,lambda:worker.ssh_diagnostics().get('strict_kex') is True)
             diagnostic.refresh();app.processEvents();save(diagnostic,'ssh-diagnostics');diagnostic.close()
+            window.open_text_files();text_files=window.service_panels[(worker,'text')]
+            text_source=temporary/'text-source.txt';text_source.write_text('capture: text-file-first\ncapture: text-file-second\n',encoding='utf-8')
+            text_files.path.setText(str(text_source));text_files.load();app.processEvents();save(text_files,'text-send')
+            capture_path=temporary/'received-plain.txt';text_files.receive_path.setText(str(capture_path));text_files.start_capture()
+            await until(app,lambda:worker.text_capture.snapshot()['state']=='running')
+            text_files.send();await until(app,lambda:text_files.pending is None)
+            await until(app,lambda:'text-file-second' in worker.receive_stream.text)
+            worker.stop_text_capture();await until(app,lambda:not worker.text_capture.snapshot()['alive'])
+            assert 'text-file-second' in capture_path.read_text()
+            text_files.tabs.setCurrentIndex(1);text_files.poll();app.processEvents();save(text_files,'text-receive');text_files.close()
+            if os.name!='nt':
+                from harbor_terminal.input_dialogs import SerialLinesDialog
+                serial_lines=SerialLinesDialog(serial,'LOCAL PTY / 非实体COM',window)
+                serial_lines.show();app.processEvents();save(serial_lines,'serial-lines');serial_lines.close();serial_lines.deleteLater()
             window.open_command_panel();panel=window.command_panel
             panel.persist_library({'生成测试命令':dict(text='capture-command',pinned=True)})
             panel.edit.setPlainText('capture-command')

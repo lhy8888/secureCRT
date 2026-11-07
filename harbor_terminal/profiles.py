@@ -5,20 +5,22 @@ from .serial_config import SerialSettings
 from .terminal_model import ENCODINGS
 from .storage import DocumentStore, ANY_REVISION
 from .ssh_policy import POLICY_FIELDS,SSHPolicy
+from .input_policy import INPUT_FIELDS,InputPolicy
 
 V1_FIELDS = frozenset(('mode', 'host', 'port', 'username', 'known_hosts'))
 V2_FIELDS = V1_FIELDS | {'bytesize', 'parity', 'stopbits', 'flow_control',
                       'encoding', 'backspace', 'private_key'}
 V3_FIELDS = V2_FIELDS | {'jump_profile'}
 V4_FIELDS = V3_FIELDS | {'auth_method','ssh_mode'}
-FIELDS = V4_FIELDS | POLICY_FIELDS | {'client_certificate'}
+V5_FIELDS = V4_FIELDS | POLICY_FIELDS | {'client_certificate'}
+FIELDS = V5_FIELDS | INPUT_FIELDS
 
 
-def validate(sessions, *, version=5):
-    if version not in (1,2,3,4,5): raise ValueError('Unsupported session version')
+def validate(sessions, *, version=6):
+    if version not in (1,2,3,4,5,6): raise ValueError('Unsupported session version')
     if not isinstance(sessions, dict) or len(sessions) > 500:
         raise ValueError('Invalid session collection')
-    allowed = {1:V1_FIELDS,2:V2_FIELDS,3:V3_FIELDS,4:V4_FIELDS,5:FIELDS}[version]
+    allowed = {1:V1_FIELDS,2:V2_FIELDS,3:V3_FIELDS,4:V4_FIELDS,5:V5_FIELDS,6:FIELDS}[version]
     for name, profile in sessions.items():
         if (not isinstance(name, str) or not name.strip() or len(name) > 256
                 or any(ord(c)<32 or ord(c)==127 for c in name)):
@@ -47,6 +49,7 @@ def validate(sessions, *, version=5):
             raise ValueError('Invalid authentication method')
         if profile.get('ssh_mode','shell') not in ('shell','channels'):raise ValueError('Invalid SSH shell mode')
         SSHPolicy.parse({key:value for key,value in profile.items() if key in POLICY_FIELDS})
+        InputPolicy.parse({key:value for key,value in profile.items() if key in INPUT_FIELDS})
         if mode == 'Serial':
             SerialSettings(int(profile.get('port', '115200')),
                            int(profile.get('bytesize', '8')), profile.get('parity', 'N'),
@@ -68,7 +71,7 @@ def decode(raw):
     try:data = json.loads(raw.decode('utf-8-sig'),object_pairs_hook=reject_duplicates)
     except RecursionError:raise ValueError('Session document nesting exceeds parser limits') from None
     if (not isinstance(data, dict) or type(data.get('version')) is not int
-            or data['version'] not in (1, 2, 3, 4, 5) or not isinstance(data.get('sessions'), dict)
+            or data['version'] not in (1, 2, 3, 4, 5, 6) or not isinstance(data.get('sessions'), dict)
             or set(data)-{'version','sessions'}):
         raise ValueError('Unsupported session file')
     result = data['sessions']
@@ -78,7 +81,7 @@ def decode(raw):
 
 def encode(sessions):
     validate(sessions)
-    payload = json.dumps({'version': 5, 'sessions': sessions}, ensure_ascii=False, indent=2)
+    payload = json.dumps({'version': 6, 'sessions': sessions}, ensure_ascii=False, indent=2)
     if len(payload.encode('utf-8')) > 1048576:
         raise ValueError('Session file exceeds 1 MiB')
     return payload.encode('utf-8')

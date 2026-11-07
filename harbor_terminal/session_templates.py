@@ -4,15 +4,16 @@ import json
 from . import profiles
 from .storage import DocumentStore
 from .ssh_policy import DEFAULT_POLICY
+from .input_policy import DEFAULT_INPUT
 
 
 BASE_OPTIONS = dict(bytesize='8',parity='N',stopbits='1',flow_control='none',encoding='utf-8',
-                    backspace='del',private_key='',jump_profile='',auth_method='auto',ssh_mode='shell',client_certificate='',**DEFAULT_POLICY)
+                    backspace='del',private_key='',jump_profile='',auth_method='auto',ssh_mode='shell',client_certificate='',**DEFAULT_POLICY,**DEFAULT_INPUT)
 BUILTIN = {
     'SSH':dict(port='22',username='',known_hosts='',encoding='utf-8',backspace='del',
-               private_key='',auth_method='auto',ssh_mode='shell',client_certificate='',**DEFAULT_POLICY),
+               private_key='',auth_method='auto',ssh_mode='shell',client_certificate='',**DEFAULT_POLICY,**DEFAULT_INPUT),
     'Serial':dict(port='115200',bytesize='8',parity='N',stopbits='1',flow_control='none',
-                  encoding='utf-8',backspace='del')}
+                  encoding='utf-8',backspace='del',**DEFAULT_INPUT)}
 
 
 def validate(templates):

@@ -25,6 +25,7 @@ Copy-Item docs/windows-hardware-testing.md dist/HarborTerminal/HARDWARE-TESTING.
 Copy-Item docs/windows-comparison.md dist/HarborTerminal/COMPARISON.md
 Copy-Item docs/session-management.md dist/HarborTerminal/SESSION-MANAGEMENT.md
 Copy-Item docs/ssh-security.md dist/HarborTerminal/SSH-SECURITY.md
+Copy-Item docs/input-and-serial.md dist/HarborTerminal/INPUT-SERIAL.md
 $sourceCommit = $null; $sourceDirty = $null
 if ((Test-Path .git) -and (Get-Command git -ErrorAction SilentlyContinue)) {
     $sourceCommit = (& git rev-parse HEAD).Trim()

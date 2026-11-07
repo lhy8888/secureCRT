@@ -14,6 +14,7 @@ from .reports import atomic_json
 from .serial_config import SerialSettings
 from .transport import SSHTransport, SerialTransport
 from .ssh_policy import POLICY_FIELDS
+from .input_policy import INPUT_FIELDS,InputPolicy
 
 
 async def run_batch(args):
@@ -87,7 +88,12 @@ async def run_batch(args):
                     stream.append(data)
             finally:stream.close()
         reader=asyncio.create_task(receive())
-        async def send(data):await asyncio.wait_for(transport.write(data),5);return True
+        input_policy=InputPolicy.parse({key:profile[key] for key in INPUT_FIELDS if key in profile})
+        async def send(data):
+            for part,delay in input_policy.chunks(data):
+                await asyncio.wait_for(transport.write(part),5)
+                if delay:await asyncio.sleep(delay)
+            return True
         result['result']=await run_flow(stream,cursor,steps,send,encoding=profile.get('encoding','utf-8'),
             progress=lambda value:result.update(progress=value))
         result['status']='success'
