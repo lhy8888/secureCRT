@@ -71,7 +71,9 @@ class FieldEditor(QWidget):
         for field in fields:
             if field in CHOICES:
                 edit=QComboBox()
-                for value in CHOICES[field]:edit.addItem(CHOICE_LABELS.get(value,value),value)
+                for value in CHOICES[field]:
+                    title='自动（普通CR / Bracketed LF）' if field=='paste_newline' and value=='auto' else CHOICE_LABELS.get(value,value)
+                    edit.addItem(title,value)
                 edit.setCurrentIndex(max(0,edit.findData(values.get(field,''))))
             else:edit=QLineEdit(values.get(field,''))
             self.inputs[field]=edit

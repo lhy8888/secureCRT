@@ -1,5 +1,6 @@
 """Validated per-session input transformations and pacing, without I/O."""
 from dataclasses import dataclass
+import re
 
 
 DEFAULT_INPUT = dict(send_char_delay_ms='0',send_line_delay_ms='0',paste_newline='auto',
@@ -51,3 +52,7 @@ def quote_text(text,style):
     if style=='posix':return "'"+text.replace("'","'\"'\"'")+"'"
     if style=='powershell':return "'"+text.replace("'","''")+"'"
     raise ValueError('Unknown quoting style')
+
+
+def display_text(text):
+    return re.sub(r'\r\n|\r|\n',lambda match:{'\r\n':'␍␊\n','\r':'␍\n','\n':'␊\n'}[match[0]],text).replace('\x1b','␛')

@@ -5,7 +5,7 @@ from PySide6.QtCore import QTimer,Qt
 from PySide6.QtWidgets import (QWidget,QDialog,QVBoxLayout,QHBoxLayout,QFormLayout,QLineEdit,
     QComboBox,QPushButton,QPlainTextEdit,QTreeWidget,QTreeWidgetItem,QTabWidget,QSpinBox,QMessageBox,QFileDialog)
 
-from .input_policy import DEFAULT_INPUT,InputPolicy
+from .input_policy import DEFAULT_INPUT,InputPolicy,display_text
 from .terminal_model import ENCODINGS
 from .text_files import prepare_file,MAX_TEXT_BYTES
 from .ssh_dialogs import plain
@@ -83,7 +83,7 @@ class TextFilesDialog(QDialog):
         try:
             with Path(self.path.text()).open('rb') as stream:raw=stream.read(MAX_TEXT_BYTES+1)
             self.payload=prepare_file(raw,self.source.currentData(),self.target.currentData(),self.newline.currentData())
-            self.preview.setPlainText(self.payload[:8192].decode(self.target.currentData(),errors='replace').replace('\r','␍').replace('\n','␊\n'))
+            self.preview.setPlainText(display_text(self.payload[:8192].decode(self.target.currentData(),errors='replace')))
             self.status.setText(f'冻结{len(self.payload)}字节；预览最多8192字节，发送不再读取源文件。请核对编码、换行和内容。')
         except (OSError,ValueError,UnicodeError):self.payload=None;self.preview.clear();self.status.setText('读取失败：检查大小、编码、控制字符和行长。')
         self.poll()
@@ -131,7 +131,7 @@ class SerialLinesDialog(QDialog):
     def __init__(self,worker,label,parent):
         super().__init__(parent);self.worker=worker;self.pending=None;self.setWindowTitle('串口线路 · '+label);self.resize(650,420)
         layout=QVBoxLayout(self);layout.addWidget(plain('DTR/RTS改变可能复位设备。显示的是驱动报告的输入/输出设定，不能代替实体电压测试；RTS/CTS或DSR/DTR流控占用的输出不能手动改动。'))
-        self.tree=QTreeWidget();self.tree.setHeaderLabels(['线路','驱动报告']);layout.addWidget(self.tree,1)
+        self.tree=QTreeWidget();self.tree.setHeaderLabels(['线路','驱动报告']);self.tree.setColumnWidth(0,200);layout.addWidget(self.tree,1)
         row=QHBoxLayout();self.line=choices([('DTR','dtr'),('RTS','rts')],'dtr');self.value=choices([('设为有效','true'),('设为无效','false')],'true')
         self.apply=QPushButton('确认后设置…');row.addWidget(self.line);row.addWidget(self.value);row.addWidget(self.apply);layout.addLayout(row)
         self.apply.clicked.connect(self.change);self.status=plain('未知状态不会显示为正常。');layout.addWidget(self.status)

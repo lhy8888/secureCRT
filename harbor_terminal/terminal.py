@@ -11,7 +11,7 @@ from PySide6.QtWidgets import (QAbstractScrollArea, QApplication, QDialog,
 from .keyboard import encode_key, prepare_paste
 from .terminal_model import TerminalModel, MAX_COLUMNS, MAX_ROWS
 from .appearance import SCHEMES, terminal_font
-from .input_policy import InputPolicy
+from .input_policy import InputPolicy,display_text
 
 PALETTE = dict(zip(
     ('black', 'red', 'green', 'brown', 'blue', 'magenta', 'cyan', 'white',
@@ -366,7 +366,7 @@ class Terminal(QAbstractScrollArea):
                 content=edit.toPlainText() if edit.document().isModified() else text
                 raw=prepare_paste(content,encoding=self.encoding,bracketed=2004 in self.screen.input_modes,
                     newline=self.input_policy['paste_newline'],quote=self.input_policy['paste_quote'])
-                shown=raw.decode(self.encoding).replace('\x1b','␛').replace('\r','␍').replace('\n','␊\n')
+                shown=display_text(raw.decode(self.encoding))
                 preview.setPlainText(shown);buttons.button(QDialogButtonBox.StandardButton.Ok).setEnabled(True)
             except (ValueError,UnicodeError):
                 preview.setPlainText('内容包含控制字符、不能用当前编码表示或超过64KiB。');buttons.button(QDialogButtonBox.StandardButton.Ok).setEnabled(False)
