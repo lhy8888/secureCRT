@@ -1,0 +1,452 @@
+{
+  "baseline": "9.7.4",
+  "retrieved_on": "2026-11-07",
+  "families": 32,
+  "release_sections": 314,
+  "change_entries": 4294,
+  "sections": {
+    "bug-fixes": 2873,
+    "changes": 830,
+    "new-features": 583,
+    "security-notes": 8
+  },
+  "nested_bullet_entries": 21,
+  "unclassified_entries": 0,
+  "scope": "All SecureCRT families linked from the official Previous Releases page, plus current 9.7; this does not prove there were no earlier or unlisted releases.",
+  "classification": "Keyword navigation labels; overlapping; no claim of semantic equivalence, exploitability or fixes in Harbor.",
+  "sources": [
+    {
+      "url": "https://www.vandyke.com/download/prevreleases.html",
+      "cache_file": "/workspace/securecrt-research-cache/previous.html",
+      "bytes": 87621,
+      "sha256": "4b3e9c1cc6a4cc4d3bb05dfc44959984ba7ed5f1294d10bb3152de0ae0aa2bbc",
+      "cached_at_utc": "2026-11-07T01:13:19.263347+00:00",
+      "kind": "reference"
+    },
+    {
+      "url": "https://www.vandyke.com/products/securecrt/features.html",
+      "cache_file": "/workspace/securecrt-research-cache/features.html",
+      "bytes": 116554,
+      "sha256": "0ceb2cb086dee7cd1d08ad6f979a2b2c2af5a15898f02e22d4335f6f23669757",
+      "cached_at_utc": "2026-11-07T01:13:19.060823+00:00",
+      "kind": "reference"
+    },
+    {
+      "url": "https://www.vandyke.com/products/securecrt/faq/index.html",
+      "cache_file": "/workspace/securecrt-research-cache/faq.html",
+      "bytes": 169851,
+      "sha256": "25ad4ec0ebbe0e1bdfa400b77600761145553e557c111beda66dc48aa82eea57",
+      "cached_at_utc": "2026-11-07T01:13:19.127621+00:00",
+      "kind": "reference"
+    },
+    {
+      "url": "https://www.vandyke.com/products/securecrt/windows.html",
+      "cache_file": "/workspace/securecrt-research-cache/windows.html",
+      "bytes": 38282,
+      "sha256": "e82c2d2064d0444931e5ab2405714d02d585a76117c5b8f9e214cddb441979f2",
+      "cached_at_utc": "2026-11-07T01:13:19.164488+00:00",
+      "kind": "reference"
+    },
+    {
+      "url": "https://www.vandyke.com/support/securecrt/scripting_faq.html",
+      "cache_file": "/workspace/securecrt-research-cache/scripting.html",
+      "bytes": 67532,
+      "sha256": "3fb89e78fc3ade9433bd6a218e637db09eae16caef89eba4b6aac979573a5605",
+      "cached_at_utc": "2026-11-07T01:13:19.111818+00:00",
+      "kind": "reference"
+    },
+    {
+      "url": "https://www.vandyke.com/support/securecrt/python_examples.html",
+      "cache_file": "/workspace/securecrt-research-cache/python-examples.html",
+      "bytes": 34246,
+      "sha256": "666aeba0b4849e02fe244a9af98c5dd9ad014a10879d063ca72e66e9fc1e7198",
+      "cached_at_utc": "2026-11-07T01:13:19.174703+00:00",
+      "kind": "reference"
+    },
+    {
+      "url": "https://www.vandyke.com/support/tips/index.php?pid=all",
+      "cache_file": "/workspace/securecrt-research-cache/tips.html",
+      "bytes": 51063,
+      "sha256": "8623f55a4d8429aa7129c3e25480f7455dd3e0c0418e01686476f356f5e50855",
+      "cached_at_utc": "2026-11-07T01:13:18.977757+00:00",
+      "kind": "reference"
+    },
+    {
+      "url": "https://www.vandyke.com/products/securecrt/new-in.html",
+      "cache_file": "/workspace/securecrt-research-cache/new97.html",
+      "bytes": 37259,
+      "sha256": "aaf1e462f558297213f76a044e84c74fc61a59d686fec2e7c9f28711f24040f8",
+      "cached_at_utc": "2026-11-07T01:13:19.256539+00:00",
+      "kind": "reference"
+    },
+    {
+      "url": "https://www.vandyke.com/support/tips/scripting/index.html",
+      "cache_file": "/workspace/securecrt-research-cache/scripting-guide.html",
+      "bytes": 28893,
+      "sha256": "00fa9ceed625945af9d7a67624eaf7ddd0935e4ef15e7c47bc6687e834004785",
+      "cached_at_utc": "2026-11-07T01:23:47.803126+00:00",
+      "kind": "reference"
+    },
+    {
+      "url": "https://www.vandyke.com/support/tips/scripting/scripting_essentials.pdf",
+      "cache_file": "/workspace/securecrt-research-cache/scripting_essentials.pdf",
+      "bytes": 1351994,
+      "sha256": "54a91c8ca517ded7ee29a64e118c8ddda6226b350c524c1580d9451878c9811d",
+      "cached_at_utc": "2026-11-07T01:23:54.615060+00:00",
+      "kind": "reference",
+      "note": "122-page scripting guide, copyright 2009-2010; not the complete 9.7.4 API reference"
+    },
+    {
+      "url": "https://www.vandyke.com/download/securecrt/3.2/history.txt",
+      "cache_file": "/workspace/securecrt-research-cache/history-3.2.txt",
+      "bytes": 10218,
+      "sha256": "c1de107b38808aca7f62519092ab5c770b1fc4350f7fcb6328d1203abe7f95f7",
+      "cached_at_utc": "2026-11-07T01:13:01.130211+00:00",
+      "family": "3.2",
+      "kind": "history",
+      "releases": 8,
+      "entries": 78
+    },
+    {
+      "url": "https://www.vandyke.com/download/securecrt/3.3/history.txt",
+      "cache_file": "/workspace/securecrt-research-cache/history-3.3.txt",
+      "bytes": 13198,
+      "sha256": "f79a0076d8a267d8dfb394f7e89df27eb642dfc38a918977093745615928cf31",
+      "cached_at_utc": "2026-11-07T01:13:01.110216+00:00",
+      "family": "3.3",
+      "kind": "history",
+      "releases": 10,
+      "entries": 100
+    },
+    {
+      "url": "https://www.vandyke.com/download/securecrt/3.4/history.txt",
+      "cache_file": "/workspace/securecrt-research-cache/history-3.4.txt",
+      "bytes": 14147,
+      "sha256": "a0a89682c82c0585fe30dcfbc5491ff6eecffa92a42d5d0e6b2c72e2b608d513",
+      "cached_at_utc": "2026-11-07T01:13:01.117036+00:00",
+      "family": "3.4",
+      "kind": "history",
+      "releases": 12,
+      "entries": 108
+    },
+    {
+      "url": "https://www.vandyke.com/download/securecrt/4.0/history.txt",
+      "cache_file": "/workspace/securecrt-research-cache/history-4.0.txt",
+      "bytes": 16434,
+      "sha256": "2a77a8363d2c1e51a1084de92d43663d2d203f283be6860f23d120efe951f18d",
+      "cached_at_utc": "2026-11-07T01:13:01.097693+00:00",
+      "family": "4.0",
+      "kind": "history",
+      "releases": 17,
+      "entries": 125
+    },
+    {
+      "url": "https://www.vandyke.com/download/securecrt/4.1/history.txt",
+      "cache_file": "/workspace/securecrt-research-cache/history-4.1.txt",
+      "bytes": 18298,
+      "sha256": "881672a70404ffa9443e7b3804828ccd583edf5e5b736620cacb87390e6ea276",
+      "cached_at_utc": "2026-11-07T01:13:01.015983+00:00",
+      "family": "4.1",
+      "kind": "history",
+      "releases": 17,
+      "entries": 129
+    },
+    {
+      "url": "https://www.vandyke.com/download/securecrt/5.0/history.txt",
+      "cache_file": "/workspace/securecrt-research-cache/history-5.0.txt",
+      "bytes": 34090,
+      "sha256": "d942a91d261473fac0e91089683cf17912962e6bb0a7e2fdb063ca308cb43930",
+      "cached_at_utc": "2026-11-07T01:13:00.880203+00:00",
+      "family": "5.0",
+      "kind": "history",
+      "releases": 13,
+      "entries": 296
+    },
+    {
+      "url": "https://www.vandyke.com/download/securecrt/5.1/history.txt",
+      "cache_file": "/workspace/securecrt-research-cache/history-5.1.txt",
+      "bytes": 17158,
+      "sha256": "b8249cad2cf363d0290629c97c315805433682ce249d13e675797278c15d9ffc",
+      "cached_at_utc": "2026-11-07T01:13:00.903594+00:00",
+      "family": "5.1",
+      "kind": "history",
+      "releases": 9,
+      "entries": 123
+    },
+    {
+      "url": "https://www.vandyke.com/download/securecrt/5.2/history.txt",
+      "cache_file": "/workspace/securecrt-research-cache/history-5.2.txt",
+      "bytes": 8992,
+      "sha256": "63c8531f38e4e778490bff777cce4e5ca517a725bc7d41052bcdcd55feee1ae1",
+      "cached_at_utc": "2026-11-07T01:13:00.922944+00:00",
+      "family": "5.2",
+      "kind": "history",
+      "releases": 7,
+      "entries": 63
+    },
+    {
+      "url": "https://www.vandyke.com/download/securecrt/5.5/history.txt",
+      "cache_file": "/workspace/securecrt-research-cache/history-5.5.txt",
+      "bytes": 10621,
+      "sha256": "73dfae9d77d2088e296f0c534f09dc73607b390643e65a0452be478bd2aff03e",
+      "cached_at_utc": "2026-11-07T01:13:01.000177+00:00",
+      "family": "5.5",
+      "kind": "history",
+      "releases": 9,
+      "entries": 66
+    },
+    {
+      "url": "https://www.vandyke.com/download/securecrt/6.0/history.txt",
+      "cache_file": "/workspace/securecrt-research-cache/history-6.0.txt",
+      "bytes": 18755,
+      "sha256": "e91b7f950deab454c5ec62d90669d231098f441027ac4cce3455c1ab877a1f56",
+      "cached_at_utc": "2026-11-07T01:13:00.641701+00:00",
+      "family": "6.0",
+      "kind": "history",
+      "releases": 9,
+      "entries": 141
+    },
+    {
+      "url": "https://www.vandyke.com/download/securecrt/6.1/history.txt",
+      "cache_file": "/workspace/securecrt-research-cache/history-6.1.txt",
+      "bytes": 15485,
+      "sha256": "4dadbe381f05669780cc2db490297eccf6c5da2bf038dcd428c6f0783d97a8e8",
+      "cached_at_utc": "2026-11-07T01:13:00.650038+00:00",
+      "family": "6.1",
+      "kind": "history",
+      "releases": 9,
+      "entries": 98
+    },
+    {
+      "url": "https://www.vandyke.com/download/securecrt/6.2/history.txt",
+      "cache_file": "/workspace/securecrt-research-cache/history-6.2.txt",
+      "bytes": 12881,
+      "sha256": "3f45a627f1813c8f6063fe0eee58598a60336db74bd7f405df271f4d8d95c827",
+      "cached_at_utc": "2026-11-07T01:13:00.720946+00:00",
+      "family": "6.2",
+      "kind": "history",
+      "releases": 7,
+      "entries": 85
+    },
+    {
+      "url": "https://www.vandyke.com/download/securecrt/6.5/history.txt",
+      "cache_file": "/workspace/securecrt-research-cache/history-6.5.txt",
+      "bytes": 23962,
+      "sha256": "f2a3d2a7c8cf1cdf80b3de13aadbb03a3882a8bad630b1b41cd308a0bf03972b",
+      "cached_at_utc": "2026-11-07T01:13:00.739933+00:00",
+      "family": "6.5",
+      "kind": "history",
+      "releases": 10,
+      "entries": 162
+    },
+    {
+      "url": "https://www.vandyke.com/download/securecrt/6.6/history.txt",
+      "cache_file": "/workspace/securecrt-research-cache/history-6.6.txt",
+      "bytes": 27368,
+      "sha256": "7400dbc10a86be916de0437afbdb15f0677478e2ec1d056d24f1415f89f8f720",
+      "cached_at_utc": "2026-11-07T01:13:00.814942+00:00",
+      "family": "6.6",
+      "kind": "history",
+      "releases": 10,
+      "entries": 201
+    },
+    {
+      "url": "https://www.vandyke.com/download/securecrt/6.7/history.txt",
+      "cache_file": "/workspace/securecrt-research-cache/history-6.7.txt",
+      "bytes": 21184,
+      "sha256": "a2f1a4f37f82cd74cebc2b0f782db3d192b8ac7f9e9d90c7c10acf0a2e876768",
+      "cached_at_utc": "2026-11-07T01:13:00.837155+00:00",
+      "family": "6.7",
+      "kind": "history",
+      "releases": 11,
+      "entries": 141
+    },
+    {
+      "url": "https://www.vandyke.com/download/securecrt/7.0/history.txt",
+      "cache_file": "/workspace/securecrt-research-cache/history-7.0.txt",
+      "bytes": 23416,
+      "sha256": "1b2f0c1eec6772c515fa3c99e8fd2e01a0b024e877f3c4d9d546f9bc6537fb51",
+      "cached_at_utc": "2026-11-07T01:13:00.544656+00:00",
+      "family": "7.0",
+      "kind": "history",
+      "releases": 9,
+      "entries": 164
+    },
+    {
+      "url": "https://www.vandyke.com/download/securecrt/7.1/history.txt",
+      "cache_file": "/workspace/securecrt-research-cache/history-7.1.txt",
+      "bytes": 14904,
+      "sha256": "b89d0a3bfdb970266df52ae0f786a17743ac28f8507556233c5e0164fefafeb9",
+      "cached_at_utc": "2026-11-07T01:13:00.525225+00:00",
+      "family": "7.1",
+      "kind": "history",
+      "releases": 9,
+      "entries": 101
+    },
+    {
+      "url": "https://www.vandyke.com/download/securecrt/7.2/history.txt",
+      "cache_file": "/workspace/securecrt-research-cache/history-7.2.txt",
+      "bytes": 16734,
+      "sha256": "e6cdd199d68fb9896202db7f426f44c05131307cc155f959c9f6861c0a427690",
+      "cached_at_utc": "2026-11-07T01:13:00.577260+00:00",
+      "family": "7.2",
+      "kind": "history",
+      "releases": 12,
+      "entries": 111
+    },
+    {
+      "url": "https://www.vandyke.com/download/securecrt/7.3/history.txt",
+      "cache_file": "/workspace/securecrt-research-cache/history-7.3.txt",
+      "bytes": 24353,
+      "sha256": "2d7069c4a5424cd8a4fd7dac04ed5f8167edaa93227a81909036c0f8692016ed",
+      "cached_at_utc": "2026-11-07T01:13:00.620043+00:00",
+      "family": "7.3",
+      "kind": "history",
+      "releases": 13,
+      "entries": 156
+    },
+    {
+      "url": "https://www.vandyke.com/download/securecrt/8.0/history.txt",
+      "cache_file": "/workspace/securecrt-research-cache/history-8.0.txt",
+      "bytes": 27016,
+      "sha256": "25842cdd3f1ed2bd5d19fda81be162c37a6e132e145eadabe578cb7659bc6726",
+      "cached_at_utc": "2026-11-07T01:13:00.250508+00:00",
+      "family": "8.0",
+      "kind": "history",
+      "releases": 10,
+      "entries": 187
+    },
+    {
+      "url": "https://www.vandyke.com/download/securecrt/8.1/history.txt",
+      "cache_file": "/workspace/securecrt-research-cache/history-8.1.txt",
+      "bytes": 20127,
+      "sha256": "71516849fa710a634122fdbc13c791b10fd12c3d788fddab7d3b35885cbb32a4",
+      "cached_at_utc": "2026-11-07T01:13:00.233392+00:00",
+      "family": "8.1",
+      "kind": "history",
+      "releases": 10,
+      "entries": 130
+    },
+    {
+      "url": "https://www.vandyke.com/download/securecrt/8.3/history.txt",
+      "cache_file": "/workspace/securecrt-research-cache/history-8.3.txt",
+      "bytes": 18106,
+      "sha256": "3e6b07ca8d63b871cbe3c7cdf09f0430e3c1ec3ca4d67213618385286ecdaf46",
+      "cached_at_utc": "2026-11-07T01:13:00.328829+00:00",
+      "family": "8.3",
+      "kind": "history",
+      "releases": 9,
+      "entries": 127
+    },
+    {
+      "url": "https://www.vandyke.com/download/securecrt/8.5/history.txt",
+      "cache_file": "/workspace/securecrt-research-cache/history-8.5.txt",
+      "bytes": 20226,
+      "sha256": "31e01759d55485f705d4bb65018bd1bccad9d743d578d070814b5a8b8a44dd82",
+      "cached_at_utc": "2026-11-07T01:13:00.407479+00:00",
+      "family": "8.5",
+      "kind": "history",
+      "releases": 10,
+      "entries": 130
+    },
+    {
+      "url": "https://www.vandyke.com/download/securecrt/8.7/history.txt",
+      "cache_file": "/workspace/securecrt-research-cache/history-8.7.txt",
+      "bytes": 34796,
+      "sha256": "0bcce24839baaeded52d8ce7913749ba665f5201a4a6181229e5e4c1546c7dc1",
+      "cached_at_utc": "2026-11-07T01:13:00.484069+00:00",
+      "family": "8.7",
+      "kind": "history",
+      "releases": 8,
+      "entries": 213
+    },
+    {
+      "url": "https://www.vandyke.com/download/securecrt/9.0/history.txt",
+      "cache_file": "/workspace/securecrt-research-cache/history-9.0.txt",
+      "bytes": 29964,
+      "sha256": "5a177b1ffbd61c9f627eb36856ceb5207e866666dd6c8ebe82c2764a0e43bbbc",
+      "cached_at_utc": "2026-11-07T01:13:00.076956+00:00",
+      "family": "9.0",
+      "kind": "history",
+      "releases": 9,
+      "entries": 185
+    },
+    {
+      "url": "https://www.vandyke.com/download/securecrt/9.1/history.txt",
+      "cache_file": "/workspace/securecrt-research-cache/history-9.1.txt",
+      "bytes": 11955,
+      "sha256": "19d6a9631272f2d203a375eead74028ccf6ef47fd8ef365ef06d3f2492e29a59",
+      "cached_at_utc": "2026-11-07T01:12:59.986705+00:00",
+      "family": "9.1",
+      "kind": "history",
+      "releases": 7,
+      "entries": 76
+    },
+    {
+      "url": "https://www.vandyke.com/download/securecrt/9.2/history.txt",
+      "cache_file": "/workspace/securecrt-research-cache/history-9.2.txt",
+      "bytes": 22099,
+      "sha256": "ec2caa01f4a97a329b379ee06f9fd51cf655d1acaa5c052e09b1c17fe6b17657",
+      "cached_at_utc": "2026-11-07T01:13:00.031856+00:00",
+      "family": "9.2",
+      "kind": "history",
+      "releases": 9,
+      "entries": 123
+    },
+    {
+      "url": "https://www.vandyke.com/download/securecrt/9.3/history.txt",
+      "cache_file": "/workspace/securecrt-research-cache/history-9.3.txt",
+      "bytes": 17888,
+      "sha256": "f054c17f6c04e8ff7f897f2a23a91d28090b88a8757772833eb0da938fea8097",
+      "cached_at_utc": "2026-11-07T01:13:00.088277+00:00",
+      "family": "9.3",
+      "kind": "history",
+      "releases": 8,
+      "entries": 107
+    },
+    {
+      "url": "https://www.vandyke.com/download/securecrt/9.4/history.txt",
+      "cache_file": "/workspace/securecrt-research-cache/history-9.4.txt",
+      "bytes": 16440,
+      "sha256": "31aea3a23c6245a2b9086beacdf6d06573f0f357debc0a245c56df2c79f5ce96",
+      "cached_at_utc": "2026-11-07T01:13:00.123453+00:00",
+      "family": "9.4",
+      "kind": "history",
+      "releases": 7,
+      "entries": 101
+    },
+    {
+      "url": "https://www.vandyke.com/download/securecrt/9.5/history.txt",
+      "cache_file": "/workspace/securecrt-research-cache/history-9.5.txt",
+      "bytes": 18630,
+      "sha256": "678ab39ae7bee703f5c0f1e4bb887324b98a84a4a42300454f0197dd0b3c277c",
+      "cached_at_utc": "2026-11-07T01:13:00.138140+00:00",
+      "family": "9.5",
+      "kind": "history",
+      "releases": 6,
+      "entries": 109
+    },
+    {
+      "url": "https://www.vandyke.com/download/securecrt/9.6/history.txt",
+      "cache_file": "/workspace/securecrt-research-cache/history-9.6.txt",
+      "bytes": 25892,
+      "sha256": "c5ef2bb6a44c0fddd2d4d0d3bd67381ebbae30d7014ce41c9dc9666a445fc8de",
+      "cached_at_utc": "2026-11-07T01:13:00.182384+00:00",
+      "family": "9.6",
+      "kind": "history",
+      "releases": 10,
+      "entries": 178
+    },
+    {
+      "url": "https://www.vandyke.com/products/securecrt/history.txt",
+      "cache_file": "/workspace/securecrt-research-cache/history-9.7.txt",
+      "bytes": 25678,
+      "sha256": "d19e812a0033a4881ab53019dcd9a17dae600e558f7f286620be24855f6e6bec",
+      "cached_at_utc": "2026-11-07T01:13:30.226360+00:00",
+      "family": "9.7",
+      "kind": "history",
+      "releases": 10,
+      "entries": 180
+    }
+  ]
+}

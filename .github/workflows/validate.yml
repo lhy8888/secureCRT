@@ -1,0 +1,43 @@
+name: Validate terminal
+on: [push, pull_request, workflow_dispatch]
+jobs:
+  tests:
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    env:
+      QT_QPA_PLATFORM: offscreen
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements-lock.txt
+      - run: python -m pip install --no-deps .
+      - run: python -m pytest -q --junitxml=artifacts/test-results-${{ runner.os }}.xml
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-${{ runner.os }}
+          path: artifacts/test-results-${{ runner.os }}.xml
+  windows-package:
+    needs: tests
+    timeout-minutes: 30
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - shell: pwsh
+        run: ./scripts/build-windows.ps1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: HarborTerminal-Windows-unsigned
+          path: |
+            artifacts/HarborTerminal-Windows-x64.zip
+            artifacts/HarborTerminal-Windows-x64.sha256.txt
+            artifacts/windows/

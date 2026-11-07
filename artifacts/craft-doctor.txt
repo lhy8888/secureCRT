@@ -1,0 +1,26 @@
+[ok] binary: craft-anything-cli is at /workspace/tools/bin/craft-anything-cli
+[info] registration:codex: Codex is installed but not connected.
+       → craft-anything-cli setup --client codex
+[info] skill:/home/agent/.agents/skills: The Craft Anything skill isn't installed here.
+       → craft-anything-cli setup --yes
+[info] engine:ghidra: Ghidra not found (optional; Deep mode: richer decompiled code).
+[info] engine:adb: Android platform tools (adb) not found (optional; Android devices: apps, logs, screenshots).
+[info] engine:jadx: JADX not found (optional; Decompiling Android apps to Java (needs Java)).
+[info] engine:apktool: Apktool not found (optional; Decoding Android resources (needs Java)).
+[ok] engine:chromium: a Chromium-based browser: /usr/bin/chromium
+[info] engine:frida: Frida not found (optional; Tracing apps while they run).
+[info] engine:gdb: GDB not found (optional; Debugging native programs).
+[info] engine:lldb: LLDB not found (optional; Debugging Apple apps).
+[info] engine:mitmdump: mitmproxy (mitmdump) not found (optional; Recording an app's network traffic).
+[info] engine:binwalk: Binwalk not found (optional; Firmware carving (a second opinion)).
+[info] engine:unblob: Unblob not found (optional; Firmware unpacking (a second opinion)).
+[info] engine:ilspy: ILSpy command line (ilspycmd) not found (optional; .NET decompiling (a second opinion)).
+[ok] engine:java: Java runtime: /usr/bin/java
+[info] engine:tshark: Wireshark (tshark) not found (optional; Reading packet captures (a second opinion)).
+[ok] engine:objdump: objdump (GNU binutils or LLVM): /usr/bin/objdump
+[info] engine:rizin: Rizin not found (optional; Disassembly (a second opinion)).
+[info] engine:rtl433: rtl_433 not found (optional; Decoding radio recordings).
+[info] engine:vineflower: Vineflower not found (optional; Decompiling Java classes and JARs (needs Java)).
+[ok] mcp:self-test: MCP server answered (protocol 2025-06-18, 30 tools listed).
+[ok] ai:Codex: Codex answered in 0 ms.
+healthy

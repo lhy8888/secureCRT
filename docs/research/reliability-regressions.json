@@ -1,0 +1,470 @@
+[
+  {
+    "id": "R01",
+    "issue": "SSH 交换恶意包",
+    "check": "畸形 KEX 包、分片、取消、超长字段；协议解析失败后进程仍可用",
+    "status": "协议故障注入待做",
+    "evidence": {
+      "id": "73d53c4787cd",
+      "release": "9.7.4 (Official)",
+      "source": "https://www.vandyke.com/products/securecrt/history.txt",
+      "line": 20,
+      "family": "9.7"
+    }
+  },
+  {
+    "id": "R02",
+    "issue": "串口连接阻塞",
+    "check": "驱动拒绝/无响应/设备占用时能够取消；连接线程在期限内退出",
+    "status": "PTY 正常收发已测；Windows 故障未测",
+    "evidence": {
+      "id": "4cabada2fce4",
+      "release": "9.7.3 (Official)",
+      "source": "https://www.vandyke.com/products/securecrt/history.txt",
+      "line": 45,
+      "family": "9.7"
+    }
+  },
+  {
+    "id": "R03",
+    "issue": "交互式认证 LF 提示",
+    "check": "多行 challenge、echo=false、取消、密码变更提示均正确",
+    "status": "MFA UI 未实现",
+    "evidence": {
+      "id": "ce1ebc32a7d5",
+      "release": "9.7.4 (Official)",
+      "source": "https://www.vandyke.com/products/securecrt/history.txt",
+      "line": 26,
+      "family": "9.7"
+    }
+  },
+  {
+    "id": "R04",
+    "issue": "主机公钥与证书指纹区别",
+    "check": "同证书 raw-key 与 certificate 模式显示对应公钥指纹",
+    "status": "硬件密钥未实现",
+    "evidence": {
+      "id": "6039f180a5fe",
+      "release": "9.7.3 (Official)",
+      "source": "https://www.vandyke.com/products/securecrt/history.txt",
+      "line": 51,
+      "family": "9.7"
+    }
+  },
+  {
+    "id": "R05",
+    "issue": "只读旧配置迁移",
+    "check": "在只读/不可写目标上提示，旧文件不被破坏，主界面正常启动",
+    "status": "旧版迁移未实现",
+    "evidence": {
+      "id": "fa2dc7816a13",
+      "release": "9.7.2 (Official)",
+      "source": "https://www.vandyke.com/products/securecrt/history.txt",
+      "line": 85,
+      "family": "9.7"
+    }
+  },
+  {
+    "id": "R06",
+    "issue": "会话大小写改名丢失",
+    "check": "Windows 上只改大小写、Unicode 归一化与冲突不丢会话",
+    "status": "已有基本层级会话树；大小写重命名/Windows文件系统场景未实现",
+    "evidence": {
+      "id": "277f9c5a9064",
+      "release": "9.7.1 (Official)",
+      "source": "https://www.vandyke.com/products/securecrt/history.txt",
+      "line": 189,
+      "family": "9.7"
+    }
+  },
+  {
+    "id": "R07",
+    "issue": "连接失败误显示已连接",
+    "check": "认证/PTY 创建失败后活动列表、标签、按钮状态一致",
+    "status": "连接/取消/主机密钥拒绝及跳板/目标阶段已有测试；PTY创建失败与全部GUI控件组合尚未验收",
+    "evidence": {
+      "id": "4d12313277dd",
+      "release": "9.7.1 (Official)",
+      "source": "https://www.vandyke.com/products/securecrt/history.txt",
+      "line": 181,
+      "family": "9.7"
+    }
+  },
+  {
+    "id": "R08",
+    "issue": "证书算法协商过滤",
+    "check": "受控服务端返回不同算法列表，验证禁止使用未协商证书签名",
+    "status": "证书互通未实现",
+    "evidence": {
+      "id": "4ca322797ffa",
+      "release": "9.7.1 (Official)",
+      "source": "https://www.vandyke.com/products/securecrt/history.txt",
+      "line": 142,
+      "family": "9.7"
+    }
+  },
+  {
+    "id": "R09",
+    "issue": "终端重复字符与颜色",
+    "check": "REP、256色、密集 SGR 和属性复位的屏幕回放",
+    "status": "REP、256/24位颜色及Qt字格已测；供应商原始TUI问题未复现，完整回放待做",
+    "evidence": {
+      "id": "55366fa7e33d",
+      "release": "9.7.1 (Official)",
+      "source": "https://www.vandyke.com/products/securecrt/history.txt",
+      "line": 169,
+      "family": "9.7"
+    }
+  },
+  {
+    "id": "R10",
+    "issue": "导入丢端口转发",
+    "check": "完整配置 round-trip 比较启用标志、地址、端口和方向",
+    "status": "本地/远程/SOCKS转发已实现；转发持久化和配置导入未实现",
+    "evidence": {
+      "id": "eaa66f789cdd",
+      "release": "9.6.4 (Official)",
+      "source": "https://www.vandyke.com/download/securecrt/9.6/history.txt",
+      "line": 20,
+      "family": "9.6"
+    }
+  },
+  {
+    "id": "R11",
+    "issue": "禁用动态转发破坏跳板",
+    "check": "禁用配置不参与创建；依赖会话仍能建立",
+    "status": "单级跳板和动态监听已实现并分别测试；禁用模板及该依赖组合场景尚未验收",
+    "evidence": {
+      "id": "85b32d3e12fd",
+      "release": "9.6.3 (Official)",
+      "source": "https://www.vandyke.com/download/securecrt/9.6/history.txt",
+      "line": 36,
+      "family": "9.6"
+    }
+  },
+  {
+    "id": "R12",
+    "issue": "串口输出延迟",
+    "check": "测 p50/p95/p99 交互延迟，单字节与大块输出均测",
+    "status": "PTY 功能已测；延迟未测",
+    "evidence": {
+      "id": "a62dd07b6ce8",
+      "release": "9.6.3 (Official)",
+      "source": "https://www.vandyke.com/download/securecrt/9.6/history.txt",
+      "line": 45,
+      "family": "9.6"
+    }
+  },
+  {
+    "id": "R13",
+    "issue": "串口设备枚举遗漏",
+    "check": "FTDI/CP210x/CH340/Moxa/虚拟COM、枚举和热插拔矩阵",
+    "status": "实体硬件未测",
+    "evidence": {
+      "id": "fac0e6abad8a",
+      "release": "9.6.3 (Official)",
+      "source": "https://www.vandyke.com/download/securecrt/9.6/history.txt",
+      "line": 79,
+      "family": "9.6"
+    }
+  },
+  {
+    "id": "R14",
+    "issue": "Moxa 端口遗漏",
+    "check": "真实驱动安装后可见可连接，不能仅检查 COM 数字范围",
+    "status": "实体硬件未测",
+    "evidence": {
+      "id": "0b2b4a2454bc",
+      "release": "9.6.2 (Official)",
+      "source": "https://www.vandyke.com/download/securecrt/9.6/history.txt",
+      "line": 128,
+      "family": "9.6"
+    }
+  },
+  {
+    "id": "R15",
+    "issue": "配置整数越界",
+    "check": "导入对端口、尺寸、缓冲、超时做类型/范围验证并原子拒绝",
+    "status": "XML 导入未实现",
+    "evidence": {
+      "id": "249aa34b0732",
+      "release": "9.6.2 (Official)",
+      "source": "https://www.vandyke.com/download/securecrt/9.6/history.txt",
+      "line": 106,
+      "family": "9.6"
+    }
+  },
+  {
+    "id": "R16",
+    "issue": "配置敏感项空条目",
+    "check": "共享/个人数据目录导入不得丢凭据引用或生成空记录",
+    "status": "凭据库未实现",
+    "evidence": {
+      "id": "fa31653e441f",
+      "release": "9.6.2 (Official)",
+      "source": "https://www.vandyke.com/download/securecrt/9.6/history.txt",
+      "line": 99,
+      "family": "9.6"
+    }
+  },
+  {
+    "id": "R17",
+    "issue": "本地终端 resize 丢历史",
+    "check": "ConPTY 与历史重排：交替缩放、宽字符、长行回放比对",
+    "status": "本地终端未实现",
+    "evidence": {
+      "id": "072dc7cca68f",
+      "release": "9.6.2 (Official)",
+      "source": "https://www.vandyke.com/download/securecrt/9.6/history.txt",
+      "line": 121,
+      "family": "9.6"
+    }
+  },
+  {
+    "id": "R18",
+    "issue": "重复断开日志",
+    "check": "多路关闭/断线同时发生时 disconnect 事件和落盘只发生一次",
+    "status": "真实SSH/SFTP断开并取消传输时日志disconnected事件一次已测；其他关闭组合待覆盖",
+    "evidence": {
+      "id": "bcd553241e09",
+      "release": "9.6.3 (Official)",
+      "source": "https://www.vandyke.com/download/securecrt/9.6/history.txt",
+      "line": 63,
+      "family": "9.6"
+    }
+  },
+  {
+    "id": "R19",
+    "issue": "多窗口同时关闭",
+    "check": "关闭窗口时取消任务、等待工作线程、释放传输只执行一次",
+    "status": "单窗口关闭有实现；多窗口未实现",
+    "evidence": {
+      "id": "ac613a1a896c",
+      "release": "9.6.3 (Official)",
+      "source": "https://www.vandyke.com/download/securecrt/9.6/history.txt",
+      "line": 73,
+      "family": "9.6"
+    }
+  },
+  {
+    "id": "R20",
+    "issue": "脚本启动/关闭登录会话",
+    "check": "登录脚本、关闭、异步返回同时发生时不访问已销毁对象",
+    "status": "脚本未实现",
+    "evidence": {
+      "id": "15c485393bdf",
+      "release": "9.6.1 (Official)",
+      "source": "https://www.vandyke.com/download/securecrt/9.6/history.txt",
+      "line": 148,
+      "family": "9.6"
+    }
+  },
+  {
+    "id": "R21",
+    "issue": "畸形私钥文件",
+    "check": "各格式损坏/超长/加密口令错误，报类型化错误不崩溃",
+    "status": "加密OpenSSH私钥认证和图形选择已实现；畸形/超长私钥语料及全部格式未验证",
+    "evidence": {
+      "id": "09252d1038ae",
+      "release": "9.5.2 (Official)",
+      "source": "https://www.vandyke.com/download/securecrt/9.5/history.txt",
+      "line": 20,
+      "family": "9.5"
+    }
+  },
+  {
+    "id": "R22",
+    "issue": "旧 DLL 污染升级",
+    "check": "旧/新二进制混杂时阻止启动或完整修复，不加载任意搜索路径",
+    "status": "Windows 安装升级未验证",
+    "evidence": {
+      "id": "f78f27e94fa9",
+      "release": "9.5.2 (Official)",
+      "source": "https://www.vandyke.com/download/securecrt/9.5/history.txt",
+      "line": 26,
+      "family": "9.5"
+    }
+  },
+  {
+    "id": "R23",
+    "issue": "脚本先于连接",
+    "check": "明确等待认证和 PTY 完成后启动，失败时不运行",
+    "status": "脚本未实现",
+    "evidence": {
+      "id": "669ef37fb30a",
+      "release": "9.5.2 (Official)",
+      "source": "https://www.vandyke.com/download/securecrt/9.5/history.txt",
+      "line": 34,
+      "family": "9.5"
+    }
+  },
+  {
+    "id": "R24",
+    "issue": "Strict KEX 与完整性",
+    "check": "CVE-2023-48795 场景需双方扩展协商及包序列测试",
+    "status": "协议级测试未做",
+    "evidence": {
+      "id": "35c3e2bda388",
+      "release": "9.5 (Beta 3)",
+      "source": "https://www.vandyke.com/download/securecrt/9.5/history.txt",
+      "line": 73,
+      "family": "9.5"
+    }
+  },
+  {
+    "id": "R25",
+    "issue": "第三方密码库漏洞更新",
+    "check": "SBOM、依赖公告、适用模块、补丁和回归；不能只比库版本",
+    "status": "0.4锁定的21个Python发行包扫描未报告已知漏洞；发布治理与完整SBOM未实现",
+    "evidence": {
+      "id": "11224dad437c",
+      "release": "9.5.1 (Official)",
+      "source": "https://www.vandyke.com/download/securecrt/9.5/history.txt",
+      "line": 48,
+      "family": "9.5"
+    }
+  },
+  {
+    "id": "R26",
+    "issue": "存储口令抵抗离线破解",
+    "check": "凭据本地存储使用平台安全服务或合适 KDF/AEAD；弱主口令策略",
+    "status": "原型不存密码；加密库未实现",
+    "evidence": {
+      "id": "f8c0e51635b6",
+      "release": "9.3 (Official)",
+      "source": "https://www.vandyke.com/download/securecrt/9.3/history.txt",
+      "line": 55,
+      "family": "9.3"
+    }
+  },
+  {
+    "id": "R27",
+    "issue": "终端负数参数内存破坏",
+    "check": "终端 CSI 超长/负数/极值/分片，解析器不崩溃、内存有界",
+    "status": "通用有界控制串测试通过；非同漏洞复现",
+    "evidence": {
+      "id": "fbedf608f0a2",
+      "release": "8.7.2 (Official)",
+      "source": "https://www.vandyke.com/download/securecrt/8.7/history.txt",
+      "line": 62,
+      "family": "8.7"
+    }
+  },
+  {
+    "id": "R28",
+    "issue": "脚本录制转义丢失",
+    "check": "录制含反斜杠、引号、特殊键和 Unicode 后正确重放",
+    "status": "录制器未实现",
+    "evidence": {
+      "id": "ae94c0ade947",
+      "release": "8.3.4 (Official)",
+      "source": "https://www.vandyke.com/download/securecrt/8.3/history.txt",
+      "line": 20,
+      "family": "8.3"
+    }
+  },
+  {
+    "id": "R29",
+    "issue": "URI 触发恶意本地脚本",
+    "check": "URI 白名单参数，不接受配置目录或本地执行注入",
+    "status": "URI handler 未实现",
+    "evidence": {
+      "id": "127cf910f865",
+      "release": "4.1.9 (Official)",
+      "source": "https://www.vandyke.com/download/securecrt/4.1/history.txt",
+      "line": 65,
+      "family": "4.1"
+    }
+  },
+  {
+    "id": "R30",
+    "issue": "SSH1 长标识缓冲溢出",
+    "check": "不提供 SSH1；SSH2 标识/包尺寸仍需独立验证",
+    "status": "SSH1 安全差异；SSH2包测试待做",
+    "evidence": {
+      "id": "503d634f217f",
+      "release": "3.2.2 (Official)",
+      "source": "https://www.vandyke.com/download/securecrt/3.2/history.txt",
+      "line": 18,
+      "family": "3.2"
+    }
+  },
+  {
+    "id": "R31",
+    "issue": "SSH1 转发内存增长",
+    "check": "重复创建关闭转发通道、fd/句柄/RSS 趋势收敛",
+    "status": "只提供SSH2；16个监听创建/关闭和端口释放已测；长期fd/句柄/RSS趋势未测",
+    "evidence": {
+      "id": "63aa7c288368",
+      "release": "3.2.1 (Official)",
+      "source": "https://www.vandyke.com/download/securecrt/3.2/history.txt",
+      "line": 30,
+      "family": "3.2"
+    }
+  },
+  {
+    "id": "R32",
+    "issue": "X11 cookie 与身份校验",
+    "check": "cookie 长度、校验、DISPLAY 与恶意连接限制",
+    "status": "未实现 X11",
+    "evidence": {
+      "id": "9812b5bf3b3c",
+      "release": "3.2.1 (Official)",
+      "source": "https://www.vandyke.com/download/securecrt/3.2/history.txt",
+      "line": 38,
+      "family": "3.2"
+    }
+  },
+  {
+    "id": "R33",
+    "issue": "SFTP 小块传输提前结束",
+    "check": "随机 1–3 字节分片、EOF、中断和文件校验",
+    "status": "SSH2/SFTP真实服务1–3字节响应往返及提前EOF保护/临时文件清理已测；非供应商原始缺陷复现",
+    "evidence": {
+      "id": "b85908d18095",
+      "release": "3.2 (Official)",
+      "source": "https://www.vandyke.com/download/securecrt/3.2/history.txt",
+      "line": 61,
+      "family": "3.2"
+    }
+  },
+  {
+    "id": "R34",
+    "issue": "默认算法变更与升级区分",
+    "check": "新安装与升级配置分开测试，已有安全策略不被覆盖",
+    "status": "策略UI/迁移未实现",
+    "evidence": {
+      "id": "63baf7224251",
+      "release": "9.7 (Beta 1)",
+      "source": "https://www.vandyke.com/products/securecrt/history.txt",
+      "line": 456,
+      "family": "9.7"
+    }
+  },
+  {
+    "id": "R35",
+    "issue": "串口流控默认改变",
+    "check": "XON/XOFF 会消耗控制字节；二进制场景与历史配置显式核验",
+    "status": "流控配置和驱动参数传递已测，默认none；实体设备、XON/XOFF字节消费及旧配置对照待测",
+    "evidence": {
+      "id": "700e4c3db557",
+      "release": "8.7 (Beta 1)",
+      "source": "https://www.vandyke.com/download/securecrt/8.7/history.txt",
+      "line": 436,
+      "family": "8.7"
+    }
+  },
+  {
+    "id": "R36",
+    "issue": "百万行历史上限变更",
+    "check": "滚动容量可配置，严格资源预算；大历史查找不阻塞 UI",
+    "status": "当前仅2000行；未实现大历史",
+    "evidence": {
+      "id": "9e2ca7744c14",
+      "release": "9.6 (Beta 1)",
+      "source": "https://www.vandyke.com/download/securecrt/9.6/history.txt",
+      "line": 368,
+      "family": "9.6"
+    }
+  }
+]
