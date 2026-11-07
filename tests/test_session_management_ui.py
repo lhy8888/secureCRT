@@ -1,6 +1,9 @@
 import asyncio
 from copy import deepcopy
+import threading
+from types import SimpleNamespace
 
+import asyncssh
 import pytest
 from PySide6.QtCore import QTimer,Qt
 from PySide6.QtWidgets import QApplication,QDialog
@@ -13,6 +16,48 @@ from harbor_terminal.session_manager import SessionManager,ImportDialog,ChangePr
 async def until(app,predicate):
     async with asyncio.timeout(8):
         while not predicate():app.processEvents();await asyncio.sleep(.01)
+
+
+@pytest.fixture
+def threaded_endpoint(tmp_path):
+    """A remote peer must not stop processing SSH while Qt paints a window."""
+    ready=threading.Event();stop=threading.Event();failures=[];connections=set()
+    endpoint=SimpleNamespace(controls=SimpleNamespace(received=bytearray()))
+    key=asyncssh.generate_private_key('ssh-ed25519')
+    class Server(asyncssh.SSHServer):
+        def connection_made(self,connection):self.connection=connection;connections.add(connection)
+        def connection_lost(self,exc):connections.discard(self.connection)
+        def begin_auth(self,username):return True
+        def password_auth_supported(self):return True
+        def validate_password(self,username,password):return username=='tester' and password=='test-only'
+    async def echo(process):
+        while True:
+            try:data=await process.stdin.read(4096)
+            except asyncssh.TerminalSizeChanged:continue
+            if not data:break
+            endpoint.controls.received.extend(data);process.stdout.write(data)
+    async def serve():
+        server=await asyncssh.create_server(Server,'127.0.0.1',0,server_host_keys=[key],process_factory=echo,encoding=None,line_editor=False)
+        endpoint.port=server.get_port();ready.set()
+        try:
+            while not stop.is_set():await asyncio.sleep(.01)
+        finally:
+            server.close();active=list(connections)
+            for connection in active:connection.close()
+            await asyncio.gather(*(connection.wait_closed() for connection in active),return_exceptions=True)
+            await server.wait_closed()
+    def run():
+        try:asyncio.run(serve())
+        except BaseException as exc:failures.append(type(exc).__name__);ready.set()
+    thread=threading.Thread(target=run,name='owned-test-ssh-server',daemon=True);thread.start()
+    try:
+        assert ready.wait(5) and not failures,'Local SSH fixture could not start'
+        endpoint.known=tmp_path/'threaded-known-hosts'
+        endpoint.known.write_bytes(f'[127.0.0.1]:{endpoint.port} '.encode()+key.export_public_key())
+        yield endpoint
+    finally:
+        stop.set();thread.join(8)
+        assert not thread.is_alive() and not failures,'Local SSH fixture did not shut down'
 
 
 @pytest.fixture
@@ -126,7 +171,8 @@ async def test_recovery_previews_exact_backup_and_preserves_damaged_original(des
     manager.close()
 
 
-async def test_clone_is_independent_and_requires_fresh_credentials_and_lock_guards_input(sftp_endpoint,desktop):
+async def test_clone_is_independent_and_requires_fresh_credentials_and_lock_guards_input(threaded_endpoint,desktop):
+    sftp_endpoint=threaded_endpoint
     app,window=desktop();window.host.setText('127.0.0.1');window.port.setText(str(sftp_endpoint.port))
     window.user.setText('tester');window.password.setText('test-only');window.known.setText(str(sftp_endpoint.known))
     window.connect_session();first=window.tabs.currentWidget();worker=first.worker
@@ -153,7 +199,8 @@ async def test_clone_is_independent_and_requires_fresh_credentials_and_lock_guar
     assert not worker.stop_event.is_set()
     assert not worker.send(b'blocked-manual') and not worker.send_break()
     assert worker.submit_flow([dict(action='send',text='blocked-flow')]) is None
-    await until(app,lambda:worker.flow_progress().get('phase')=='success')
+    await until(app,lambda:worker.flow_progress().get('phase') in ('success','error','cancelled'))
+    assert worker.flow_progress().get('phase')=='success',(worker.status,worker.flow_progress(),bytes(sftp_endpoint.controls.received))
     await until(app,lambda:'owned-flow#' in first.toPlainText())
     import re
     assert re.search(rb'\x1b\[[0-9]+;[0-9]+R',sftp_endpoint.controls.received)
