@@ -9,6 +9,9 @@ import asyncssh
 import pytest
 
 os.environ.setdefault('QT_QPA_PLATFORM','offscreen')
+if os.name == 'nt':
+    from PySide6.QtCore import QCoreApplication, Qt
+    QCoreApplication.setAttribute(Qt.ApplicationAttribute.AA_DontUseNativeDialogs, True)
 
 
 @pytest.fixture
