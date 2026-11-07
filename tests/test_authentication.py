@@ -59,10 +59,14 @@ async def answer(event):
 async def test_multiround_echo_flags_and_newlines_exceed_handshake_budget_safely(mfa_endpoint):
     observed=[]
     async def delayed(event):
-        observed.append(event);await asyncio.sleep(.08);return await answer(event)
+        observed.append(event);await asyncio.sleep(1.1);return await answer(event)
     client=SSHTransport()
-    await client.connect(**mfa_endpoint.options,auth_prompt=delayed,timeout=.07,auth_timeout=2)
+    # A real SSH handshake must not race a 70 ms CI scheduling window. Both
+    # user-response delays together still exceed this separate handshake cap.
+    started=asyncio.get_running_loop().time()
+    await client.connect(**mfa_endpoint.options,auth_prompt=delayed,timeout=2,auth_timeout=5)
     try:
+        assert asyncio.get_running_loop().time()-started>2
         assert len(observed)==2
         assert observed[0]['prompts'][0]==('Visible name\nSecond line:',True)
         assert observed[0]['prompts'][1][1] is False
