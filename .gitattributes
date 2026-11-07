@@ -5,3 +5,4 @@
 *.csv text eol=crlf
 *.png binary
 *.whl binary
+artifacts/**/*.xml -whitespace

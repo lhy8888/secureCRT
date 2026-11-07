@@ -90,3 +90,54 @@ async def test_listener_capacity_is_bounded_and_all_owned_ports_are_released(for
     assert await manager.close_all()==0
     for entry in entries:
         with pytest.raises(OSError):await asyncio.open_connection('127.0.0.1',entry['listen_port'])
+
+
+async def test_socks_domain_route_and_unsupported_auth_do_not_end_ssh(forwarded,sftp_endpoint):
+    client,manager,port=forwarded
+    sftp_endpoint.controls.allowed_destinations.add(('localhost',port))
+    entry=await manager.start(ForwardSpec('socks'))
+    reader,writer=await asyncio.open_connection('127.0.0.1',entry['listen_port'])
+    writer.write(b'\x05\x01\x02');await writer.drain()
+    assert await asyncio.wait_for(reader.readexactly(2),2)==b'\x05\xff'
+    writer.close();await writer.wait_closed()
+    reader,writer=await asyncio.open_connection('127.0.0.1',entry['listen_port'])
+    try:
+        writer.write(b'\x05\x01\x00');await writer.drain()
+        assert await reader.readexactly(2)==b'\x05\x00'
+        writer.write(b'\x05\x01\x00\x03\x09localhost'+port.to_bytes(2,'big'));await writer.drain()
+        assert (await asyncio.wait_for(reader.readexactly(10),3))[:2]==b'\x05\x00'
+        writer.write(b'domain-route');await writer.drain()
+        assert await asyncio.wait_for(reader.readexactly(12),2)==b'domain-route'
+    finally:writer.close();await writer.wait_closed()
+    await client.write(b'still-open\n')
+    assert await asyncio.wait_for(client.read(),2)==b'still-open\n'
+
+
+async def test_owner_close_releases_partial_socks_handshake_and_budget(forwarded):
+    client,manager,_=forwarded
+    entry=await manager.start(ForwardSpec('socks'))
+    reader,writer=await asyncio.open_connection('127.0.0.1',entry['listen_port'])
+    writer.write(b'\x05');await writer.drain()
+    await asyncio.sleep(.02)
+    assert manager.budget.active==1
+    await client.close()
+    assert await asyncio.wait_for(reader.read(),2)==b''
+    assert manager.budget.active==0
+    writer.close();await writer.wait_closed()
+
+
+async def test_local_forward_preserves_half_close_and_final_response(forwarded,sftp_endpoint):
+    _,manager,_=forwarded
+    async def respond_after_eof(reader,writer):
+        data=await reader.read()
+        writer.write(data[::-1]);await writer.drain();writer.close();await writer.wait_closed()
+    server=await asyncio.start_server(respond_after_eof,'127.0.0.1',0)
+    port=server.sockets[0].getsockname()[1]
+    sftp_endpoint.controls.allowed_destinations.add(('127.0.0.1',port))
+    try:
+        entry=await manager.start(ForwardSpec('local',0,'127.0.0.1',port))
+        reader,writer=await asyncio.open_connection('127.0.0.1',entry['listen_port'])
+        writer.write(b'half-close');await writer.drain();writer.write_eof()
+        assert await asyncio.wait_for(reader.read(),3)==b'esolc-flah'
+        writer.close();await writer.wait_closed()
+    finally:server.close();await server.wait_closed()

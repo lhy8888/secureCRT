@@ -328,7 +328,7 @@ class ForwardDialog(QDialog):
         layout.addWidget(plain_label('监听请求固定为127.0.0.1。关闭此窗口不停止监听；断开SSH会话会释放转发。'))
         row = QHBoxLayout(); layout.addLayout(row)
         self.kind = QComboBox()
-        for text, value in [('本地转发 L','local'),('远程转发 R','remote'),('本地SOCKS代理','socks')]:
+        for text, value in [('本地转发 L','local'),('远程转发 R','remote'),('本地SOCKS5代理','socks')]:
             self.kind.addItem(text,value)
         self.listen = QSpinBox(); self.listen.setRange(0,65535); self.listen.setSpecialValueText('自动分配监听端口')
         self.host = QLineEdit('127.0.0.1'); self.host.setPlaceholderText('目标主机')

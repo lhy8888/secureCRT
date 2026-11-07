@@ -2,6 +2,7 @@
 import asyncio
 from dataclasses import dataclass
 import uuid
+from .local_forward import LocalListener, FlowBudget
 
 
 @dataclass(frozen=True)
@@ -29,18 +30,18 @@ class ForwardManager:
     def __init__(self, connection):
         self.connection = connection
         self.listeners = {}
+        self.budget = FlowBudget()
 
     async def start(self, spec):
         if len(self.listeners) >= 16:
             raise ValueError('At most 16 forwarding listeners per session')
         if spec.kind == 'local':
-            operation = self.connection.forward_local_port('127.0.0.1', spec.listen_port,
-                spec.destination_host, spec.destination_port)
+            operation = LocalListener.create(self.connection, spec, self.budget)
         elif spec.kind == 'remote':
             operation = self.connection.forward_remote_port('127.0.0.1', spec.listen_port,
                 spec.destination_host, spec.destination_port)
         else:
-            operation = self.connection.forward_socks('127.0.0.1', spec.listen_port)
+            operation = LocalListener.create(self.connection, spec, self.budget)
         listener = await asyncio.wait_for(operation, 15)
         identifier = uuid.uuid4().hex
         entry = dict(id=identifier, kind=spec.kind, listen_host='127.0.0.1',

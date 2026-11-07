@@ -93,11 +93,13 @@ async def test_font_and_color_changes_preserve_screen_and_resize_real_ssh(sftp_e
             modal = app.activeModalWidget()
             picked.append(isinstance(modal, QFontDialog))
             if isinstance(modal, QFontDialog):
-                modal.setCurrentFont(chosen); modal.accept()
+                modal.setCurrentFont(chosen); QTimer.singleShot(50, modal.accept)
             elif modal: modal.reject()
         QTimer.singleShot(30, select_font)
         window.choose_terminal_font(); window.set_terminal_scheme('paper')
         assert picked == [True]
+        assert window.preferences.size == 16, (window.preferences.family, window.preferences.size, chosen.toString())
+        assert terminal.cell_width > old_width, (terminal.font().toString(), terminal.cell_width, old_width)
         await until(app, lambda: not terminal.resize_timer.isActive() and terminal.screen.columns < old_columns)
         assert terminal.cell_width > old_width
         assert terminal.cell_width == pytest.approx(QFontMetricsF(terminal.font()).horizontalAdvance('M'))

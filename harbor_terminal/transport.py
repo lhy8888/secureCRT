@@ -81,6 +81,8 @@ class SSHTransport:
         self.process = None
         try:
             if connection:
+                from .local_forward import close_owned_listeners
+                await close_owned_listeners(connection)
                 await self._close_connection(connection)
         finally:
             if hop:
