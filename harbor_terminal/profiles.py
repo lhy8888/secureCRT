@@ -10,13 +10,14 @@ from .terminal_model import ENCODINGS
 V1_FIELDS = frozenset(('mode', 'host', 'port', 'username', 'known_hosts'))
 V2_FIELDS = V1_FIELDS | {'bytesize', 'parity', 'stopbits', 'flow_control',
                       'encoding', 'backspace', 'private_key'}
-FIELDS = V2_FIELDS | {'jump_profile'}
+V3_FIELDS = V2_FIELDS | {'jump_profile'}
+FIELDS = V3_FIELDS | {'auth_method'}
 
 
-def validate(sessions, *, version=3):
+def validate(sessions, *, version=4):
     if not isinstance(sessions, dict) or len(sessions) > 500:
         raise ValueError('Invalid session collection')
-    allowed = V1_FIELDS if version == 1 else V2_FIELDS if version == 2 else FIELDS
+    allowed = V1_FIELDS if version == 1 else V2_FIELDS if version == 2 else V3_FIELDS if version == 3 else FIELDS
     for name, profile in sessions.items():
         if not isinstance(name, str) or not name.strip() or len(name) > 256:
             raise ValueError('Invalid session name')
@@ -35,6 +36,8 @@ def validate(sessions, *, version=3):
             raise ValueError('Invalid backspace setting')
         if len(profile.get('jump_profile', '')) > 256:
             raise ValueError('Invalid jump profile reference')
+        if profile.get('auth_method','auto') not in ('auto','password-first','interactive-first','publickey-only','interactive-only'):
+            raise ValueError('Invalid authentication method')
         if mode == 'Serial':
             SerialSettings(int(profile.get('port', '115200')),
                            int(profile.get('bytesize', '8')), profile.get('parity', 'N'),
@@ -51,7 +54,7 @@ def load(path):
         raise ValueError('Session file exceeds 1 MiB')
     data = json.loads(path.read_text(encoding='utf-8'))
     if (not isinstance(data, dict) or type(data.get('version')) is not int
-            or data['version'] not in (1, 2, 3) or not isinstance(data.get('sessions'), dict)):
+            or data['version'] not in (1, 2, 3, 4) or not isinstance(data.get('sessions'), dict)):
         raise ValueError('Unsupported session file')
     result = data['sessions']
     validate(result, version=data['version'])
@@ -61,7 +64,7 @@ def load(path):
 def save(path, sessions):
     # Validate exactly the bytes we will persist before touching an existing file.
     validate(sessions)
-    payload = json.dumps({'version': 3, 'sessions': sessions}, ensure_ascii=False, indent=2)
+    payload = json.dumps({'version': 4, 'sessions': sessions}, ensure_ascii=False, indent=2)
     if len(payload.encode('utf-8')) > 1048576:
         raise ValueError('Session file exceeds 1 MiB')
     path = Path(path)

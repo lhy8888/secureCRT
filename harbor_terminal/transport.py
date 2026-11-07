@@ -5,6 +5,7 @@ import asyncssh
 import serial
 
 from .serial_config import SerialSettings
+from .authentication import AUTH_METHODS, InteractiveClient
 
 
 class IncompleteWriteError(IOError):
@@ -21,21 +22,24 @@ class SSHTransport:
 
     async def connect(self, host, username, *, port=22, password=None,
                       known_hosts=None, client_keys=None, passphrase=None,
-                      term_size=(100, 30), timeout=15, jump=None, status=None):
+                      term_size=(100, 30), timeout=15, jump=None, status=None,
+                      auth_method='auto', auth_prompt=None, auth_timeout=180):
         if self.connection is not None:
             raise RuntimeError("Already connected")
         connection = hop = None
         try:
             if jump:
-                allowed = {'host','username','port','password','known_hosts','client_keys','passphrase'}
+                allowed = {'host','username','port','password','known_hosts','client_keys','passphrase','auth_method'}
                 if not isinstance(jump, dict) or set(jump) - allowed:
                     raise ValueError('Only one explicitly configured SSH jump is supported')
                 if status: status('ConnectingJump')
-                hop = await self._open_ssh(**jump, timeout=timeout)
+                hop = await self._open_ssh(**jump, timeout=timeout, auth_prompt=auth_prompt,
+                    auth_timeout=auth_timeout, status=status, stage='jump')
             if status: status('ConnectingTarget')
             connection = await self._open_ssh(host, username, port=port, password=password,
                 known_hosts=known_hosts, client_keys=client_keys, passphrase=passphrase,
-                timeout=timeout, tunnel=hop)
+                timeout=timeout, tunnel=hop, auth_method=auth_method, auth_prompt=auth_prompt,
+                auth_timeout=auth_timeout, status=status, stage='target')
             process = await asyncio.wait_for(connection.create_process(
                 term_type='xterm-256color', term_size=term_size, encoding=None, stderr=asyncssh.STDOUT), timeout)
         except BaseException:
@@ -47,17 +51,41 @@ class SSHTransport:
 
     @staticmethod
     async def _open_ssh(host, username, *, port=22, password=None, known_hosts=None,
-                        client_keys=None, passphrase=None, timeout=15, tunnel=None):
+                        client_keys=None, passphrase=None, timeout=15, tunnel=None,
+                        auth_method='auto', auth_prompt=None, auth_timeout=180, status=None, stage='target'):
         if not host or not username or not 1 <= int(port) <= 65535:
             raise ValueError('Invalid host, username, or port')
         # Both hops independently verify their own endpoint identity.
         path = Path(known_hosts) if known_hosts else Path.home() / '.ssh' / 'known_hosts'
         if not path.is_file():
             raise ValueError('Create a known_hosts file using an independently verified host fingerprint first')
-        return await asyncio.wait_for(asyncssh.connect(host, port=int(port), username=username,
-            password=password, known_hosts=str(path), client_keys=client_keys, passphrase=passphrase,
-            tunnel=tunnel, connect_timeout=timeout, login_timeout=timeout,
-            keepalive_interval=15, keepalive_count_max=3, agent_forwarding=False), timeout=timeout)
+        if auth_method not in AUTH_METHODS or not 0<timeout<=600 or not 0<auth_timeout<=600:
+            raise ValueError('Invalid authentication method or deadline')
+        options = dict(port=int(port), username=username, password=password, known_hosts=str(path),
+            client_keys=client_keys, passphrase=passphrase, tunnel=tunnel,
+            keepalive_interval=15, keepalive_count_max=3, agent_forwarding=False,
+            preferred_auth=AUTH_METHODS[auth_method])
+        if auth_prompt is None:
+            return await asyncio.wait_for(asyncssh.connect(host, connect_timeout=timeout,
+                login_timeout=timeout, **options), timeout)
+        challenged = asyncio.Event()
+        context = dict(host=host, port=int(port), username=username, stage=stage)
+        async def establish():
+            return await asyncssh.connect(host, connect_timeout=None, login_timeout=timeout+auth_timeout,
+                client_factory=lambda: InteractiveClient(auth_prompt, context, challenged, status), **options)
+        task = asyncio.create_task(establish()); notice = asyncio.create_task(challenged.wait())
+        try:
+            done, _ = await asyncio.wait((task, notice), timeout=timeout, return_when=asyncio.FIRST_COMPLETED)
+            notice.cancel(); await asyncio.gather(notice, return_exceptions=True)
+            if not done: raise TimeoutError('SSH handshake deadline')
+            if task in done: return await task
+            return await asyncio.wait_for(task, auth_timeout)
+        except BaseException:
+            notice.cancel(); task.cancel()
+            results = await asyncio.gather(task, notice, return_exceptions=True)
+            if isinstance(results[0], asyncssh.SSHClientConnection):
+                await SSHTransport._close_connection(results[0])
+            raise
 
     async def read(self):
         return await self.process.stdout.read(16384)

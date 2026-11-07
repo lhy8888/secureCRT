@@ -14,10 +14,12 @@ from .serial_config import SerialSettings
 from .panels import SFTPDialog, LogDialog, HexDialog, ForwardDialog
 from .desktop import DesktopShell, ConnectionOptions
 from .appearance import icon, terminal_font
+from .auth_dialog import AuthenticationDialog
 
 DEFAULTS = dict(bytesize='8', parity='N', stopbits='1', flow_control='none',
-                encoding='utf-8', backspace='del', private_key='', jump_profile='')
+                encoding='utf-8', backspace='del', private_key='', jump_profile='', auth_method='auto')
 STATES = dict(Connecting='连接中', ConnectingJump='连接跳板中', ConnectingTarget='连接目标中',
+              AuthenticatingJump='跳板交互认证', AuthenticatingTarget='目标交互认证',
               Connected='已连接', Closing='关闭中', Disconnected='已断开')
 
 
@@ -32,6 +34,7 @@ class Window(QMainWindow, DesktopShell):
         self._closing = False
         self._probe = None
         self.service_panels = {}
+        self.auth_dialogs = {}
         self.options = dict(DEFAULTS)
         self.passphrase = None
         self.jump_password = self.jump_passphrase = None
@@ -178,7 +181,8 @@ class Window(QMainWindow, DesktopShell):
                 if not 1 <= number <= 65535: raise ValueError('port')
                 options = dict(host=self.host.text().strip(),username=self.user.text().strip(),
                                port=number,password=self.password.text() or None,
-                               passphrase=self.passphrase,known_hosts=self.known.text().strip() or None)
+                               passphrase=self.passphrase,known_hosts=self.known.text().strip() or None,
+                               auth_method=self.options['auth_method'])
                 if self.options['private_key']: options['client_keys'] = [self.options['private_key']]
                 reference = self.options.get('jump_profile')
                 if reference:
@@ -188,12 +192,14 @@ class Window(QMainWindow, DesktopShell):
                     options['jump'] = dict(host=jump.get('host',''), username=jump.get('username',''),
                         port=int(jump.get('port','22')), known_hosts=jump.get('known_hosts') or None,
                         password=self.jump_password, passphrase=self.jump_passphrase)
+                    options['jump']['auth_method'] = jump.get('auth_method','auto')
                     if jump.get('private_key'): options['jump']['client_keys'] = [jump['private_key']]
         except (ValueError,TypeError):
             self.status.setText('连接参数无效，请检查端口、编码、串口或跳板引用；当前仅支持单级跳板'); return
         self.password.clear(); self.passphrase = None
         self.jump_password = self.jump_passphrase = None
         worker = Worker(self.mode.currentText(),options)
+        worker.receive_stream.configure(self.options['encoding'])
         terminal = Terminal(worker,encoding=self.options['encoding'],backspace=self.options['backspace'])
         terminal.set_appearance(self.preferences.scheme, terminal_font(self.preferences.family, self.preferences.size))
         loaded = self.profiles.get(self._loaded_profile, {})
@@ -207,11 +213,30 @@ class Window(QMainWindow, DesktopShell):
         worker.finished.connect(self.on_worker_finished)
         worker.file_result.connect(self.on_file_result)
         worker.forward_result.connect(self.on_forward_result)
+        worker.auth_requested.connect(self.on_auth_requested)
         worker.start(); self.quick_dialog.accept(); self.activateWindow(); terminal.setFocus()
 
     @Slot(str)
     def on_worker_state(self, state):
-        self.session_state(self.sender(), state)
+        worker = self.sender()
+        if state in ('Closing', 'Disconnected'):
+            dialog = self.auth_dialogs.pop(worker, None)
+            if dialog: dialog.finish_without_reply()
+        self.session_state(worker, state)
+
+    @Slot(dict)
+    def on_auth_requested(self, event):
+        worker = self.sender()
+        if worker not in self.sessions or self._closing or worker.stop_event.is_set():
+            if worker: worker.reply_auth(event['id'], None)
+            return
+        previous = self.auth_dialogs.pop(worker, None)
+        if previous: previous.finish_without_reply()
+        dialog = AuthenticationDialog(worker, event, self); self.auth_dialogs[worker] = dialog
+        def released(_result):
+            if self.auth_dialogs.get(worker) is dialog: self.auth_dialogs.pop(worker, None)
+            dialog.deleteLater()
+        dialog.finished.connect(released); dialog.open()
 
     @Slot(str)
     def on_worker_error(self, message):
@@ -294,6 +319,8 @@ class Window(QMainWindow, DesktopShell):
             notes.append('SFTP：' + progress['phase'])
         forwards = worker.forwards()
         if forwards: notes.append(f'转发监听：{len(forwards)}')
+        flow = worker.flow_progress()
+        if flow.get('phase') in ('starting','running'):notes.append(f"流程：{flow.get('step',0)}/{flow.get('total',0)}")
         self.activity.setText(' · '.join(notes))
         self.dimensions.setText(f'{terminal.screen.lines} 行 × {terminal.screen.columns} 列')
         protocol = 'SSH2' if worker.mode == 'SSH' else 'Serial'
@@ -353,8 +380,11 @@ class Window(QMainWindow, DesktopShell):
         self.remove_session(worker)
 
     def remove_session(self, worker):
+        dialog = self.auth_dialogs.pop(worker, None)
+        if dialog: dialog.finish_without_reply()
         terminal = self.sessions.pop(worker,None)
         if terminal:
+            if self.command_panel:self.command_panel.remove_worker(worker)
             for key in [key for key in self.service_panels if key[0] is worker]:
                 panel = self.service_panels.pop(key)
                 panel.close(); panel.deleteLater()
@@ -377,6 +407,8 @@ class Window(QMainWindow, DesktopShell):
     def closeEvent(self, event):
         self._closing = True; self.connect_button.setEnabled(False)
         self.quick_action.setEnabled(False); self.quick_dialog.reject()
+        if self.command_panel:self.command_panel.cancel_flows()
+        for dialog in list(self.auth_dialogs.values()): dialog.finish_without_reply()
         for worker in self.workers: worker.stop_event.set()
         busy = any(w.isRunning() for w in self.workers) or (self._probe and self._probe.isRunning())
         if busy:

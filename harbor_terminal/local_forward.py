@@ -53,7 +53,10 @@ class LocalListener:
     def close(self): self.server.close()
 
     async def wait_closed(self):
-        await self.server.wait_closed()
+        # Python 3.13+ waits for accepted streams as well. Stopping a listener
+        # intentionally keeps existing flows, so wait only when there are none.
+        if not self.flows: await self.server.wait_closed()
+        else: await asyncio.sleep(0)
         if not self.flows and self.monitor and not self.closing_connection:
             self.monitor.cancel(); await asyncio.gather(self.monitor, return_exceptions=True)
 

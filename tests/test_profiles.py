@@ -35,7 +35,7 @@ def test_wrong_root_type_rejected(tmp_path, payload):
         load(path)
 
 
-def test_v1_is_readable_and_new_serial_settings_round_trip_as_v3(tmp_path):
+def test_v1_is_readable_and_new_serial_settings_round_trip_as_v4(tmp_path):
     import json
     path=tmp_path/'sessions.json'
     old={'console':{'mode':'Serial','host':'COM3','port':'115200'}}
@@ -44,7 +44,7 @@ def test_v1_is_readable_and_new_serial_settings_round_trip_as_v3(tmp_path):
     old['console'].update(bytesize='7',parity='E',stopbits='2',flow_control='rtscts',encoding='gb18030')
     save(path,old)
     assert load(path)==old
-    assert json.loads(path.read_text())['version']==3
+    assert json.loads(path.read_text())['version']==4
 
 
 @pytest.mark.parametrize('field',['password','passphrase','private_key_content'])

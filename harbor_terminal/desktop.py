@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QFormLayout,
 
 from .appearance import Preferences, SCHEMES, apply_desktop_style, icon, terminal_font
 from .terminal_model import ENCODINGS
+from .authentication import AUTH_METHODS
 
 
 class ConnectionOptions(QDialog):
@@ -40,6 +41,12 @@ class ConnectionOptions(QDialog):
         form.addRow(note)
 
         form = page('SSH 身份验证')
+        self.auth_method = QComboBox()
+        for label, value in (('自动（密钥、密码、交互）','auto'),('密码优先','password-first'),('交互优先','interactive-first'),
+                            ('仅公钥','publickey-only'),('仅交互 / MFA','interactive-only')):
+            self.auth_method.addItem(label, value)
+        self.auth_method.setCurrentIndex(max(0, self.auth_method.findData(options.get('auth_method','auto'))))
+        form.addRow('认证方式：', self.auth_method)
         self.private_key = QLineEdit(options['private_key'])
         key_row = QHBoxLayout(); key_row.addWidget(self.private_key, 1)
         choose = QPushButton('浏览…'); choose.clicked.connect(self.choose_key); key_row.addWidget(choose)
@@ -88,6 +95,7 @@ class ConnectionOptions(QDialog):
     def values(self):
         return dict(encoding=self.encoding.currentText(), backspace=self.backspace.currentText(),
                     private_key=self.private_key.text().strip(), jump_profile=self.jump_profile.currentData(),
+                    auth_method=self.auth_method.currentData(),
                     **{key: field.currentText() for key, field in self.serial_fields.items()})
 
 
@@ -189,6 +197,9 @@ class DesktopShell:
         self.find_bar.addAction(icon('up'), '上一处', lambda: self.find_next(True))
         self.find_bar.addAction(icon('down'), '下一处', self.find_next)
         self.find_bar.addAction(icon('close'), '关闭查找', self.hide_find_bar); self.find_bar.hide()
+        self.command_buttons = QToolBar('按钮栏', self); self.command_buttons.setObjectName('commandButtons')
+        self.command_buttons.setMovable(False); self.addToolBar(Qt.ToolBarArea.BottomToolBarArea, self.command_buttons)
+        self.command_panel = None; self.refresh_command_buttons()
         QShortcut(QKeySequence('Alt+R'), self, activated=self.quick_host.setFocus)
         QShortcut(QKeySequence('Alt+K'), self, activated=self.focus_session_filter)
         self.update_profiles()
@@ -220,6 +231,7 @@ class DesktopShell:
         self.hex_button = self._action('terminal', '串口 Hex', self.open_hex)
         self.forward_button = self._action('forward', 'SSH 隧道', self.open_forwards)
         self.break_button = self._action('terminal', '发送 BREAK', self.send_break)
+        self.command_action = self._action('terminal', '命令与流程…', self.open_command_panel, 'Alt+M')
 
     def _build_toolbar(self):
         self.toolbar = QToolBar('标准工具栏', self); self.toolbar.setObjectName('standardToolbar')
@@ -236,7 +248,7 @@ class DesktopShell:
         self.toolbar.addSeparator()
         for action in (self.options_action, self.font_action): self.toolbar.addAction(action)
         self.toolbar.addSeparator()
-        for action in (self.sftp_button, self.log_button, self.forward_button, self.hex_button): self.toolbar.addAction(action)
+        for action in (self.sftp_button, self.log_button, self.forward_button, self.hex_button, self.command_action): self.toolbar.addAction(action)
 
     def _build_menus(self):
         bar = self.menuBar(); bar.setNativeMenuBar(False)
@@ -248,6 +260,7 @@ class DesktopShell:
         view = bar.addMenu('查看(&V)')
         view.addAction(self.session_dock.toggleViewAction()); view.addAction(self.active_dock.toggleViewAction())
         view.addSeparator(); view.addAction(self.toolbar.toggleViewAction())
+        self.view_menu = view
         theme = view.addMenu('界面主题'); group = QActionGroup(self)
         for value, label in (('light','经典浅色'),('dark','深色')):
             action = theme.addAction(label); action.setCheckable(True); action.setChecked(self.preferences.theme == value)
@@ -259,6 +272,7 @@ class DesktopShell:
             group.addAction(action); action.triggered.connect(lambda checked, value=key: self.set_terminal_scheme(value))
         transfer = bar.addMenu('传输(&T)'); transfer.addAction(self.sftp_button)
         tools = bar.addMenu('工具(&U)'); tools.addActions([self.log_button, self.hex_button, self.forward_button, self.break_button])
+        tools.addAction(self.command_action)
         self.windows_menu = bar.addMenu('窗口(&W)'); self.windows_menu.aboutToShow.connect(self.populate_windows_menu)
         help_menu = bar.addMenu('帮助(&H)')
         help_menu.addAction('快捷键', lambda: QMessageBox.information(self, '快捷键',
@@ -325,7 +339,7 @@ class DesktopShell:
         for worker, terminal in self.sessions.items():
             from .app import STATES
             item = QTreeWidgetItem([terminal.session_label, STATES.get(worker.status, worker.status)])
-            item.setData(0, Qt.ItemDataRole.UserRole, id(worker))
+            item.setData(0, Qt.ItemDataRole.UserRole, worker.session_id)
             item.setIcon(0, icon('connected' if worker.status == 'Connected' else 'disconnected' if worker.status == 'Disconnected' else 'pending'))
             self.active_tree.addTopLevelItem(item)
         self.active_tree.resizeColumnToContents(0)
@@ -333,7 +347,38 @@ class DesktopShell:
     def activate_session_item(self, item, _column):
         identifier = item.data(0, Qt.ItemDataRole.UserRole)
         for worker, terminal in self.sessions.items():
-            if id(worker) == identifier: self.tabs.setCurrentWidget(terminal); break
+            if worker.session_id == identifier: self.tabs.setCurrentWidget(terminal); break
+
+    def open_command_panel(self):
+        if self.command_panel is None:
+            from .workflow_panel import WorkflowPanel
+            self.command_panel = WorkflowPanel(self)
+            self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, self.command_panel)
+            self.resizeDocks([self.command_panel],[310],Qt.Orientation.Vertical)
+            self.view_menu.addAction(self.command_panel.toggleViewAction())
+            self.view_menu.addAction(self.command_buttons.toggleViewAction())
+        self.command_panel.refresh_targets();self.command_panel.show();self.command_panel.raise_()
+        self.command_panel.edit.setFocus()
+
+    def refresh_command_buttons(self):
+        from .commands import load_library
+        self.command_buttons.clear()
+        try:
+            commands=self.command_panel.library if self.command_panel else load_library(self.profile_path.with_name('commands.json'))
+        except (OSError,ValueError,KeyError):commands={}
+        for name,item in commands.items():
+            if not item.get('pinned'):continue
+            action=self.command_buttons.addAction(name)
+            action.setToolTip(name+'（预览后发送到当前会话）')
+            action.triggered.connect(lambda checked, key=name:self.preview_command_button(key))
+        self.command_buttons.setVisible(bool(self.command_buttons.actions()))
+
+    def preview_command_button(self,name):
+        terminal=self.tabs.currentWidget()
+        self.open_command_panel()
+        definition=self.command_panel.library.get(name)
+        if not terminal or not definition:return
+        self.command_panel.send_commands([(terminal.worker,terminal.session_label,terminal.encoding)],definition['text'])
 
     def populate_windows_menu(self):
         self.windows_menu.clear()

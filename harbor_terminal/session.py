@@ -15,6 +15,8 @@ from .sftp import FileRequest, SFTPService, file_error, CommitUncertainError
 from .trace import ByteTrace
 from .journal import SessionJournal
 from .forwarding import ForwardSpec, ForwardManager
+from .authentication import AuthenticationBroker, AuthenticationCancelled, AuthenticationTimeout, AuthenticationLimit
+from .automation import ReceiveStream, run_flow, validate_steps
 
 
 class Worker(QThread):
@@ -22,10 +24,13 @@ class Worker(QThread):
     state = Signal(str)
     file_result = Signal(dict)
     forward_result = Signal(dict)
+    auth_requested = Signal(dict)
+    flow_result = Signal(dict)
 
     def __init__(self, mode, options, *, transport_factory=None):
         super().__init__()
         self.mode, self.options = mode, dict(options)
+        self.session_id = uuid.uuid4().hex
         self.stop_event = threading.Event()
         self.lock = threading.Lock()
         self.incoming, self.outgoing = bytearray(), bytearray()
@@ -40,6 +45,14 @@ class Worker(QThread):
         self._file_progress = {}
         self._forward_jobs = deque()
         self._forward_snapshot = []
+        self.authentication = AuthenticationBroker(self.auth_requested.emit)
+        self.receive_stream = ReceiveStream()
+        self._flow_job = None; self._flow_progress = {}; self._outgoing_owner = None
+
+    def reply_auth(self, identifier, answers):
+        accepted = self.authentication.reply(identifier, answers)
+        if accepted and answers is None: self.stop_event.set()
+        return accepted
 
     def _set_state(self, state):
         with self.lock:
@@ -78,6 +91,7 @@ class Worker(QThread):
         return True
 
     def _observe(self, direction, data):
+        if direction == 'RX': self.receive_stream.append(data)
         self.trace.append(direction, data)
         if self.journal:
             self.journal.record(direction, data)
@@ -101,14 +115,44 @@ class Worker(QThread):
         with self.lock:
             return [dict(item) for item in self._forward_snapshot]
 
-    def send(self, data):
+    def send(self, data, *, owner=None):
         with self.lock:
             if self.status != 'Connected' or self.stop_event.is_set():
                 return False
+            job = self._flow_job
+            if job:
+                if owner != job['id']:
+                    if data != b'\x03': return False
+                    job['cancel'].set()
+                    if self._outgoing_owner == job['id']: self.outgoing.clear()
+                elif job['cancel'].is_set(): return False
             if len(self.outgoing) + len(data) > 65536:
                 return False
             self.outgoing.extend(data)
+            self._outgoing_owner = owner
         return True
+
+    def submit_flow(self, steps, encoding='utf-8'):
+        steps = validate_steps(steps)
+        for step in steps:
+            if step['action']=='send': step['text'].encode(encoding)
+        with self.lock:
+            if self.status!='Connected' or self.stop_event.is_set() or self._flow_job or self.outgoing: return None
+            identifier = uuid.uuid4().hex
+            self._flow_job = dict(id=identifier,steps=steps,cursor=self.receive_stream.cursor(),
+                encoding=encoding,cancel=threading.Event())
+            self._flow_progress = dict(id=identifier,phase='starting',step=0,total=len(steps))
+            return identifier
+
+    def cancel_flow(self, identifier):
+        with self.lock:
+            if not self._flow_job or self._flow_job['id']!=identifier:return False
+            self._flow_job['cancel'].set()
+            if self._outgoing_owner==identifier:self.outgoing.clear();self._outgoing_owner=None
+            return True
+
+    def flow_progress(self):
+        with self.lock:return dict(self._flow_progress)
 
     def resize(self, columns, rows):
         with self.lock:
@@ -154,6 +198,7 @@ class Worker(QThread):
                     return
                 outgoing = bytes(self.outgoing)
                 self.outgoing.clear()
+                self._outgoing_owner = None
             if outgoing:
                 try:
                     await asyncio.wait_for(transport.write(outgoing), 5)
@@ -272,6 +317,42 @@ class Worker(QThread):
             if failures:
                 self.failed.emit('部分转发监听未确认关闭；SSH连接关闭将继续释放资源')
 
+    async def _workflow_operations(self, transport):
+        while True:
+            with self.lock: job = self._flow_job
+            if not job:
+                await asyncio.sleep(.02); continue
+            identifier = job['id']
+            def progress(value):
+                with self.lock:self._flow_progress = dict(id=identifier,phase='running',**value)
+            operation = asyncio.create_task(run_flow(self.receive_stream,job['cursor'],job['steps'],
+                lambda data:self.send(data,owner=identifier),encoding=job['encoding'],progress=progress))
+            async def cancellation():
+                while not job['cancel'].is_set():await asyncio.sleep(.02)
+            monitor = asyncio.create_task(cancellation())
+            event = dict(id=identifier,status='cancelled',result={})
+            try:
+                done,_ = await asyncio.wait((operation,monitor),return_when=asyncio.FIRST_COMPLETED)
+                if job['cancel'].is_set():
+                    operation.cancel();await asyncio.gather(operation,return_exceptions=True)
+                else:
+                    event['result'] = await asyncio.shield(operation); event['status'] = 'success'
+            except asyncio.CancelledError:
+                operation.cancel(); await asyncio.gather(operation,return_exceptions=True)
+                if asyncio.current_task().cancelling():raise
+            except Exception as exc:
+                event['status']='error';event['code']=type(exc).__name__
+                event['message']=type(exc).__name__+'：流程停止；已发送内容无法撤回，不会自动重试'
+            finally:
+                monitor.cancel();await asyncio.gather(monitor,return_exceptions=True)
+                with self.lock:
+                    event['sends_queued']=event['result'].get('sends_queued',self._flow_progress.get('sends_queued',0))
+                    if self._flow_job is job:self._flow_job=None
+                    if self._outgoing_owner==identifier and event['status']!='success':
+                        self.outgoing.clear();self._outgoing_owner=None
+                    self._flow_progress=dict(self._flow_progress,phase=event['status'])
+                self.flow_result.emit(event)
+
     async def session(self):
         transport = self._factory()
         tasks = []
@@ -284,6 +365,7 @@ class Worker(QThread):
                 with self.lock:
                     options['term_size'] = self._size
                 options['status'] = self._set_state
+                options['auth_prompt'] = self.authentication.ask
             connect = asyncio.create_task(transport.connect(**options))
             stop = asyncio.create_task(self._wait_stop())
             tasks.extend((connect, stop))
@@ -297,7 +379,7 @@ class Worker(QThread):
             self.options.pop('jump', None)
             self._set_state('Connected')
             running = [asyncio.create_task(operation(transport)) for operation in
-                       (self._reader, self._writer, self._control)]
+                       (self._reader, self._writer, self._control, self._workflow_operations)]
             if self.mode == 'SSH':
                 running.append(asyncio.create_task(self._file_operations(transport)))
                 running.append(asyncio.create_task(self._forward_operations(transport)))
@@ -307,7 +389,13 @@ class Worker(QThread):
                 await task
         except Exception as exc:
             # Type is diagnostic; arbitrary exception text may contain secrets.
-            if isinstance(exc, asyncssh.HostKeyNotVerifiable):
+            if isinstance(exc, AuthenticationCancelled):
+                message = '认证已取消'
+            elif isinstance(exc, AuthenticationTimeout):
+                message = '等待认证输入超时，连接已停止'
+            elif isinstance(exc, AuthenticationLimit):
+                message = '认证提示超过大小或轮数限制，连接已停止'
+            elif isinstance(exc, asyncssh.HostKeyNotVerifiable):
                 message = '主机密钥未知或已变更，请独立核验；不会跳过校验'
             elif isinstance(exc, asyncssh.PermissionDenied):
                 message = '认证被拒绝，请检查用户名、密码或密钥'
@@ -333,6 +421,11 @@ class Worker(QThread):
             with self.lock:
                 pending = self._file_job
                 self._file_job = None
+                pending_flow = self._flow_job
+                self._flow_job = None
+            self.receive_stream.close()
+            if pending_flow:
+                self.flow_result.emit(dict(id=pending_flow['id'],status='cancelled',result={}))
             if pending:
                 self.file_result.emit(dict(id=pending['request'].id, action=pending['request'].action,
                                           status='cancelled', result={}, cleanup_warning=False))

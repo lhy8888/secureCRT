@@ -141,3 +141,18 @@ async def test_local_forward_preserves_half_close_and_final_response(forwarded,s
         assert await asyncio.wait_for(reader.read(),3)==b'esolc-flah'
         writer.close();await writer.wait_closed()
     finally:server.close();await server.wait_closed()
+
+
+async def test_stopping_listener_preserves_existing_stream_until_owner_close(forwarded):
+    client,manager,port=forwarded
+    entry=await manager.start(ForwardSpec('local',0,'127.0.0.1',port))
+    reader,writer=await asyncio.open_connection('127.0.0.1',entry['listen_port'])
+    writer.write(b'before');await writer.drain()
+    assert await asyncio.wait_for(reader.readexactly(6),2)==b'before'
+    await asyncio.wait_for(manager.stop(entry['id']),1)
+    writer.write(b'after');await writer.drain()
+    assert await asyncio.wait_for(reader.readexactly(5),2)==b'after'
+    with pytest.raises(OSError):await asyncio.open_connection('127.0.0.1',entry['listen_port'])
+    await client.close()
+    assert await asyncio.wait_for(reader.read(),2)==b''
+    writer.close();await writer.wait_closed()
