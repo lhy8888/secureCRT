@@ -28,8 +28,10 @@ def confirm_compatibility(options,parent):
         policy=peer['security'];layout.addWidget(plain(str(peer['host'])+':'+str(peer.get('port',22))+'\n'+
             'Strict KEX：'+policy.get('ssh_strict_kex','require')+'；旧算法许可：'+policy.get('ssh_allow_legacy','false')))
     buttons=QDialogButtonBox(QDialogButtonBox.StandardButton.Ok|QDialogButtonBox.StandardButton.Cancel)
-    buttons.button(QDialogButtonBox.StandardButton.Cancel).setDefault(True)
+    ok=buttons.button(QDialogButtonBox.StandardButton.Ok);cancel=buttons.button(QDialogButtonBox.StandardButton.Cancel)
+    ok.setAutoDefault(False);ok.setDefault(False);cancel.setAutoDefault(False);cancel.setDefault(True)
     buttons.accepted.connect(dialog.accept);buttons.rejected.connect(dialog.reject);layout.addWidget(buttons)
+    cancel.setFocus(Qt.FocusReason.OtherFocusReason)
     try:return dialog.exec()==QDialog.DialogCode.Accepted
     finally:dialog.deleteLater()
 

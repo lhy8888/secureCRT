@@ -169,9 +169,11 @@ async def test_oversized_or_truncated_ssh_packet_fails_without_hanging(tmp_path,
     known=tmp_path/'known';known.write_text('')
     try:
         async with asyncio.timeout(3):
-            with pytest.raises(asyncssh.Error):
-                await SSHTransport().connect('127.0.0.1','tester',port=server.sockets[0].getsockname()[1],
+            client=SSHTransport()
+            with pytest.raises((asyncssh.Error,ConnectionResetError)):
+                await client.connect('127.0.0.1','tester',port=server.sockets[0].getsockname()[1],
                     known_hosts=known,password='never-send-this-fixture')
+            assert client.connection is None and client.process is None
     finally:server.close();await server.wait_closed()
 
 

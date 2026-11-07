@@ -138,7 +138,7 @@ def desktop_smoke(app, report_path):
             import asyncio
             result['checks'].update(asyncio.run(protocol_probe(Path(temporary))))
             from .key_dialogs import HostKeysDialog,TrustReview,KeyToolsDialog
-            from .ssh_dialogs import DiagnosticsDialog
+            from .ssh_dialogs import DiagnosticsDialog,confirm_compatibility
             from .session import Worker
             import json
             diagnostic_worker=Worker('SSH',{})
@@ -152,6 +152,18 @@ def desktop_smoke(app, report_path):
             review=TrustReview(hosts.snapshot.value,hosts);review.show();app.processEvents();review.accept()
             result['checks']['trust_requires_acknowledgement']=review.isVisible() and not review.ok.isEnabled()
             review.reject();review.deleteLater();hosts.close();hosts.deleteLater()
+            from PySide6.QtTest import QTest
+            from PySide6.QtWidgets import QDialogButtonBox
+            def cancel_compatibility():
+                modal=app.activeModalWidget()
+                cancel=modal.findChild(QDialogButtonBox).button(QDialogButtonBox.StandardButton.Cancel)
+                result['checks']['compatibility_enter_cancels']=cancel.isDefault()
+                QTest.keyClick(modal,Qt.Key.Key_Return)
+                result['checks']['compatibility_enter_cancels'] &= not modal.isVisible()
+                if modal.isVisible():modal.reject()
+            QTimer.singleShot(50,cancel_compatibility)
+            accepted=confirm_compatibility(dict(host='local-fixture.invalid',security={'ssh_strict_kex':'prefer'}),window)
+            result['checks']['compatibility_enter_cancels'] &= not accepted
             key_tools=KeyToolsDialog(window);window.key_dialog=key_tools;key_tools.show()
             key_tools.path.setText(str(Path(temporary)/'encrypted-key'));key_tools.password.setText('local-fixture-only');key_tools.start(True)
             import time

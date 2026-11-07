@@ -70,11 +70,13 @@ async def test_jump_compatibility_is_shown_in_plain_text_and_defaults_to_cancel(
         modal=app.activeModalWidget();labels=modal.findChildren(QLabel)
         seen.append(any('<b>jump.invalid</b>' in label.text() and label.textFormat()==Qt.TextFormat.PlainText for label in labels))
         seen.append(modal.findChild(QDialogButtonBox).button(QDialogButtonBox.StandardButton.Cancel).isDefault())
-        modal.reject()
+        from PySide6.QtTest import QTest
+        QTest.keyClick(modal,Qt.Key.Key_Return);seen.append(not modal.isVisible())
+        if modal.isVisible():modal.reject()
     QTimer.singleShot(20,cancel)
     assert not confirm_compatibility(dict(host='target.invalid',security={},
         jump=dict(host='<b>jump.invalid</b>',security=dict(ssh_strict_kex='prefer'))),window)
-    assert seen==[True,True] and not window.workers
+    assert seen==[True,True,True] and not window.workers
 
 
 async def test_policy_dialog_rejects_implicit_legacy_and_saves_explicit_order(desktop):
