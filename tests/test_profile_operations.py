@@ -43,7 +43,10 @@ def test_native_export_roundtrip_preserves_unicode_paths_references_and_escaping
     ('<harbor-sessions version="4"><session name="a"><field name="password">fixture</field></session></harbor-sessions>','xml'),
     ('<harbor-sessions version="4"><session name="a"><field name="host"><nested/></field></session></harbor-sessions>','xml'),
     ('<VanDyke version="3.0"/>','xml'),
-    ('{"version":4,"sessions":{"a":{"password":"fixture"}}}','json')])
+    ('{"version":4,"sessions":{"a":{"password":"fixture"}}}','json'),
+    ('['*3000+']'*3000,'json'),
+    ('<harbor-sessions version="4">'+'<x>'*3000+'</x>'*3000+'</harbor-sessions>','xml'),
+    ('{"version":4,"sessions":{"a":{"host":"\\ud800"}}}','json')])
 def test_malformed_unsupported_or_sensitive_import_rejected(text,kind):
     with pytest.raises(ValueError):parse_import(text,kind)
 

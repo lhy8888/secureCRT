@@ -73,9 +73,19 @@ def parse_import(text, kind, *, mapping=None):
     # Native Harbor XML only. Do not guess proprietary configuration meanings.
     upper=text.upper()
     if '<!DOCTYPE' in upper or '<!ENTITY' in upper: raise ValueError('DTD/entities are not accepted')
-    try: root=ET.fromstring(text.lstrip('\ufeff'))
+    try:
+        parser=ET.XMLPullParser(events=('start','end'));root=None;depth=nodes=0
+        for offset in range(0,len(text),8192):
+            parser.feed(text[offset:offset+8192])
+            for event,element in parser.read_events():
+                if event=='start':
+                    if root is None:root=element
+                    depth+=1;nodes+=1
+                    if depth>3 or nodes>10000:raise ValueError('XML structure exceeds session limits')
+                else:depth-=1
+        parser.close()
     except ET.ParseError: raise ValueError('Malformed XML') from None
-    if root.tag!='harbor-sessions' or root.attrib!={'version':'4'} or (root.text or '').strip():
+    if root is None or root.tag!='harbor-sessions' or root.attrib!={'version':'4'} or (root.text or '').strip():
         raise ValueError('Expected Harbor session XML version 4')
     sessions={}
     for item in root:

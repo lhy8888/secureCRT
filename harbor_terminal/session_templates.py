@@ -23,7 +23,8 @@ def validate(templates):
 
 def decode(raw):
     if raw is None: return {mode:{} for mode in BUILTIN}
-    data=json.loads(raw.decode('utf-8-sig'),object_pairs_hook=profiles.reject_duplicates)
+    try:data=json.loads(raw.decode('utf-8-sig'),object_pairs_hook=profiles.reject_duplicates)
+    except RecursionError:raise ValueError('Template document nesting exceeds parser limits') from None
     if not isinstance(data,dict) or set(data)!={'version','templates'} or type(data['version']) is not int or data['version']!=1:
         raise ValueError('Unsupported template file')
     validate(data['templates']);return data['templates']

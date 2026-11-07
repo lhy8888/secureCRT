@@ -21,12 +21,17 @@ def validate(sessions, *, version=4):
         if (not isinstance(name, str) or not name.strip() or len(name) > 256
                 or any(ord(c)<32 or ord(c)==127 for c in name)):
             raise ValueError('Invalid session name')
+        try:name.encode('utf-8')
+        except UnicodeError:raise ValueError('Invalid Unicode session name') from None
         if len(name.split('/')) > 16 or any(not part.strip() for part in name.split('/')):
             raise ValueError('Invalid session folder path')
         if not isinstance(profile, dict) or set(profile) - allowed:
             raise ValueError('Credentials and unrecognized fields cannot be saved')
         if any(not isinstance(v, str) or len(v) > 4096 or '\0' in v for v in profile.values()):
             raise ValueError('Invalid session values')
+        try:
+            for value in profile.values():value.encode('utf-8')
+        except UnicodeError:raise ValueError('Invalid Unicode session values') from None
         mode = profile.get('mode', 'SSH')
         if mode not in ('SSH', 'Serial'):
             raise ValueError('Invalid protocol')
@@ -57,7 +62,8 @@ def reject_duplicates(pairs):
 
 def decode(raw):
     if raw is None: return {}
-    data = json.loads(raw.decode('utf-8-sig'),object_pairs_hook=reject_duplicates)
+    try:data = json.loads(raw.decode('utf-8-sig'),object_pairs_hook=reject_duplicates)
+    except RecursionError:raise ValueError('Session document nesting exceeds parser limits') from None
     if (not isinstance(data, dict) or type(data.get('version')) is not int
             or data['version'] not in (1, 2, 3, 4) or not isinstance(data.get('sessions'), dict)
             or set(data)-{'version','sessions'}):
