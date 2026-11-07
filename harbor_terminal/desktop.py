@@ -220,7 +220,7 @@ class DesktopShell:
     def _build_actions(self):
         self.quick_action = self._action('quick', '快速连接…', lambda: self.show_quick_connect(), 'Alt+Q')
         self.new_action = self._action('terminal','新建会话…',self.new_session,'Ctrl+Shift+N')
-        self.manager_action = self._action('folder','会话管理…',self.open_session_manager,'Alt+E')
+        self.manager_action = self._action('folder','会话管理…',self.open_session_manager,'Alt+Shift+S')
         self.defaults_action = self._action('settings','默认会话模板…',self.edit_defaults)
         self.clone_action = self._action('copy','克隆当前连接…',self.clone_session)
         self.reconnect_action = self._action('connect','重新连接…',self.clone_session)
