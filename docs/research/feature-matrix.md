@@ -1,12 +1,12 @@
 # SecureCRT 9.7.4 累积功能基线与实现矩阵
 
-目标平台：Windows 10/11。当前实现版本：0.5.0。
+目标平台：Windows 10/11。当前实现版本：0.6.0。
 
 结合完整官方历史、功能表、FAQ 和脚本资料。“已验证子集”只表示列出的平台/场景证据，不能扩大为全部Windows设备或与SecureCRT等价。验收条件保持为目标规格，旁列实际实现与限制。
 
-[调研总览](README.md) · [历史覆盖](release-coverage.md) · [可靠性场景](reliability-regressions.md) · [0.5 交付记录](../releases/0.5.md)
+[调研总览](README.md) · [历史覆盖](release-coverage.md) · [可靠性场景](reliability-regressions.md) · [0.6 交付记录](../releases/0.6.md)
 
-183 项能力中，未实现 95 项；没有整体产品等价性验收。
+183 项能力中，未实现 85 项；没有整体产品等价性验收。
 
 ## 1. 连接与协议
 
@@ -160,7 +160,7 @@
 | F07.05 | 串口读写与字节流分片 | 已验证子集 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 部分读取累计，部分写入报错，读写超时 |
 | F07.06 | 串口连接取消与独占占用 | 部分实现 | 连接取消与资源关闭路径已整理，实际PTY和模拟阻塞连接测试通过；无法宣称可强制终止挂死的Windows驱动调用。<br>证据：[tests/test_session.py](../../tests/test_session.py); [tests/test_transport.py](../../tests/test_transport.py) | 无设备、被占用、驱动无响应时可取消且资源收敛 |
 | F07.07 | 热拔插与重枚举 | 部分实现 | 独立只读诊断观察移除/返回，优先按唯一设备序列号跟随端口改名，重复序列号拒绝判断；无序列号仅按端口名。枚举模拟已测；实体Windows拔插未执行，未实现自动重连。<br>证据：[tests/test_diagnostics.py](../../tests/test_diagnostics.py); [docs/windows-hardware-testing.md](../../docs/windows-hardware-testing.md) | 识别设备身份变更，不自动把命令发给另一设备 |
-| F07.08 | 按协议保存串口默认值 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 串口默认与 SSH 默认分离；升级不改已有配置 |
+| F07.08 | 按协议保存串口默认值 | 已验证子集 | defaults.json中SSH/Serial默认值独立保存，切协议或新建连接时应用；已有v1–v4会话按原参数载入，不随模板变更。实际Qt模板/串口切换回归通过。<br>证据：[tests/test_session_management_ui.py::test_protocol_templates_do_not_rewrite_existing_sessions_and_detect_conflicts](../../tests/test_session_management_ui.py) | 串口默认与 SSH 默认分离；升级不改已有配置 |
 | F07.09 | Hex/ASCII 双视图 | 部分实现 | 串口Hex/ASCII同窗显示方向、UTC时间和偏移；32KiB/256条上限并显示丢弃量；无双向联动选区。<br>证据：[tests/test_trace.py](../../tests/test_trace.py); [tests/test_service_panels.py](../../tests/test_service_panels.py) | 逐会话双向数据带方向和偏移，选择联动，二进制不转码 |
 | F07.10 | 十六进制/二进制发送 | 已验证子集 | Hex最多4096原始字节发送，不追加换行，不重试；真实PTY收发、标签切换固定目标和部分写入观察有测试。<br>证据：[tests/test_service_panels.py](../../tests/test_service_panels.py); [tests/test_session.py](../../tests/test_session.py) | 精确发送字节，包括 NUL/0xFF，不走 UTF-8 编码 |
 | F07.11 | Windows 命名管道 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 虚拟机串口管道读写、断开和取消 |
@@ -173,25 +173,25 @@
 | ID | 能力/范围 | Harbor 状态 | 实现与限制 | 目标验收条件 |
 |---|---|---|---|---|
 | F08.01 | 保存基本会话 | 已验证子集 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 主机、端口、用户和 known_hosts 可保存，不写密码 |
-| F08.02 | 层级会话树/描述/自然排序 | 部分实现 | 新增层级会话树与按名称中的斜杠分组；无拖放、复制改名、自然排序或描述编辑。<br>证据：[tests/test_terminal_widget.py::test_saved_session_tree_filters_nested_profiles](../../tests/test_terminal_widget.py) | 目录、复制移动、重命名、大小写冲突和持久化 |
+| F08.02 | 层级会话树/描述/自然排序 | 部分实现 | 层级树和管理对话框支持会话/文件夹路径重命名，大小写冲突拒绝，单JSON事务更新所有跳板引用；可选依赖范围删除。不支持拖放、描述和自然排序。<br>证据：[tests/test_profile_operations.py](../../tests/test_profile_operations.py); [harbor_terminal/session_manager.py](../../harbor_terminal/session_manager.py) | 目录、复制移动、重命名、大小写冲突和持久化 |
 | F08.03 | 按会话/主机/目录/描述过滤 | 部分实现 | 支持按会话路径、主机、用户名的不区分大小写子串过滤；描述、通配符和大型数据库索引待实现。<br>证据：[tests/test_terminal_widget.py::test_saved_session_tree_filters_nested_profiles](../../tests/test_terminal_widget.py) | 通配符、输入节流、大量会话与无结果状态 |
-| F08.04 | 批量编辑会话 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 只修改显式变化的字段，协议切换保留无关配置 |
-| F08.05 | 默认会话模板 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 应用到已有会话需要范围确认；支持按协议默认 |
-| F08.06 | 连接/重连/克隆/复用传输 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 标签身份与底层连接生命周期分离，关闭一个不误断其他 |
-| F08.07 | 活动会话管理器 | 部分实现 | 新增可停靠的活动会话列表，显示会话状态，双击切换对应标签。没有筛选、批量断开或锁定；不等同SecureCRT完整活动会话管理器。<br>证据：[harbor_terminal/desktop.py::rebuild_active_sessions](../../harbor_terminal/desktop.py); [scripts/capture_services.py](../../scripts/capture_services.py) | 筛选、活动标志、状态计数与批量断开/锁定 |
+| F08.04 | 批量编辑会话 | 已验证子集 | 固定选择范围，只修改明确勾选字段，空值须勾选；协议切换保留未勾选字段，跨协议参数不合法则整体拒绝。预览原/新值后CAS提交，取消无写入。<br>证据：[tests/test_profile_operations.py::test_batch_changes_are_atomic_and_unselected_fields_and_profiles_are_preserved](../../tests/test_profile_operations.py); [tests/test_session_management_ui.py](../../tests/test_session_management_ui.py) | 只修改显式变化的字段，协议切换保留无关配置 |
+| F08.05 | 默认会话模板 | 已验证子集 | 独立SSH/Serial默认模板编辑与并发保护；新建连接采用模板，已有会话不自动改写。批量编辑可填入模板，再明确勾选字段/范围与预览。不包含全套SecureCRT默认选项。<br>证据：[harbor_terminal/session_templates.py](../../harbor_terminal/session_templates.py); [tests/test_session_management_ui.py](../../tests/test_session_management_ui.py) | 应用到已有会话需要范围确认；支持按协议默认 |
+| F08.06 | 连接/重连/克隆/复用传输 | 部分实现 | 当前连接保存非秘密参数快照，克隆/手动重连只载入快速连接并要求本次凭据；各标签独立SSH连接，关闭克隆不误断原连接。无传输复用或自动重连；跳板引用按当前保存配置解析。<br>证据：[tests/test_session_management_ui.py::test_clone_is_independent_and_requires_fresh_credentials_and_lock_guards_input](../../tests/test_session_management_ui.py) | 标签身份与底层连接生命周期分离，关闭一个不误断其他 |
+| F08.07 | 活动会话管理器 | 已验证子集 | 活动列表支持名称/主机/状态筛选、状态计数、多选及固定目标预览后的批量断开/输入锁；状态刷新保留UUID选择。输入锁只防误触，不是口令安全锁。<br>证据：[harbor_terminal/desktop.py::active_sessions_action](../../harbor_terminal/desktop.py); [tests/test_session_management_ui.py](../../tests/test_session_management_ui.py) | 筛选、活动标志、状态计数与批量断开/锁定 |
 | F08.08 | 标签组、平铺和层叠 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 侧对侧监控、拖动分组、缩放/焦点不丢失 |
 | F08.09 | 分离窗口/跨窗口拖放 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 保持连接、标签顺序和资源归属 |
 | F08.10 | 工作区快照 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 保存会话集合、组/平铺/顺序，恢复布局精确 |
 | F08.11 | 自动会话与上次会话恢复 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 启动时可取消；恢复配置不自动重放命令 |
-| F08.12 | 最近会话/临时标签名 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 去重、大小写和真实会话重命名不丢数据 |
-| F08.13 | 会话锁定 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 防误输入与安全锁定明确区分；锁定/隐藏输出需要验证 |
+| F08.12 | 最近会话/临时标签名 | 部分实现 | 可临时重命名当前标签，活动列表、窗口标题和命令目标标签同步；不改保存会话或连接参数。最近会话列表尚未实现。<br>证据：[harbor_terminal/app.py::rename_tab](../../harbor_terminal/app.py); [tests/test_session_management_ui.py](../../tests/test_session_management_ui.py) | 去重、大小写和真实会话重命名不丢数据 |
+| F08.13 | 会话锁定 | 部分实现 | 单会话/批量输入锁阻止新手动键入、粘贴、Hex、BREAK和新流程，保留输出与复制；已启动流程继续。自动DA/DSR应答使用独立有界队列，不因锁或流程断开。无口令验证/隐藏输出的安全锁。<br>证据：[tests/test_session_management_ui.py](../../tests/test_session_management_ui.py); [tests/test_automation.py::test_cancelled_flow_is_not_written_after_an_awaited_protocol_reply](../../tests/test_automation.py) | 防误输入与安全锁定明确区分；锁定/隐藏输出需要验证 |
 | F08.14 | 连接/活动/静默/脚本状态 | 部分实现 | 窄标签以图标区分连接/断开/处理中，提示和状态栏显示详细状态；真实连接、关闭和口令取消已测。活动会话列表同步连接状态，无静默/脚本/新活动提示。<br>证据：[tests/test_desktop.py](../../tests/test_desktop.py); [tests/test_ssh_ui_integration.py](../../tests/test_ssh_ui_integration.py); [harbor_terminal/app.py](../../harbor_terminal/app.py) | 底层失败不能显示 Connected；每标签状态不串线 |
-| F08.15 | CSV/TSV 导入 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 列映射、转义、多语言、端口范围和重复处理 |
-| F08.16 | XML 配置导入导出 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 范围可选、全局/会话/转发不丢失，敏感项显式选择 |
-| F08.17 | 导入冲突策略 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 覆盖/合并/复制/仅新增，预览后原子应用 |
-| F08.18 | 配置备份/迁移/只读模式 | 部分实现 | 配置v3保存编码/串口/私钥路径，兼容读取v1；凭据字段被拒绝，原子替换与坏文件保护有测试。仍无完整备份/迁移向导。<br>证据：[tests/test_profiles.py](../../tests/test_profiles.py) | 坏文件、旧版本、只读介质迁移失败不丢原数据 |
+| F08.15 | CSV/TSV 导入 | 已验证子集 | CSV/TSV显式列映射、UTF-8/GB18030/UTF-16、引号/中文、选择行、端口验证及500项限制；凭据/未知列默认忽略，不带值记录。重复名称/不支持协议拒绝。<br>证据：[tests/test_profile_operations.py](../../tests/test_profile_operations.py); [tests/test_session_management_ui.py](../../tests/test_session_management_ui.py) | 列映射、转义、多语言、端口范围和重复处理 |
+| F08.16 | XML 配置导入导出 | 部分实现 | 所选会话可导入/导出Harbor原生XML/JSON，字段白名单、DTD/entity/深度/节点/重复字段与畸形Unicode拒绝，原子保存。不是SecureCRT专有XML导入；不导入全局项、转发模板或凭据库。<br>证据：[tests/test_profile_operations.py](../../tests/test_profile_operations.py); [harbor_terminal/session_manager.py::export_selected](../../harbor_terminal/session_manager.py) | 范围可选、全局/会话/转发不丢失，敏感项显式选择 |
+| F08.17 | 导入冲突策略 | 已验证子集 | 仅新增、替换、合并已提供字段、复制四种策略；复制时重写批内跳板引用，大小写歧义拒绝。冻结预览、取消不写、版本冲突要求重新载入，已有连接不改变。<br>证据：[tests/test_profile_operations.py](../../tests/test_profile_operations.py); [tests/test_session_management_ui.py](../../tests/test_session_management_ui.py) | 覆盖/合并/复制/仅新增，预览后原子应用 |
+| F08.18 | 配置备份/迁移/只读模式 | 部分实现 | 每次会话/模板成功替换前保留上次有效备份，损坏/不支持原文件不覆盖；会话恢复预览同时核对目标与备份版本并保留damaged副本。原生v1–v4读取；无SecureCRT迁移或完整只读模式。<br>证据：[tests/test_profile_transactions.py](../../tests/test_profile_transactions.py); [tests/test_session_management_ui.py::test_recovery_previews_exact_backup_and_preserves_damaged_original](../../tests/test_session_management_ui.py) | 坏文件、旧版本、只读介质迁移失败不丢原数据 |
 | F08.19 | 跨平台路径与环境变量 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 路径展开、个人数据位置、不可用驱动器与旧设置迁移 |
-| F08.20 | 配置并发与事务 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 多窗口同时编辑、崩溃中断与备份恢复一致 |
+| F08.20 | 配置并发与事务 | 部分实现 | OS跨进程锁、内容SHA修订、同一文件乐观并发控制、临时文件fsync/替换及最后有效备份。两个本版本窗口冲突拒绝；锁持有进程退出后可继续；目录fsync失败明确待确认。无跨文件或分布式事务保证。<br>证据：[tests/test_profile_transactions.py](../../tests/test_profile_transactions.py); [tests/test_session_management_ui.py](../../tests/test_session_management_ui.py) | 多窗口同时编辑、崩溃中断与备份恢复一致 |
 
 ## 9. 命令工作流与自动化
 
@@ -272,19 +272,19 @@
 | F12.08 | 签名与可信更新 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | Windows Authenticode、下载校验、更新签名及回滚 |
 | F12.09 | 企业策略禁用开关 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 可控制脚本、明文传输、转发、打印、TFTP、自动登录和凭据保存 |
 | F12.10 | 依赖 SBOM 与供应链维护 | 部分实现 | 21个Python发行包锁版本；Windows包带发行包/许可证文件与哈希、Python许可和构建提交号，非完整原生DLL SBOM。签名与公告治理未实现。<br>证据：[scripts/collect_licenses.py](../../scripts/collect_licenses.py); [scripts/build-windows.ps1](../../scripts/build-windows.ps1) | 版本、许可证、安全公告与签名验证纳入发布 |
-| F12.11 | 长期稳定性与故障注入 | 部分实现 | 故障注入、真实SSH/SFTP/TCP/PTY连续检测与资源预算；旧基线中止报告已留存，最新源文件哈希对应的72小时测试在运行，未达到时限。无Windows/实体COM/供应商长期对照结论。<br>证据：[scripts/soak.py](../../scripts/soak.py); [artifacts/soak-0.5-baseline-interrupted.json](../../artifacts/soak-0.5-baseline-interrupted.json); [artifacts/validation-0.5.md](../../artifacts/validation-0.5.md) | 24/72小时、资源趋势、多窗口同时关闭、网断与睡眠恢复 |
-| F12.12 | 兼容性与回归基线 | 部分实现 | 已远端执行Linux/Windows与Python3.12/3.14矩阵和实际冻结EXE检查；失败初始证据保留。216本地用例并非SecureCRT逐项行为对照，实际Win10/11与完整TUI仍待测。<br>证据：[tests](../../tests); [.github/workflows/validate.yml](../../.github/workflows/validate.yml); [artifacts/validation-0.5.md](../../artifacts/validation-0.5.md) | Win10/11、SSH 服务矩阵、串口适配器与终端回放留原始结果 |
+| F12.11 | 长期稳定性与故障注入 | 部分实现 | 保留0.5传输/PTY持续运行，独立0.6 Qt/Worker/SSH/流程/输入锁/应答/配置持续测试已启动；两者各自保存源码哈希与实际时长，均未完成72小时。无实体COM或SecureCRT长期对照结论。<br>证据：[scripts/soak.py](../../scripts/soak.py); [scripts/soak_desktop.py](../../scripts/soak_desktop.py); [artifacts/validation-0.6.md](../../artifacts/validation-0.6.md) | 24/72小时、资源趋势、多窗口同时关闭、网断与睡眠恢复 |
+| F12.12 | 兼容性与回归基线 | 部分实现 | 0.6本地254测试通过，Linux/Windows×Python3.12/3.14远端执行及实际冻结EXE运行；新增原生文件锁、导入预览/模板/并发检查。Win10/11实机与SecureCRT逐项行为仍未验收。<br>证据：[tests](../../tests); [.github/workflows/validate.yml](../../.github/workflows/validate.yml); [artifacts/validation-0.6.md](../../artifacts/validation-0.6.md) | Win10/11、SSH 服务矩阵、串口适配器与终端回放留原始结果 |
 
 ## 状态统计
 
-- 已验证子集：27 项。
+- 已验证子集：33 项。
 - 依赖能力未验证：2 项。
-- 部分实现：56 项。
-- 未实现：95 项。
+- 部分实现：60 项。
+- 未实现：85 项。
 - 仅关闭策略：1 项。
 - 安全差异：2 项。
 
-原始0.1调研时为163项未实现。0.2补终端/串口，0.3补SFTP/日志/Hex，0.4补单级跳板/转发，0.4.1重做界面/字体，0.5补MFA/命令与JSON流程及原生Windows包；仍不能据子集测试宣称完整模块已经完成。
+原始0.1调研时为163项未实现。0.2补终端/串口，0.3补SFTP/日志/Hex，0.4补单级跳板/转发，0.4.1重做界面/字体，0.5补MFA/命令与JSON流程及原生Windows包，0.6补会话导入/批量/模板/并发与输入锁；仍不能据子集测试宣称完整模块已经完成。
 
 后续仍包括证书/凭据库、完整脚本对象、传输/日志高级功能、多级跳板/代理、布局快照/配置迁移、Windows 10/11实机、实体硬件及长期对照。
 百万行历史、横向重排、完整仿真/鼠标协议、原生Windows IME/DPI仍未验收。历史中的弱协议/命令行秘密/自动信任不会作为安全默认值。

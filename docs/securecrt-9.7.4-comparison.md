@@ -10,6 +10,6 @@
 
 官方页面现已可访问，之前的网络阻断结论只适用于早先那次验证，不再作为当前资料缺失的原因。
 
-Harbor 0.5.0 已有Windows原生CI、实际x64 EXE、MFA/命令/声明式流程及硬件工具。183项中仍有95项未实现，其他行也只覆盖注明的子集。历史记录不表示原问题已在Harbor复现或修复，也不表示与SecureCRT 9.7.4等价。
+Harbor 0.6.0 已有Windows原生CI、实际x64 EXE、MFA/命令/声明式流程、会话导入/批量/模板及硬件工具。183项中仍有85项未实现，其他行也只覆盖注明的子集。历史记录不表示原问题已在Harbor复现或修复，也不表示与SecureCRT 9.7.4等价。
 
 用户已具备Windows电脑与USB转串口，可按[实体COM验证](windows-hardware-testing.md)运行随包工具，按[同机对照规程](windows-comparison.md)记录双方行为与资源。当前Windows CI运行于Server 2025，不能代替Win10/11实机、驱动、IME与完整DPI验收；72小时与SecureCRT同机对照尚无完成报告。

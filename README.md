@@ -1,10 +1,22 @@
-# Harbor Terminal 0.5.0
+# Harbor Terminal 0.6.0
 
-面向 Windows 10/11 的独立 SSH / 串口桌面客户端。保留参照SecureCRT 9.7公开截图设计的紧凑桌面，0.5新增多轮MFA、认证顺序、命令面板/按钮栏、明确目标的批量发送、可取消的发送/等待流程与CLI。已有原生Windows x64 EXE和自动测试，尚未达到SecureCRT 9.7.4全功能等价，也没有“更安全/更稳定”的对照结论。
+面向 Windows 10/11 的独立 SSH / 串口桌面客户端。0.6补充会话管理、CSV/TSV导入、批量编辑、协议默认模板、克隆/重连入口及配置并发保护，保留参照SecureCRT 9.7设计的紧凑界面。已有原生Windows x64 EXE和实际测试，尚未达到SecureCRT 9.7.4全功能等价。
 
-[0.5交付记录](docs/releases/0.5.md) · [验证证据](artifacts/validation-0.5.md) · [实体COM测试](docs/windows-hardware-testing.md) · [SecureCRT同机对照](docs/windows-comparison.md)
+[0.6交付记录](docs/releases/0.6.md) · [会话管理说明](docs/session-management.md) · [验证证据](artifacts/validation-0.6.md) · [实体COM测试](docs/windows-hardware-testing.md) · [SecureCRT同机对照](docs/windows-comparison.md)
 
-## 0.5新增工作流
+## 0.6会话与配置工作流
+
+- “文件 → 会话管理…”（Alt+Shift+S）支持多选、批量编辑与字段预览，只有勾选字段会改动；取消不写入。
+- CSV/TSV列映射和行选择，UTF-8/GB18030/UTF-16，新增/替换/合并/复制四种策略；Harbor原生XML/JSON可选范围导入导出。
+- 会话/文件夹路径重命名同步更新跳板引用；删除被引用跳板时需明确处理依赖。
+- “选项 → 默认会话模板…”分别保存SSH/Serial初始参数，已有会话保持原值；批量套用需选范围/字段。
+- OS文件锁、修订冲突检查与上次有效备份；损坏原文件不覆盖，恢复先预览并保留damaged副本。
+- 当前连接可克隆、手动重连与临时改标签名；重新认证、各连接独立。活动列表支持筛选、计数、批量断开/输入锁。
+- 输入锁仅防误触，保留输出/复制及已启动流程，自动协议应答独立运行；没有口令安全锁。
+
+[会话管理](artifacts/harbor-0.6.0-session-manager.png) · [导入映射](artifacts/harbor-0.6.0-session-import.png) · [批量预览](artifacts/harbor-0.6.0-session-preview.png) · [默认模板](artifacts/harbor-0.6.0-defaults.png)
+
+## 0.5认证与命令基础
 
 - 多轮多提示MFA按echo位显示/掩码，保留LF，跳板/目标分别应答；取消、过期或重复回复不会继续。五种认证顺序预设不保存答案。
 - `Alt+M`打开多行命令、最近50条内存历史、命令库与按钮栏。勾选目标后预览，目标在预览时固定；分别列入队结果，不自动重试。按钮只指向当前交互会话。
@@ -13,11 +25,11 @@
 - GUI支持`admin@host:2222`、`[IPv6]:port`和SSH URI预填；不自动发送，不接受URI/命令行口令。
 - `--run-flow flow.json --output new-result.json`无界面执行SSH密钥/默认Agent或Serial流程；CLI未实现交互MFA/私钥口令输入。仅通道SSH不打开Shell，可用SFTP/隧道。
 
-183项能力中仍有95项未实现，27项已测子集和56项部分实现也不表示完整模块已完成。实际Windows 10/11、实体COM与长期对照按真实报告验收。
+183项能力中仍有85项未实现，33项已测子集和60项部分实现也不表示完整模块已完成。实际Windows 10/11、实体COM与长期对照按真实报告验收。
 
 完整规格见 [历代累积功能审计](docs/research/README.md)：32 个系列、314 个发布分节、4294 条历史 bullet、183 项能力/验收。每项实现与缺口记录在 [功能矩阵](docs/research/feature-matrix.md)，本次界面变更见 [0.4.1 记录](docs/releases/0.4.1.md)，连接能力见 [0.4](docs/releases/0.4.md) 及 [0.3](docs/releases/0.3.md)。参考公开界面布局，未包含 SecureCRT 代码或品牌素材，工具栏图标独立绘制。
 
-![0.5经典桌面布局，本地SSH/PTY测试数据](artifacts/harbor-0.5.0-terminal.png)
+![0.6经典桌面布局，本地SSH/PTY测试数据](artifacts/harbor-0.6.0-terminal.png)
 
 ## 界面与字体
 
@@ -28,7 +40,7 @@
 - “查看 → 界面主题”切换经典浅色/深色；“选项 → 终端配色”选择黑底、浅色或深蓝。显示偏好独立保存在会话文件旁的`appearance.ini`，不保存连接凭据。
 - `Ctrl+F`打开可关闭的查找栏；`Ctrl+C/D/S`仍发送终端控制字符，保存会话使用`Alt+S`。
 
-[深色界面](artifacts/harbor-0.5.0-terminal-dark.png) · [快速连接](artifacts/harbor-0.5.0-quick-connect.png) · [会话选项](artifacts/harbor-0.5.0-options.png)
+[深色界面](artifacts/harbor-0.6.0-terminal-dark.png) · [快速连接](artifacts/harbor-0.6.0-quick-connect.png) · [会话选项](artifacts/harbor-0.6.0-options.png)
 
 ## 本次可用的工作流
 
@@ -84,19 +96,19 @@ py -3.14 -m venv .venv
 
 ```bash
 cd /workspace/secureCRT
-/workspace/securecrt-venv/bin/python -m pytest -q
-QT_QPA_PLATFORM=offscreen /workspace/securecrt-venv/bin/python scripts/capture_terminal.py
-QT_QPA_PLATFORM=offscreen /workspace/securecrt-venv/bin/python scripts/capture_services.py
+/workspace/securecrt-dev-venv/bin/python -m pytest -q
+QT_QPA_PLATFORM=offscreen /workspace/securecrt-dev-venv/bin/python scripts/capture_terminal.py
+QT_QPA_PLATFORM=offscreen /workspace/securecrt-dev-venv/bin/python scripts/capture_services.py
 ```
 
 运行截图脚本前，修改源码后需重新执行 `python -m pip install --no-deps .`，脚本使用安装后的包。本地真实SSH服务验证加密收发、密钥拒绝、私钥认证、窗口变化、跳板、SFTP、三类转发及Qt输入链路；Linux PTY验证串口字节流。截图均来自生成测试数据，不是真实网络设备或Windows界面。
 
-工具截图：[SFTP](artifacts/harbor-0.5.0-sftp.png) · [SSH隧道](artifacts/harbor-0.5.0-tunnels.png) · [会话日志](artifacts/harbor-0.5.0-log.png) · [串口Hex](artifacts/harbor-0.5.0-hex.png)。复查结果见 [本轮验证](artifacts/validation-0.5.md)。
+工具截图：[SFTP](artifacts/harbor-0.6.0-sftp.png) · [SSH隧道](artifacts/harbor-0.6.0-tunnels.png) · [会话日志](artifacts/harbor-0.6.0-log.png) · [串口Hex](artifacts/harbor-0.6.0-hex.png)。复查结果见 [本轮验证](artifacts/validation-0.6.md)。
 
 ## 实现边界
 
 - SFTP当前限单文件，上传安全提交需hardlink/POSIX rename；不保留元数据，无递归/续传/独立SFTP登录。日志为JSONL分块，无逐行纯文本/跨日/自动脱敏。完整约束见0.3记录。
-- 跳板仅单级，转发不保存模板、不自动重建；SOCKS5已测IPv4/域名、半关闭和取消，不支持代理认证；IPv6实际互通与长期并发待验收。仍无X/Y/Zmodem/Kermit、通用Python脚本对象、凭据库、快照/平铺、导入向导和自动重连。
+- 跳板仅单级，转发不保存模板、不自动重建；SOCKS5已测IPv4/域名、半关闭和取消，不支持代理认证；IPv6实际互通与长期并发待验收。仍无X/Y/Zmodem/Kermit、通用Python脚本对象、凭据库、快照/平铺、SecureCRT专有配置迁移和自动重连。
 - 不是完整 VT320/TN3270/Wyse/Xterm 实现。未做 vim/tmux/top 全量回放、远端鼠标、闪烁、双高/双宽行、RTL/emoji完整字素兼容。OSC/DCS/APC/PM/SOS仍被过滤。
 - 2000行历史；最多16个标签；网格最多512列×200行。缩小高度保留适用行与移出的历史，**横向缩小会裁切列，尚无软换行重排**。
 - 接收256KiB、发送64KiB缓冲，收发独立并施加背压；CSI限制128字符，保存光标栈16项，每格32码点；每次解析有估算操作预算。这些边界不是操作系统级CPU/内存沙箱。

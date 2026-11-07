@@ -1470,14 +1470,16 @@
       "id": "F07.08",
       "domain": "串口与设备操作",
       "capability": "按协议保存串口默认值",
-      "status": "未实现",
+      "status": "已验证子集",
       "acceptance": "串口默认与 SSH 默认分离；升级不改已有配置",
       "priority": "P0",
       "sources": [
         "https://www.vandyke.com/products/securecrt/features.html",
         "https://www.vandyke.com/download/securecrt/9.6/history.txt",
         "https://www.vandyke.com/products/securecrt/history.txt"
-      ]
+      ],
+      "implementation_note": "defaults.json中SSH/Serial默认值独立保存，切协议或新建连接时应用；已有v1–v4会话按原参数载入，不随模板变更。实际Qt模板/串口切换回归通过。",
+      "validation": "tests/test_session_management_ui.py::test_protocol_templates_do_not_rewrite_existing_sessions_and_detect_conflicts"
     },
     {
       "id": "F07.09",
@@ -1570,8 +1572,8 @@
         "https://www.vandyke.com/download/securecrt/9.6/history.txt",
         "https://www.vandyke.com/products/securecrt/history.txt"
       ],
-      "implementation_note": "新增层级会话树与按名称中的斜杠分组；无拖放、复制改名、自然排序或描述编辑。",
-      "validation": "tests/test_terminal_widget.py::test_saved_session_tree_filters_nested_profiles"
+      "implementation_note": "层级树和管理对话框支持会话/文件夹路径重命名，大小写冲突拒绝，单JSON事务更新所有跳板引用；可选依赖范围删除。不支持拖放、描述和自然排序。",
+      "validation": "tests/test_profile_operations.py; harbor_terminal/session_manager.py"
     },
     {
       "id": "F08.03",
@@ -1596,7 +1598,7 @@
       "id": "F08.04",
       "domain": "会话数据库与布局",
       "capability": "批量编辑会话",
-      "status": "未实现",
+      "status": "已验证子集",
       "acceptance": "只修改显式变化的字段，协议切换保留无关配置",
       "priority": "P0",
       "sources": [
@@ -1607,13 +1609,15 @@
         "https://www.vandyke.com/download/securecrt/9.2/history.txt",
         "https://www.vandyke.com/download/securecrt/9.6/history.txt",
         "https://www.vandyke.com/products/securecrt/history.txt"
-      ]
+      ],
+      "implementation_note": "固定选择范围，只修改明确勾选字段，空值须勾选；协议切换保留未勾选字段，跨协议参数不合法则整体拒绝。预览原/新值后CAS提交，取消无写入。",
+      "validation": "tests/test_profile_operations.py::test_batch_changes_are_atomic_and_unselected_fields_and_profiles_are_preserved; tests/test_session_management_ui.py"
     },
     {
       "id": "F08.05",
       "domain": "会话数据库与布局",
       "capability": "默认会话模板",
-      "status": "未实现",
+      "status": "已验证子集",
       "acceptance": "应用到已有会话需要范围确认；支持按协议默认",
       "priority": "P0",
       "sources": [
@@ -1624,13 +1628,15 @@
         "https://www.vandyke.com/download/securecrt/9.2/history.txt",
         "https://www.vandyke.com/download/securecrt/9.6/history.txt",
         "https://www.vandyke.com/products/securecrt/history.txt"
-      ]
+      ],
+      "implementation_note": "独立SSH/Serial默认模板编辑与并发保护；新建连接采用模板，已有会话不自动改写。批量编辑可填入模板，再明确勾选字段/范围与预览。不包含全套SecureCRT默认选项。",
+      "validation": "harbor_terminal/session_templates.py; tests/test_session_management_ui.py"
     },
     {
       "id": "F08.06",
       "domain": "会话数据库与布局",
       "capability": "连接/重连/克隆/复用传输",
-      "status": "未实现",
+      "status": "部分实现",
       "acceptance": "标签身份与底层连接生命周期分离，关闭一个不误断其他",
       "priority": "P0",
       "sources": [
@@ -1641,13 +1647,15 @@
         "https://www.vandyke.com/download/securecrt/9.2/history.txt",
         "https://www.vandyke.com/download/securecrt/9.6/history.txt",
         "https://www.vandyke.com/products/securecrt/history.txt"
-      ]
+      ],
+      "implementation_note": "当前连接保存非秘密参数快照，克隆/手动重连只载入快速连接并要求本次凭据；各标签独立SSH连接，关闭克隆不误断原连接。无传输复用或自动重连；跳板引用按当前保存配置解析。",
+      "validation": "tests/test_session_management_ui.py::test_clone_is_independent_and_requires_fresh_credentials_and_lock_guards_input"
     },
     {
       "id": "F08.07",
       "domain": "会话数据库与布局",
       "capability": "活动会话管理器",
-      "status": "部分实现",
+      "status": "已验证子集",
       "acceptance": "筛选、活动标志、状态计数与批量断开/锁定",
       "priority": "P0",
       "sources": [
@@ -1659,8 +1667,8 @@
         "https://www.vandyke.com/download/securecrt/9.6/history.txt",
         "https://www.vandyke.com/products/securecrt/history.txt"
       ],
-      "implementation_note": "新增可停靠的活动会话列表，显示会话状态，双击切换对应标签。没有筛选、批量断开或锁定；不等同SecureCRT完整活动会话管理器。",
-      "validation": "harbor_terminal/desktop.py::rebuild_active_sessions; scripts/capture_services.py"
+      "implementation_note": "活动列表支持名称/主机/状态筛选、状态计数、多选及固定目标预览后的批量断开/输入锁；状态刷新保留UUID选择。输入锁只防误触，不是口令安全锁。",
+      "validation": "harbor_terminal/desktop.py::active_sessions_action; tests/test_session_management_ui.py"
     },
     {
       "id": "F08.08",
@@ -1734,7 +1742,7 @@
       "id": "F08.12",
       "domain": "会话数据库与布局",
       "capability": "最近会话/临时标签名",
-      "status": "未实现",
+      "status": "部分实现",
       "acceptance": "去重、大小写和真实会话重命名不丢数据",
       "priority": "P0",
       "sources": [
@@ -1745,13 +1753,15 @@
         "https://www.vandyke.com/download/securecrt/9.2/history.txt",
         "https://www.vandyke.com/download/securecrt/9.6/history.txt",
         "https://www.vandyke.com/products/securecrt/history.txt"
-      ]
+      ],
+      "implementation_note": "可临时重命名当前标签，活动列表、窗口标题和命令目标标签同步；不改保存会话或连接参数。最近会话列表尚未实现。",
+      "validation": "harbor_terminal/app.py::rename_tab; tests/test_session_management_ui.py"
     },
     {
       "id": "F08.13",
       "domain": "会话数据库与布局",
       "capability": "会话锁定",
-      "status": "未实现",
+      "status": "部分实现",
       "acceptance": "防误输入与安全锁定明确区分；锁定/隐藏输出需要验证",
       "priority": "P0",
       "sources": [
@@ -1762,7 +1772,9 @@
         "https://www.vandyke.com/download/securecrt/9.2/history.txt",
         "https://www.vandyke.com/download/securecrt/9.6/history.txt",
         "https://www.vandyke.com/products/securecrt/history.txt"
-      ]
+      ],
+      "implementation_note": "单会话/批量输入锁阻止新手动键入、粘贴、Hex、BREAK和新流程，保留输出与复制；已启动流程继续。自动DA/DSR应答使用独立有界队列，不因锁或流程断开。无口令验证/隐藏输出的安全锁。",
+      "validation": "tests/test_session_management_ui.py; tests/test_automation.py::test_cancelled_flow_is_not_written_after_an_awaited_protocol_reply"
     },
     {
       "id": "F08.14",
@@ -1787,7 +1799,7 @@
       "id": "F08.15",
       "domain": "会话数据库与布局",
       "capability": "CSV/TSV 导入",
-      "status": "未实现",
+      "status": "已验证子集",
       "acceptance": "列映射、转义、多语言、端口范围和重复处理",
       "priority": "P0",
       "sources": [
@@ -1798,13 +1810,15 @@
         "https://www.vandyke.com/download/securecrt/9.2/history.txt",
         "https://www.vandyke.com/download/securecrt/9.6/history.txt",
         "https://www.vandyke.com/products/securecrt/history.txt"
-      ]
+      ],
+      "implementation_note": "CSV/TSV显式列映射、UTF-8/GB18030/UTF-16、引号/中文、选择行、端口验证及500项限制；凭据/未知列默认忽略，不带值记录。重复名称/不支持协议拒绝。",
+      "validation": "tests/test_profile_operations.py; tests/test_session_management_ui.py"
     },
     {
       "id": "F08.16",
       "domain": "会话数据库与布局",
       "capability": "XML 配置导入导出",
-      "status": "未实现",
+      "status": "部分实现",
       "acceptance": "范围可选、全局/会话/转发不丢失，敏感项显式选择",
       "priority": "P0",
       "sources": [
@@ -1815,13 +1829,15 @@
         "https://www.vandyke.com/download/securecrt/9.2/history.txt",
         "https://www.vandyke.com/download/securecrt/9.6/history.txt",
         "https://www.vandyke.com/products/securecrt/history.txt"
-      ]
+      ],
+      "implementation_note": "所选会话可导入/导出Harbor原生XML/JSON，字段白名单、DTD/entity/深度/节点/重复字段与畸形Unicode拒绝，原子保存。不是SecureCRT专有XML导入；不导入全局项、转发模板或凭据库。",
+      "validation": "tests/test_profile_operations.py; harbor_terminal/session_manager.py::export_selected"
     },
     {
       "id": "F08.17",
       "domain": "会话数据库与布局",
       "capability": "导入冲突策略",
-      "status": "未实现",
+      "status": "已验证子集",
       "acceptance": "覆盖/合并/复制/仅新增，预览后原子应用",
       "priority": "P0",
       "sources": [
@@ -1832,7 +1848,9 @@
         "https://www.vandyke.com/download/securecrt/9.2/history.txt",
         "https://www.vandyke.com/download/securecrt/9.6/history.txt",
         "https://www.vandyke.com/products/securecrt/history.txt"
-      ]
+      ],
+      "implementation_note": "仅新增、替换、合并已提供字段、复制四种策略；复制时重写批内跳板引用，大小写歧义拒绝。冻结预览、取消不写、版本冲突要求重新载入，已有连接不改变。",
+      "validation": "tests/test_profile_operations.py; tests/test_session_management_ui.py"
     },
     {
       "id": "F08.18",
@@ -1850,8 +1868,8 @@
         "https://www.vandyke.com/download/securecrt/9.6/history.txt",
         "https://www.vandyke.com/products/securecrt/history.txt"
       ],
-      "implementation_note": "配置v3保存编码/串口/私钥路径，兼容读取v1；凭据字段被拒绝，原子替换与坏文件保护有测试。仍无完整备份/迁移向导。",
-      "validation": "tests/test_profiles.py"
+      "implementation_note": "每次会话/模板成功替换前保留上次有效备份，损坏/不支持原文件不覆盖；会话恢复预览同时核对目标与备份版本并保留damaged副本。原生v1–v4读取；无SecureCRT迁移或完整只读模式。",
+      "validation": "tests/test_profile_transactions.py; tests/test_session_management_ui.py::test_recovery_previews_exact_backup_and_preserves_damaged_original"
     },
     {
       "id": "F08.19",
@@ -1874,7 +1892,7 @@
       "id": "F08.20",
       "domain": "会话数据库与布局",
       "capability": "配置并发与事务",
-      "status": "未实现",
+      "status": "部分实现",
       "acceptance": "多窗口同时编辑、崩溃中断与备份恢复一致",
       "priority": "P0",
       "sources": [
@@ -1885,7 +1903,9 @@
         "https://www.vandyke.com/download/securecrt/9.2/history.txt",
         "https://www.vandyke.com/download/securecrt/9.6/history.txt",
         "https://www.vandyke.com/products/securecrt/history.txt"
-      ]
+      ],
+      "implementation_note": "OS跨进程锁、内容SHA修订、同一文件乐观并发控制、临时文件fsync/替换及最后有效备份。两个本版本窗口冲突拒绝；锁持有进程退出后可继续；目录fsync失败明确待确认。无跨文件或分布式事务保证。",
+      "validation": "tests/test_profile_transactions.py; tests/test_session_management_ui.py"
     },
     {
       "id": "F09.01",
@@ -2760,8 +2780,8 @@
         "https://www.vandyke.com/download/securecrt/9.6/history.txt",
         "https://www.vandyke.com/products/securecrt/history.txt"
       ],
-      "implementation_note": "故障注入、真实SSH/SFTP/TCP/PTY连续检测与资源预算；旧基线中止报告已留存，最新源文件哈希对应的72小时测试在运行，未达到时限。无Windows/实体COM/供应商长期对照结论。",
-      "validation": "scripts/soak.py; artifacts/soak-0.5-baseline-interrupted.json; artifacts/validation-0.5.md"
+      "implementation_note": "保留0.5传输/PTY持续运行，独立0.6 Qt/Worker/SSH/流程/输入锁/应答/配置持续测试已启动；两者各自保存源码哈希与实际时长，均未完成72小时。无实体COM或SecureCRT长期对照结论。",
+      "validation": "scripts/soak.py; scripts/soak_desktop.py; artifacts/validation-0.6.md"
     },
     {
       "id": "F12.12",
@@ -2778,17 +2798,17 @@
         "https://www.vandyke.com/download/securecrt/9.6/history.txt",
         "https://www.vandyke.com/products/securecrt/history.txt"
       ],
-      "implementation_note": "已远端执行Linux/Windows与Python3.12/3.14矩阵和实际冻结EXE检查；失败初始证据保留。216本地用例并非SecureCRT逐项行为对照，实际Win10/11与完整TUI仍待测。",
-      "validation": "tests; .github/workflows/validate.yml; artifacts/validation-0.5.md"
+      "implementation_note": "0.6本地254测试通过，Linux/Windows×Python3.12/3.14远端执行及实际冻结EXE运行；新增原生文件锁、导入预览/模板/并发检查。Win10/11实机与SecureCRT逐项行为仍未验收。",
+      "validation": "tests; .github/workflows/validate.yml; artifacts/validation-0.6.md"
     }
   ],
   "counts": {
-    "已验证子集": 27,
+    "已验证子集": 33,
     "依赖能力未验证": 2,
-    "部分实现": 56,
-    "未实现": 95,
+    "部分实现": 60,
+    "未实现": 85,
     "仅关闭策略": 1,
     "安全差异": 2
   },
-  "implementation_version": "0.5.0"
+  "implementation_version": "0.6.0"
 }

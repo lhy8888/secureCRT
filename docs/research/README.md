@@ -52,9 +52,9 @@ SSH1、弱算法兼容、自动接受主机密钥、命令行传秘密、远端�
 
 ## 当前产品差距
 
-首次0.1审计时183项中有163项未实现。**0.5当前为95项未实现、56项部分实现、27项子集已验证**；其余为2项依赖未验证、1项仅关闭策略、2项安全差异。[0.5记录](../releases/0.5.md)补MFA/命令流程与原生Windows包；[0.4.1](../releases/0.4.1.md)为界面字体基线，[0.4](../releases/0.4.md)与[0.3](../releases/0.3.md)为早期连接能力。没有整体模块通过SecureCRT等价性验收，测试数量不能代表完整可靠性。
+首次0.1审计时183项中有163项未实现。**0.6当前为85项未实现、60项部分实现、33项子集已验证**；其余为2项依赖未验证、1项仅关闭策略、2项安全差异。[0.6记录](../releases/0.6.md)补会话导入/批量/模板/并发；[0.5](../releases/0.5.md)补MFA/命令与原生Windows包；[0.4.1](../releases/0.4.1.md)为界面字体基线，[0.4](../releases/0.4.md)与[0.3](../releases/0.3.md)为早期连接能力。没有整体模块通过SecureCRT等价性验收，测试数量不能代表完整可靠性。
 
-0.2补终端网格/颜色、尺寸同步、Qt输入、串口设置和基本会话树；0.3补SFTP单文件、日志和Hex；0.4补单级跳板及三类转发；0.4.1参照9.7重做桌面；0.5补MFA、固定目标命令、声明式流程、CLI、仅通道SSH及实际Windows包。后续包括证书/凭据库、通用脚本对象、传输高级功能、配置迁移、用户Win10/11/实体COM和长期对照。完整目标、限制与证据见功能矩阵；requirements.json和reliability-regressions.json分别为当前能力与历史场景证据，由render_research.py同步生成文档和浏览器。
+0.2补终端网格/颜色、尺寸同步、Qt输入、串口设置和基本会话树；0.3补SFTP单文件、日志和Hex；0.4补单级跳板及三类转发；0.4.1参照9.7重做桌面；0.5补MFA、固定目标命令、声明式流程、CLI、仅通道SSH及实际Windows包；0.6补会话/配置管理。后续包括证书/凭据库、通用脚本对象、传输高级功能、配置迁移、用户Win10/11/实体COM和长期对照。完整目标、限制与证据见功能矩阵；requirements.json和reliability-regressions.json分别为当前能力与历史场景证据，由render_research.py同步生成文档和浏览器。
 
 ## 完整性边界与后续证据
 
@@ -68,10 +68,10 @@ SSH1、弱算法兼容、自动接受主机密钥、命令行传秘密、远端�
 
 ```bash
 cd /workspace/secureCRT
-/workspace/securecrt-venv/bin/python scripts/research_securecrt.py
+/workspace/securecrt-dev-venv/bin/python scripts/research_securecrt.py
 # 明确重新拉取官方资料时：
-/workspace/securecrt-venv/bin/python scripts/research_securecrt.py --refresh
-/workspace/securecrt-venv/bin/python scripts/render_research.py
+/workspace/securecrt-dev-venv/bin/python scripts/research_securecrt.py --refresh
+/workspace/securecrt-dev-venv/bin/python scripts/render_research.py
 ```
 
 原始公共文档和完整逐条标准化文本与官方脚本指南保留在 `/workspace/securecrt-research-cache`，项目内保存来源索引、哈希和自行整理的规格/验收总结。抓取器会验证内容；不存在的路径可能返回 HTTP 200 的 HTML 错误页，不能计为成功取得历史。

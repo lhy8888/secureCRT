@@ -238,6 +238,19 @@ async def capture(output):
             await until(app,lambda:not panel.pending and '流程完成' in panel.results.toPlainText())
             assert worker.flow_progress()['phase']=='success'
             save(window,'workflow')
+            from harbor_terminal.session_manager import SessionManager,BatchEditor,ChangePreview,ImportDialog,TemplateDialog
+            if not window.commit_profiles(window.profiles):raise RuntimeError('Fixture profile commit failed')
+            selected=('本地实验室/核心交换机','本地实验室/边缘路由器')
+            manager=SessionManager(window,selected);manager.show();app.processEvents();save(manager,'session-manager')
+            batch=BatchEditor(window.profiles,selected,window.templates,manager)
+            batch.editor.inputs['port'].setText('2222');batch.editor.checks['port'].setChecked(True)
+            batch.show();app.processEvents();save(batch,'batch-edit');batch.accept()
+            preview=ChangePreview(window.profiles,batch.plan,manager);preview.show();app.processEvents();save(preview,'session-preview')
+            imported=ImportDialog('Name,Host,Port,Password\n实验室/控制台,example.invalid,22,generated-fixture-only\n'.encode(),'csv',manager)
+            imported.read_rows();imported.show();app.processEvents();save(imported,'session-import')
+            template=TemplateDialog(window);template.show();app.processEvents();save(template,'defaults')
+            for dialog in (template,imported,preview,batch,manager):dialog.close();dialog.deleteLater()
+            app.processEvents()
         finally:
             for worker in window.workers: worker.stop_event.set()
             await until(app, lambda: all(not worker.isRunning() for worker in window.workers), seconds=15)

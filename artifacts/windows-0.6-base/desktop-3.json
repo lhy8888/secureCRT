@@ -1,0 +1,34 @@
+{
+  "status": "passed",
+  "version": "0.6.0",
+  "platform": "Windows-2025Server-10.0.26100-SP0",
+  "python": "3.14.10",
+  "qt": "6.12.0",
+  "checks": {
+    "mainwindow": true,
+    "encrypted_key_and_ssh": true,
+    "sftp_binary_roundtrip": true,
+    "tcp_forward": true,
+    "untrusted_host_rejected": true,
+    "keyboard_interactive": true,
+    "batch_flow": true,
+    "import_secret_columns_ignored": true,
+    "session_import_preview_commit": true,
+    "stale_configuration_rejected": true,
+    "native_xml_roundtrip": true,
+    "protocol_template_dialog": true,
+    "quick_connect": true,
+    "nested_options": true,
+    "font_dialog": true,
+    "no_connection_side_effect": true,
+    "screenshot": true
+  },
+  "ui_font": "Segoe UI",
+  "terminal_font": "Consolas",
+  "display": {
+    "dpr": 3.0,
+    "dpi": 96.0,
+    "width": 366,
+    "height": 260
+  }
+}
