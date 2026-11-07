@@ -16,7 +16,7 @@
     "id": "R02",
     "issue": "串口连接阻塞",
     "check": "驱动拒绝/无响应/设备占用时能够取消；连接线程在期限内退出",
-    "status": "PTY 正常收发已测；Windows 故障未测",
+    "status": "Windows/Unix读写超时和取消路径有回归；实体USB驱动挂死未测试。附本机回环/拔插工具，不等于实测通过。",
     "evidence": {
       "id": "4cabada2fce4",
       "release": "9.7.3 (Official)",
@@ -29,7 +29,7 @@
     "id": "R03",
     "issue": "交互式认证 LF 提示",
     "check": "多行 challenge、echo=false、取消、密码变更提示均正确",
-    "status": "MFA UI 未实现",
+    "status": "真实SSH + Qt多轮认证已测LF提示、掩码、取消、过期与重复回答；不是供应商原始问题复现。",
     "evidence": {
       "id": "ce1ebc32a7d5",
       "release": "9.7.4 (Official)",
@@ -81,7 +81,7 @@
     "id": "R07",
     "issue": "连接失败误显示已连接",
     "check": "认证/PTY 创建失败后活动列表、标签、按钮状态一致",
-    "status": "连接/取消/主机密钥拒绝及跳板/目标阶段已有测试；PTY创建失败与全部GUI控件组合尚未验收",
+    "status": "连接/取消/密钥拒绝、跳板/目标及交互认证阶段已测；仅通道模式不打开Shell。DNS/KEX全部阶段仍未验收。",
     "evidence": {
       "id": "4d12313277dd",
       "release": "9.7.1 (Official)",
@@ -120,7 +120,7 @@
     "id": "R10",
     "issue": "导入丢端口转发",
     "check": "完整配置 round-trip 比较启用标志、地址、端口和方向",
-    "status": "本地/远程/SOCKS转发已实现；转发持久化和配置导入未实现",
+    "status": "本地/远程/SOCKS转发已有实际流测试，Windows重复绑定另有修复；配置导入/持久化仍未实现。",
     "evidence": {
       "id": "eaa66f789cdd",
       "release": "9.6.4 (Official)",
@@ -146,7 +146,7 @@
     "id": "R12",
     "issue": "串口输出延迟",
     "check": "测 p50/p95/p99 交互延迟，单字节与大块输出均测",
-    "status": "PTY 功能已测；延迟未测",
+    "status": "PTY回环报告实测帧/延迟；云端持续传输在运行。实体串口延迟与SecureCRT同条件对照待执行。",
     "evidence": {
       "id": "a62dd07b6ce8",
       "release": "9.6.3 (Official)",
@@ -250,7 +250,7 @@
     "id": "R20",
     "issue": "脚本启动/关闭登录会话",
     "check": "登录脚本、关闭、异步返回同时发生时不访问已销毁对象",
-    "status": "脚本未实现",
+    "status": "有界JSON流程的成功/取消/断开、目标冻结有真实SSH/Qt测试；没有通用脚本对象或任意脚本生命周期。",
     "evidence": {
       "id": "15c485393bdf",
       "release": "9.6.1 (Official)",
@@ -276,7 +276,7 @@
     "id": "R22",
     "issue": "旧 DLL 污染升级",
     "check": "旧/新二进制混杂时阻止启动或完整修复，不加载任意搜索路径",
-    "status": "Windows 安装升级未验证",
+    "status": "Windows原生未签名便携包及冻结EXE启动已测；无旧版DLL污染、安装升级或签名验收。",
     "evidence": {
       "id": "f78f27e94fa9",
       "release": "9.5.2 (Official)",
@@ -289,7 +289,7 @@
     "id": "R23",
     "issue": "脚本先于连接",
     "check": "明确等待认证和 PTY 完成后启动，失败时不运行",
-    "status": "脚本未实现",
+    "status": "未连接时拒绝发送/启动流程，断开取消等待并释放队列；未实现通用Python/VB脚本。",
     "evidence": {
       "id": "669ef37fb30a",
       "release": "9.5.2 (Official)",
@@ -315,7 +315,7 @@
     "id": "R25",
     "issue": "第三方密码库漏洞更新",
     "check": "SBOM、依赖公告、适用模块、补丁和回归；不能只比库版本",
-    "status": "0.4锁定的21个Python发行包扫描未报告已知漏洞；发布治理与完整SBOM未实现",
+    "status": "21个锁定Python包未报告已知漏洞；Windows包附分发包/许可清单与哈希，仍非完整二进制SBOM和发布治理。",
     "evidence": {
       "id": "11224dad437c",
       "release": "9.5.1 (Official)",
@@ -367,7 +367,7 @@
     "id": "R29",
     "issue": "URI 触发恶意本地脚本",
     "check": "URI 白名单参数，不接受配置目录或本地执行注入",
-    "status": "URI handler 未实现",
+    "status": "CLI解析SSH URI但未注册系统handler；拒绝URL密码/路径/query，不执行接收到的本地脚本。系统URI触发仍未实现。",
     "evidence": {
       "id": "127cf910f865",
       "release": "4.1.9 (Official)",
@@ -393,7 +393,7 @@
     "id": "R31",
     "issue": "SSH1 转发内存增长",
     "check": "重复创建关闭转发通道、fd/句柄/RSS 趋势收敛",
-    "status": "只提供SSH2；16个监听创建/关闭和端口释放已测；长期fd/句柄/RSS趋势未测",
+    "status": "仅SSH2；监听/流/半关闭/取消和端口释放已测。旧基线69分钟20428循环零错误后主动中止；最新72小时仍在运行，不能作长期通过结论。",
     "evidence": {
       "id": "63aa7c288368",
       "release": "3.2.1 (Official)",

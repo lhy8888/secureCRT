@@ -13,8 +13,8 @@ def render_matrix():
     counts = Counter(row['status'] for row in requirements['rows'])
     lines = ['# SecureCRT 9.7.4 累积功能基线与实现矩阵', '',
              '目标平台：Windows 10/11。当前实现版本：' + requirements.get('implementation_version', '0.1.0') + '。', '',
-             '结合完整官方历史、功能表、FAQ 和脚本资料。所有“已验证子集”仅表示列出的 Linux/离屏/本地集成证据，不表示 Windows 或与 SecureCRT 等价。验收条件保持为目标规格，旁列实际实现与限制。', '',
-             '[调研总览](README.md) · [历史覆盖](release-coverage.md) · [可靠性场景](reliability-regressions.md) · [0.4.1 交付记录](../releases/0.4.1.md)', '',
+             '结合完整官方历史、功能表、FAQ 和脚本资料。“已验证子集”只表示列出的平台/场景证据，不能扩大为全部Windows设备或与SecureCRT等价。验收条件保持为目标规格，旁列实际实现与限制。', '',
+             '[调研总览](README.md) · [历史覆盖](release-coverage.md) · [可靠性场景](reliability-regressions.md) · [0.5 交付记录](../releases/0.5.md)', '',
              '183 项能力中，未实现 ' + str(counts['未实现']) + ' 项；没有整体产品等价性验收。']
     domains = list(dict.fromkeys(row['domain'] for row in requirements['rows']))
     for index, domain in enumerate(domains, 1):
@@ -31,8 +31,8 @@ def render_matrix():
                 note += '<br>证据：' + '; '.join(f'[{ref}](../../{ref.split("::")[0]})' for ref in validation.split('; '))
             lines.append('| ' + ' | '.join([row['id'], row['capability'], row['status'], note, row['acceptance']]) + ' |')
     lines += ['', '## 状态统计', ''] + [f'- {key}：{value} 项。' for key,value in counts.items()]
-    lines += ['', '原始0.1调研时为163项未实现。0.2补终端/串口，0.3补SFTP/日志/Hex，0.4补单级跳板/转发，0.4.1重做界面/字体；仍不能据子集测试宣称完整模块已经完成。', '',
-              '后续仍包括SSH多轮认证/证书、命令和脚本、传输/日志高级功能、多级跳板/代理、布局快照/配置迁移、Windows原生与硬件及长期对照。',
+    lines += ['', '原始0.1调研时为163项未实现。0.2补终端/串口，0.3补SFTP/日志/Hex，0.4补单级跳板/转发，0.4.1重做界面/字体，0.5补MFA/命令与JSON流程及原生Windows包；仍不能据子集测试宣称完整模块已经完成。', '',
+              '后续仍包括证书/凭据库、完整脚本对象、传输/日志高级功能、多级跳板/代理、布局快照/配置迁移、Windows 10/11实机、实体硬件及长期对照。',
               '百万行历史、横向重排、完整仿真/鼠标协议、原生Windows IME/DPI仍未验收。历史中的弱协议/命令行秘密/自动信任不会作为安全默认值。']
     (root / 'feature-matrix.md').write_text('\n'.join(lines) + '\n')
 
@@ -66,7 +66,7 @@ html = '''<!doctype html>
 <h1>SecureCRT 9.7.4 累积功能基线</h1>
 <p>覆盖官方旧版本入口列出的历史系列及当前 9.7，包含正式版、补丁版和 Beta。将公开需求与 Harbor 的实际实现状态逐项区分。</p>
 <div class="cards" id="cards"></div>
-<div class="warning">当前 Harbor 是开发原型。历史索引不是功能实现，关键词分类不是根因分析，“子集已测”不是与 SecureCRT 等价。商业客户端内置帮助、Windows 实机、实体 COM 与长期对照均未完成。</div>
+<div class="warning">当前 Harbor 是开发版本。历史索引不是功能实现，关键词分类不是根因分析，“子集已测”不是与 SecureCRT 等价。已有Windows原生CI与实际EXE启动证据；商业客户端内置帮助、用户Windows 10/11实机、实体 COM 与长期对照仍待完成。</div>
 <p><a href="README.md">研究说明</a> · <a href="feature-matrix.md">完整需求矩阵</a> · <a href="reliability-regressions.md">历史回归</a> · <a href="release-coverage.md">发布覆盖</a> · <a href="change-index.csv">下载逐条索引 CSV</a></p>
 <nav id="nav"></nav>
 <div class="controls"><input id="query" aria-label="检索" placeholder="搜索能力、验收、版本或主题标签"><select id="domain" aria-label="领域"></select><select id="state" aria-label="状态"></select></div>

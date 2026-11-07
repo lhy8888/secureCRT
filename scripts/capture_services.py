@@ -6,6 +6,7 @@ Linux/offscreen evidence, not Windows, physical COM or SecureCRT comparison.
 import argparse
 import asyncio
 import os
+import json
 from pathlib import Path
 import sys
 import tempfile
@@ -13,6 +14,7 @@ from importlib.metadata import version
 
 import asyncssh
 from PySide6.QtWidgets import QApplication
+from PySide6.QtCore import QTimer
 
 from harbor_terminal.app import Window, ConnectionOptions
 
@@ -222,6 +224,20 @@ async def capture(output):
             app.processEvents(); save(window.quick_dialog, 'quick-connect'); window.quick_dialog.reject()
             settings = ConnectionOptions(window.options, window, profiles=window.profiles)
             settings.show(); app.processEvents(); save(settings, 'options'); settings.close(); settings.deleteLater()
+            window.open_command_panel();panel=window.command_panel
+            panel.persist_library({'生成测试命令':dict(text='capture-command',pinned=True)})
+            panel.edit.setPlainText('capture-command')
+            panel.flow_edit.setPlainText(json.dumps(dict(version=1,steps=[
+                dict(action='send',text='capture-flow'),
+                dict(action='wait',patterns=['capture-flow'],timeout=5)]),ensure_ascii=False,indent=2))
+            panel.tabs.setCurrentIndex(1)
+            def confirm_fixture():
+                modal=app.activeModalWidget()
+                if modal:modal.accept()
+            QTimer.singleShot(50,confirm_fixture);panel.start_flows()
+            await until(app,lambda:not panel.pending and '流程完成' in panel.results.toPlainText())
+            assert worker.flow_progress()['phase']=='success'
+            save(window,'workflow')
         finally:
             for worker in window.workers: worker.stop_event.set()
             await until(app, lambda: all(not worker.isRunning() for worker in window.workers), seconds=15)

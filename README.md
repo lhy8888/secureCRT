@@ -1,10 +1,23 @@
-# Harbor Terminal 0.4.1
+# Harbor Terminal 0.5.0
 
-面向 Windows 10/11 的独立 SSH / 串口桌面客户端，Python 3.12 + Qt。0.4.1参照SecureCRT 9.7官方Windows截图重做桌面布局、字体和配色，包含0.4的SSH跳板/转发、0.3的SFTP/日志/Hex，以及0.2终端/串口核心。尚未达到 SecureCRT 9.7.4 全功能等价，也没有“更安全/更稳定”的对照结论。
+面向 Windows 10/11 的独立 SSH / 串口桌面客户端。保留参照SecureCRT 9.7公开截图设计的紧凑桌面，0.5新增多轮MFA、认证顺序、命令面板/按钮栏、明确目标的批量发送、可取消的发送/等待流程与CLI。已有原生Windows x64 EXE和自动测试，尚未达到SecureCRT 9.7.4全功能等价，也没有“更安全/更稳定”的对照结论。
+
+[0.5交付记录](docs/releases/0.5.md) · [验证证据](artifacts/validation-0.5.md) · [实体COM测试](docs/windows-hardware-testing.md) · [SecureCRT同机对照](docs/windows-comparison.md)
+
+## 0.5新增工作流
+
+- 多轮多提示MFA按echo位显示/掩码，保留LF，跳板/目标分别应答；取消、过期或重复回复不会继续。五种认证顺序预设不保存答案。
+- `Alt+M`打开多行命令、最近50条内存历史、命令库与按钮栏。勾选目标后预览，目标在预览时固定；分别列入队结果，不自动重试。按钮只指向当前交互会话。
+- JSON流程支持send、字面wait、delay，跨分片增量匹配，最多64步/600秒/64KiB捕获；取消清理未发送数据，已发送内容不能撤回。流程期间Ctrl+C取消并发送中断。
+- 命令库、导出流程与捕获报告是本机明文，请勿写入密码/令牌。不执行Python/eval或提供crt对象。匹配提示不表示设备命令执行成功。
+- GUI支持`admin@host:2222`、`[IPv6]:port`和SSH URI预填；不自动发送，不接受URI/命令行口令。
+- `--run-flow flow.json --output new-result.json`无界面执行SSH密钥/默认Agent或Serial流程；CLI未实现交互MFA/私钥口令输入。仅通道SSH不打开Shell，可用SFTP/隧道。
+
+183项能力中仍有95项未实现，27项已测子集和56项部分实现也不表示完整模块已完成。实际Windows 10/11、实体COM与长期对照按真实报告验收。
 
 完整规格见 [历代累积功能审计](docs/research/README.md)：32 个系列、314 个发布分节、4294 条历史 bullet、183 项能力/验收。每项实现与缺口记录在 [功能矩阵](docs/research/feature-matrix.md)，本次界面变更见 [0.4.1 记录](docs/releases/0.4.1.md)，连接能力见 [0.4](docs/releases/0.4.md) 及 [0.3](docs/releases/0.3.md)。参考公开界面布局，未包含 SecureCRT 代码或品牌素材，工具栏图标独立绘制。
 
-![0.4.1经典桌面布局，本地SSH/PTY测试数据](artifacts/harbor-0.4.1-terminal.png)
+![0.5经典桌面布局，本地SSH/PTY测试数据](artifacts/harbor-0.5.0-terminal.png)
 
 ## 界面与字体
 
@@ -15,7 +28,7 @@
 - “查看 → 界面主题”切换经典浅色/深色；“选项 → 终端配色”选择黑底、浅色或深蓝。显示偏好独立保存在会话文件旁的`appearance.ini`，不保存连接凭据。
 - `Ctrl+F`打开可关闭的查找栏；`Ctrl+C/D/S`仍发送终端控制字符，保存会话使用`Alt+S`。
 
-[深色界面](artifacts/harbor-0.4.1-terminal-dark.png) · [快速连接](artifacts/harbor-0.4.1-quick-connect.png) · [会话选项](artifacts/harbor-0.4.1-options.png)
+[深色界面](artifacts/harbor-0.5.0-terminal-dark.png) · [快速连接](artifacts/harbor-0.5.0-quick-connect.png) · [会话选项](artifacts/harbor-0.5.0-options.png)
 
 ## 本次可用的工作流
 
@@ -36,10 +49,12 @@
 
 ## Windows 运行
 
-安装 Python 3.12，在 PowerShell 的项目根目录执行：
+可从[成功的Windows构建](https://github.com/lhy8888/secureCRT/actions/workflows/validate.yml)下载HarborTerminal-Windows-unsigned，核对ZIP的SHA-256后完整解压；运行EXE无需另装Python。BUILD-INFO.json记录构建提交。原生CI使用Windows Server 2025，不能代替Windows 10/11实机。
+
+开发安装Python 3.14.10，在PowerShell项目根目录执行：
 
 ```powershell
-py -3.12 -m venv .venv
+py -3.14 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements-lock.txt
 .\.venv\Scripts\python.exe -m pip install --no-deps .
 .\.venv\Scripts\harbor-terminal.exe
@@ -47,7 +62,7 @@ py -3.12 -m venv .venv
 
 按Alt+Q或点击工具栏快速连接图标，在弹窗填写SSH主机、端口、用户名和本次密码；私钥文件和本次口令在“会话选项 → SSH / 身份”中选择。连接前通过受信任渠道核实主机公钥指纹，再使用 OpenSSH 格式的 `known_hosts` 文件。非默认端口条目为 `[host]:port`。`ssh-keyscan` 只能收集公钥，不能证明可信。没有忽略校验开关。
 
-密码、私钥口令与私钥内容不写入会话配置或诊断日志；只允许保存私钥路径。Python 内存中的秘密副本不能保证擦除。配置v3可读取旧v1/v2文件，读取旧文件时不自动改写；新版本只增加跳板会话名称引用，不保存跳板密码。
+密码、私钥口令与私钥内容不写入会话配置或诊断日志；只允许保存私钥路径。Python 内存中的秘密副本不能保证擦除。配置v4可读取旧v1/v2/v3文件，读取旧文件时不自动改写；v4增加认证预设与仅通道模式，跳板仍只保存名称引用，不保存跳板密码。
 
 使用跳板时，先保存一个独立SSH跳板会话，再加载目标会话，在“会话选项 → SSH / 跳板”中选择跳板并输入本次跳板密码/口令。目标密码在快速连接弹窗输入；两端各用自己的known_hosts。当前拒绝缺失引用和嵌套跳板。连接后的“传输 → SFTP文件”和“工具 → 会话日志 / SSH隧道”固定绑定打开它们的会话，切换标签不会转向其他连接。
 
@@ -61,7 +76,9 @@ py -3.12 -m venv .venv
 ./scripts/build-windows.ps1
 ```
 
-生成 `dist/HarborTerminal/HarborTerminal.exe` 及同目录运行库；分发需保留整个目录。这是未签名开发包的构建流程，**本轮 Linux 环境没有生成或测试 Windows EXE**。Windows CI 配置在 `.github/workflows/validate.yml`，尚未远端执行。正式发布前还需许可证清单、签名、升级与原生平台验证。
+使用官方Windows Python3.14.10，生成`dist/HarborTerminal/HarborTerminal.exe`及完整运行库、ZIP/SHA-256、构建信息与依赖许可清单。已有远端Windows原生构建和实际冻结EXE测试；这是未签名开发包，无MSI/可信更新。必须完整解压保留整个目录。源码测试矩阵覆盖Windows/Linux与Python3.12/3.14。
+
+包内运行`powershell -ExecutionPolicy Bypass -File .\Test-HarborHardware.ps1 -Mode Inventory`枚举真实设备。准备TX/RX回环后按[硬件说明](docs/windows-hardware-testing.md)做回环/拔插/72小时测试；报告只保存在本机Diagnostics，不自动上传。同机资源采样与步骤见[对照说明](docs/windows-comparison.md)。
 
 ## 验证与界面采集
 
@@ -74,13 +91,13 @@ QT_QPA_PLATFORM=offscreen /workspace/securecrt-venv/bin/python scripts/capture_s
 
 运行截图脚本前，修改源码后需重新执行 `python -m pip install --no-deps .`，脚本使用安装后的包。本地真实SSH服务验证加密收发、密钥拒绝、私钥认证、窗口变化、跳板、SFTP、三类转发及Qt输入链路；Linux PTY验证串口字节流。截图均来自生成测试数据，不是真实网络设备或Windows界面。
 
-工具截图：[SFTP](artifacts/harbor-0.4.1-sftp.png) · [SSH隧道](artifacts/harbor-0.4.1-tunnels.png) · [会话日志](artifacts/harbor-0.4.1-log.png) · [串口Hex](artifacts/harbor-0.4.1-hex.png)。复查结果见 [本轮验证](artifacts/validation-0.4.1.md)。
+工具截图：[SFTP](artifacts/harbor-0.5.0-sftp.png) · [SSH隧道](artifacts/harbor-0.5.0-tunnels.png) · [会话日志](artifacts/harbor-0.5.0-log.png) · [串口Hex](artifacts/harbor-0.5.0-hex.png)。复查结果见 [本轮验证](artifacts/validation-0.5.md)。
 
 ## 实现边界
 
 - SFTP当前限单文件，上传安全提交需hardlink/POSIX rename；不保留元数据，无递归/续传/独立SFTP登录。日志为JSONL分块，无逐行纯文本/跨日/自动脱敏。完整约束见0.3记录。
-- 跳板仅单级，转发不保存模板、不自动重建；SOCKS只验证无认证IPv4子集，未验收域名/IPv6和长期并发。仍无X/Y/Zmodem/Kermit、脚本/Expect、命令广播、凭据库、快照/平铺、导入向导和自动重连。
+- 跳板仅单级，转发不保存模板、不自动重建；SOCKS5已测IPv4/域名、半关闭和取消，不支持代理认证；IPv6实际互通与长期并发待验收。仍无X/Y/Zmodem/Kermit、通用Python脚本对象、凭据库、快照/平铺、导入向导和自动重连。
 - 不是完整 VT320/TN3270/Wyse/Xterm 实现。未做 vim/tmux/top 全量回放、远端鼠标、闪烁、双高/双宽行、RTL/emoji完整字素兼容。OSC/DCS/APC/PM/SOS仍被过滤。
 - 2000行历史；最多16个标签；网格最多512列×200行。缩小高度保留适用行与移出的历史，**横向缩小会裁切列，尚无软换行重排**。
 - 接收256KiB、发送64KiB缓冲，收发独立并施加背压；CSI限制128字符，保存光标栈16项，每格32码点；每次解析有估算操作预算。这些边界不是操作系统级CPU/内存沙箱。
-- 串口实体线路、热拔插、挂死的驱动调用、Windows IME/DPI/Agent、72小时稳定性与 SecureCRT 同机对照仍未验证。
+- 用户实体COM/热拔插、挂死驱动恢复、Windows 10/11 IME/多显示器/Agent、72小时稳定性与SecureCRT同机对照仍未验证；Windows Server原生CI与DPI启动子集已有证据。

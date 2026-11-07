@@ -1,0 +1,14 @@
+{
+  "ci_run": 42371959285,
+  "source_dirty": false,
+  "source_commit": "27c4c251fe1e5ee5ca386630d6ce769580d7dabb",
+  "python": "3.14.10",
+  "signing": "unsigned development build",
+  "built_utc": "2026-11-07T12:23:25.7843451Z",
+  "zip_name": "HarborTerminal-0.5.0-Windows-x64.zip",
+  "zip_bytes": 59813744,
+  "zip_entries": 373,
+  "zip_sha256": "1b46756acc6d50c5cf781df4dc105d057f08d278d5998e76f8dd64f55470788e",
+  "architecture": "AMD64",
+  "physical_com_verified": false
+}

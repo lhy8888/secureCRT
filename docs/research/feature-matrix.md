@@ -1,12 +1,12 @@
 # SecureCRT 9.7.4 累积功能基线与实现矩阵
 
-目标平台：Windows 10/11。当前实现版本：0.4.1。
+目标平台：Windows 10/11。当前实现版本：0.5.0。
 
-结合完整官方历史、功能表、FAQ 和脚本资料。所有“已验证子集”仅表示列出的 Linux/离屏/本地集成证据，不表示 Windows 或与 SecureCRT 等价。验收条件保持为目标规格，旁列实际实现与限制。
+结合完整官方历史、功能表、FAQ 和脚本资料。“已验证子集”只表示列出的平台/场景证据，不能扩大为全部Windows设备或与SecureCRT等价。验收条件保持为目标规格，旁列实际实现与限制。
 
-[调研总览](README.md) · [历史覆盖](release-coverage.md) · [可靠性场景](reliability-regressions.md) · [0.4.1 交付记录](../releases/0.4.1.md)
+[调研总览](README.md) · [历史覆盖](release-coverage.md) · [可靠性场景](reliability-regressions.md) · [0.5 交付记录](../releases/0.5.md)
 
-183 项能力中，未实现 116 项；没有整体产品等价性验收。
+183 项能力中，未实现 95 项；没有整体产品等价性验收。
 
 ## 1. 连接与协议
 
@@ -16,17 +16,17 @@
 |---|---|---|---|---|
 | F01.01 | SSH2 交互会话 | 已验证子集 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 连接真实 SSH 服务，交互输入、stdout/stderr、退出码和远端 EOF 行为一致 |
 | F01.02 | IPv4/IPv6 与国际化主机名 | 依赖能力未验证 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | IPv6 字面地址、DNS、IDN、非默认端口均建立连接 |
-| F01.03 | 快速连接与 user@host:port 解析 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 正确处理 IPv6 方括号、空输入和转义，不能把提示文案当主机名 |
-| F01.04 | 连接参数命令行入口 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 命令行可选择会话、协议、主机、用户和新标签，秘密不放命令行 |
+| F01.03 | 快速连接与 user@host:port 解析 | 已验证子集 | 快捷主机框与CLI解析 user@host:port、带括号IPv6、SSH URI与IDNA；拒绝URL口令/控制符/无效端口。IPv6实际网络与系统URI注册未验收。<br>证据：[tests/test_startup_batch.py](../../tests/test_startup_batch.py) | 正确处理 IPv6 方括号、空输入和转义，不能把提示文案当主机名 |
+| F01.04 | 连接参数命令行入口 | 部分实现 | GUI命令行填入目标/会话/密钥路径/认证顺序；显式JSON流程可无界面执行SSH或Serial并写新报告。无命令行密码，未实现完整SecureCRT参数兼容。<br>证据：[tests/test_startup_batch.py](../../tests/test_startup_batch.py) | 命令行可选择会话、协议、主机、用户和新标签，秘密不放命令行 |
 | F01.05 | 本地 CMD/PowerShell 会话 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | Windows ConPTY、窗口改变、Ctrl+C 和进程树退出正常 |
 | F01.06 | Raw TCP 协议 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 明确标记明文，正确配置 CR/LF 和无仿真收发 |
 | F01.07 | Telnet/Telnet-TLS | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 协商、NAWS、字符编码和 TLS 身份校验；明文协议需显式选择 |
 | F01.08 | RLogin/TAPI 兼容 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 记录历史兼容范围，启用前明确需求；不作为安全默认值 |
-| F01.09 | 无 shell 的 SSH 连接 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 仅转发或 SFTP 时不请求交互 shell |
+| F01.09 | 无 shell 的 SSH 连接 | 已验证子集 | SSH仅通道模式不请求PTY或Shell，保留SFTP/隧道；拒绝终端发送、BREAK与命令流程。真实服务SFTP成功且远端进程计数为零。<br>证据：[tests/test_startup_batch.py::test_shellless_ssh_retains_sftp_and_never_opens_a_process](../../tests/test_startup_batch.py) | 仅转发或 SFTP 时不请求交互 shell |
 | F01.10 | 登录后远端命令 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 按会话配置执行，远端失败可见，不混为本地命令 |
 | F01.11 | 重连与退出原因识别 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 用户正常 exit 不重连；网络断线可取消、退避、有上限且不重放输入 |
 | F01.12 | 协议 NO-OP 与字符串防空闲 | 部分实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 区分 SSH 保活和向 shell 输入字符；后者显式配置并显示 |
-| F01.13 | 分阶段连接状态 | 部分实现 | 每标签连接/关闭/错误状态独立；连接中可取消，自动关闭窗口有回归。DNS/KEX/认证分阶段 UI 尚未实现。<br>证据：[tests/test_session.py](../../tests/test_session.py); [tests/test_ssh_ui_integration.py](../../tests/test_ssh_ui_integration.py); [tests/test_terminal_widget.py](../../tests/test_terminal_widget.py) | DNS、TCP、KEX、认证、PTY、已连接、关闭、错误状态准确 |
+| F01.13 | 分阶段连接状态 | 部分实现 | 跳板/目标连接及交互认证阶段分别显示，认证取消/超时收敛；没有DNS/TCP/KEX全部独立阶段。<br>证据：[tests/test_authentication.py](../../tests/test_authentication.py); [tests/test_jump.py](../../tests/test_jump.py); [tests/test_ssh_ui_integration.py](../../tests/test_ssh_ui_integration.py) | DNS、TCP、KEX、认证、PTY、已连接、关闭、错误状态准确 |
 | F01.14 | 顺序与并发批量连接 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 可选串行/并行，上限、取消、单点失败和进度互不污染 |
 
 ## 2. 认证、主机信任与凭据
@@ -37,9 +37,9 @@
 |---|---|---|---|---|
 | F02.01 | 密码认证 | 已验证子集 | 密码认证及错误拒绝已通过本地SSH服务验证；跳板与目标使用独立密码，诊断不输出服务端异常正文。Windows及MFA另行验收。<br>证据：[tests/test_transport.py::test_bad_password_rejected](../../tests/test_transport.py); [tests/test_jump.py::test_jump_and_target_passwords_are_independent](../../tests/test_jump.py) | 正确密码成功，错误密码拒绝，异常与日志不回显密码 |
 | F02.02 | 私钥文件与加密私钥 | 已验证子集 | 新增私钥文件选择与本次口令输入；加密 OpenSSH Ed25519 私钥对真实本地 SSH 服务认证通过。其他格式与硬件验证仍待做。<br>证据：[tests/test_transport.py::test_encrypted_openssh_private_key_authentication](../../tests/test_transport.py) | 图形选择私钥、输入口令、取消和错误口令重试均可用 |
-| F02.03 | 默认密钥与 SSH Agent | 依赖能力未验证 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 在 Windows OpenSSH Agent 上验证登录、agent 缺失和拒绝 |
-| F02.04 | 键盘交互/MFA | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 多轮 challenge、多条提示、echo 标记、内嵌 LF 与超时正确 |
-| F02.05 | 认证顺序与跳过方法 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 可选择公钥、交互、密码等顺序；取消不继续猜测认证 |
+| F02.03 | 默认密钥与 SSH Agent | 部分实现 | 修复显式client_keys=None意外禁用公钥认证；未指定密钥时允许默认密钥/Agent。实际默认密钥签名认证已测，Windows OpenSSH Agent互通未测。<br>证据：[tests/test_startup_batch.py::test_no_explicit_key_selection_does_not_disable_default_public_keys](../../tests/test_startup_batch.py) | 在 Windows OpenSSH Agent 上验证登录、agent 缺失和拒绝 |
+| F02.04 | 键盘交互/MFA | 已验证子集 | 真实SSH多轮多提示认证与Qt应答；保留LF、按echo位隐藏输入，跳板/目标分别请求；90秒提示期限、单次UUID回复和轮次/大小上限。取消不回退密码。外部硬件MFA未测。<br>证据：[tests/test_authentication.py](../../tests/test_authentication.py) | 多轮 challenge、多条提示、echo 标记、内嵌 LF 与超时正确 |
+| F02.05 | 认证顺序与跳过方法 | 部分实现 | 可保存auto（公钥优先）、密码优先、交互优先、仅公钥、仅交互的固定顺序预设；没有任意方法排序/GSSAPI。<br>证据：[tests/test_authentication.py](../../tests/test_authentication.py); [tests/test_profiles.py](../../tests/test_profiles.py) | 可选择公钥、交互、密码等顺序；取消不继续猜测认证 |
 | F02.06 | GSSAPI/Kerberos 与 SPN | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 域环境单点登录、服务主体、MIC 和 secured KEX 单独验证 |
 | F02.07 | RSA/Ed25519/ECDSA 密钥 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 生成、导入、签名、算法协商与强度策略测试 |
 | F02.08 | PPK/PPK3 导入 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 口令、证书键与格式版本识别；畸形文件不导致崩溃 |
@@ -58,7 +58,7 @@
 | F02.21 | 个人数据与会话配置分离 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 共享配置不能包含口令、私钥口令和敏感登录脚本 |
 | F02.22 | 配置口令与加密迁移 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 强 KDF、唯一盐、认证加密、迁移回滚及坏口令不覆盖数据 |
 | F02.23 | 凭据发送到按钮/命令/登录动作 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 只按明确目标发送，操作可取消，不记录秘密 |
-| F02.24 | 秘密不落配置或诊断日志 | 已验证子集 | 配置字段白名单拒绝密码、私钥口令/内容和跳板口令；v3仅增加跳板会话名称引用，兼容读取v1/v2。连接完成或取消移除Worker中的凭据选项，不宣称Python内存可靠擦除。<br>证据：[tests/test_profiles.py](../../tests/test_profiles.py); [tests/test_jump.py::test_cancelling_pending_target_handshake_closes_jump_and_drops_secrets](../../tests/test_jump.py) | 持久化字段白名单拒绝密码；不宣称 Python 内存可可靠擦除 |
+| F02.24 | 秘密不落配置或诊断日志 | 已验证子集 | 会话v4白名单仅增加认证预设/通道模式与跳板引用，兼容读取v1/v2/v3；认证回答不写配置或终端日志。命令库/流程及其捕获结果为用户显式保存的明文，不能存秘密。不宣称Python内存可擦除。<br>证据：[tests/test_profiles.py](../../tests/test_profiles.py); [tests/test_authentication.py](../../tests/test_authentication.py); [tests/test_jump.py](../../tests/test_jump.py) | 持久化字段白名单拒绝密码；不宣称 Python 内存可可靠擦除 |
 
 ## 3. 密码算法与协商策略
 
@@ -88,9 +88,9 @@
 | F04.03 | SOCKS4/5 连接代理 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 认证、DNS 位置、IPv6、错误和取消正确 |
 | F04.04 | HTTP CONNECT 代理 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 认证响应、非 200、连接头和二进制数据边界正确 |
 | F04.05 | ProxyCommand 本地代理 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 不用 shell 拼接输入；限制进程树、输出与超时 |
-| F04.06 | 本地端口转发 | 已验证子集 | 本地转发支持明确目标、监听端口或自动分配，监听固定请求127.0.0.1；绑定冲突保持既有监听。真实二进制往返、停止和SSH断开释放已测。Windows及长时并发待测。<br>证据：[tests/test_forwarding.py](../../tests/test_forwarding.py); [tests/test_service_panels.py::test_forward_dialog_operates_real_tcp_and_disconnect_releases_listener](../../tests/test_service_panels.py) | 默认回环监听，绑定失败提示，关闭后释放端口 |
+| F04.06 | 本地端口转发 | 已验证子集 | 自有回环监听在Windows绑定前启用SO_EXCLUSIVEADDRUSE，修复已复现的重复绑定；Linux/Windows真实二进制转发、半关闭、SSH断开清理。停止监听保留已有流；每会话转发流总额64。<br>证据：[tests/test_forwarding.py](../../tests/test_forwarding.py); [tests/test_service_panels.py](../../tests/test_service_panels.py) | 默认回环监听，绑定失败提示，关闭后释放端口 |
 | F04.07 | 远程端口转发 | 已验证子集 | 远程转发明确目标与端口，服务端监听请求固定127.0.0.1；真实字节往返和停止释放已测。服务端可覆盖监听策略，客户端无法证明实际网卡绑定；Windows/不同SSH服务待测。<br>证据：[tests/test_forwarding.py::test_real_forward_roundtrip_and_stop_releases_listening_port](../../tests/test_forwarding.py) | 目标、监听地址、服务器拒绝与断线释放可验证 |
-| F04.08 | 动态 SOCKS 转发 | 部分实现 | 提供经SSH的本地SOCKS监听，请求固定127.0.0.1。SOCKS5无认证/IPv4握手与真实二进制数据已测；代理认证、域名/IPv6及长期并发尚未验证。本机其他用户仍可能访问监听。<br>证据：[tests/test_forwarding.py::test_socks5_handshake_routes_actual_binary_payload](../../tests/test_forwarding.py) | 认证/地址类型/并发连接/取消无泄漏 |
+| F04.08 | 动态 SOCKS 转发 | 部分实现 | 自有SOCKS5 CONNECT支持IPv4/域名/IPv6解析，固定127.0.0.1；实际域名和IPv4、拒绝认证/非法请求、握手超时/取消、半关闭已测。不支持代理认证；IPv6网络互通和长期并发待验收。<br>证据：[tests/test_forwarding.py](../../tests/test_forwarding.py) | 认证/地址类型/并发连接/取消无泄漏 |
 | F04.09 | 转发条目增删复制禁用 | 部分实现 | 窗口支持建立、列出和停止当前会话的监听；每会话最多16个，请求队列最多8项。关闭管理窗口保留监听，断开SSH关闭转发；停止监听可能保留已有流。复制/禁用模板、持久化与导入未实现。<br>证据：[tests/test_forwarding.py::test_listener_capacity_is_bounded_and_all_owned_ports_are_released](../../tests/test_forwarding.py); [tests/test_service_panels.py::test_forward_dialog_operates_real_tcp_and_disconnect_releases_listener](../../tests/test_service_panels.py) | 禁用动态条目不能破坏依赖连接，导入不丢转发 |
 | F04.10 | X11 转发 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | DISPLAY/cookie 校验、X server 缺失与连接关闭处理 |
 | F04.11 | 端口转发启动本地应用 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 仅用户授权的固定程序和参数，连接失败不误启动 |
@@ -159,12 +159,12 @@
 | F07.04 | DTR/RTS 控制与调制解调状态 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 可操作线路并观察 CTS/DSR/RI/CD；注明复位副作用 |
 | F07.05 | 串口读写与字节流分片 | 已验证子集 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 部分读取累计，部分写入报错，读写超时 |
 | F07.06 | 串口连接取消与独占占用 | 部分实现 | 连接取消与资源关闭路径已整理，实际PTY和模拟阻塞连接测试通过；无法宣称可强制终止挂死的Windows驱动调用。<br>证据：[tests/test_session.py](../../tests/test_session.py); [tests/test_transport.py](../../tests/test_transport.py) | 无设备、被占用、驱动无响应时可取消且资源收敛 |
-| F07.07 | 热拔插与重枚举 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 识别设备身份变更，不自动把命令发给另一设备 |
+| F07.07 | 热拔插与重枚举 | 部分实现 | 独立只读诊断观察移除/返回，优先按唯一设备序列号跟随端口改名，重复序列号拒绝判断；无序列号仅按端口名。枚举模拟已测；实体Windows拔插未执行，未实现自动重连。<br>证据：[tests/test_diagnostics.py](../../tests/test_diagnostics.py); [docs/windows-hardware-testing.md](../../docs/windows-hardware-testing.md) | 识别设备身份变更，不自动把命令发给另一设备 |
 | F07.08 | 按协议保存串口默认值 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 串口默认与 SSH 默认分离；升级不改已有配置 |
 | F07.09 | Hex/ASCII 双视图 | 部分实现 | 串口Hex/ASCII同窗显示方向、UTC时间和偏移；32KiB/256条上限并显示丢弃量；无双向联动选区。<br>证据：[tests/test_trace.py](../../tests/test_trace.py); [tests/test_service_panels.py](../../tests/test_service_panels.py) | 逐会话双向数据带方向和偏移，选择联动，二进制不转码 |
 | F07.10 | 十六进制/二进制发送 | 已验证子集 | Hex最多4096原始字节发送，不追加换行，不重试；真实PTY收发、标签切换固定目标和部分写入观察有测试。<br>证据：[tests/test_service_panels.py](../../tests/test_service_panels.py); [tests/test_session.py](../../tests/test_session.py) | 精确发送字节，包括 NUL/0xFF，不走 UTF-8 编码 |
 | F07.11 | Windows 命名管道 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 虚拟机串口管道读写、断开和取消 |
-| F07.12 | 串口故障与持续流量 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 实体适配器矩阵、长期压力、拔插、睡眠唤醒 |
+| F07.12 | 串口故障与持续流量 | 部分实现 | 显式回环检测逐帧验证全部字节、超时/短写失败无重放，报告资源/延迟；Unix PTY实际通过。Windows包包含72小时实体测试入口，但未取得实体报告，未验证挂死驱动恢复。<br>证据：[tests/test_diagnostics.py](../../tests/test_diagnostics.py); [docs/windows-hardware-testing.md](../../docs/windows-hardware-testing.md) | 实体适配器矩阵、长期压力、拔插、睡眠唤醒 |
 
 ## 8. 会话数据库与布局
 
@@ -199,23 +199,23 @@
 
 | ID | 能力/范围 | Harbor 状态 | 实现与限制 | 目标验收条件 |
 |---|---|---|---|---|
-| F09.01 | 命令窗口与历史 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 编辑多行、历史检索、活动/可见/选组/全部目标 |
-| F09.02 | 多会话命令广播 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 明确展示目标列表，锁定或断开会话排除，高危命令确认 |
+| F09.01 | 命令窗口与历史 | 部分实现 | Alt+M打开多行命令面板、本窗口最近50条历史、显式选目标及可编辑预览；历史无检索/持久化。<br>证据：[tests/test_workflow_panel.py](../../tests/test_workflow_panel.py) | 编辑多行、历史检索、活动/可见/选组/全部目标 |
+| F09.02 | 多会话命令广播 | 已验证子集 | 逐会话勾选，预览固定目标及编码；切换标签/新增连接不自动改发送目标，分别列入队结果，无重试。真实两个SSH/Qt验证。没有即时字符广播。<br>证据：[tests/test_workflow_panel.py](../../tests/test_workflow_panel.py) | 明确展示目标列表，锁定或断开会话排除，高危命令确认 |
 | F09.03 | 即时字符广播 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | Ctrl+C、Tab 补全和编辑器按键逐会话一致 |
-| F09.04 | 按钮栏与按钮管理 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 多栏、复制/排序/颜色/说明、按会话分配 |
-| F09.05 | 命令管理器 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 分层保存、过滤、按钮栏互换及命令描述 |
-| F09.06 | Expect/Send 登录动作 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 跨 read 边界匹配、超时、顺序、编码和取消 |
-| F09.07 | 等待提示发送 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 无提示不能无限等待；等待状态可见，不重复发送 |
+| F09.04 | 按钮栏与按钮管理 | 部分实现 | 保存命令可固定到按钮栏；按钮仅发当前交互会话并再次预览，不沿用上次广播目标。没有多组按钮栏/完整自定义动作。<br>证据：[tests/test_workflow_panel.py](../../tests/test_workflow_panel.py); [harbor_terminal/desktop.py](../../harbor_terminal/desktop.py) | 多栏、复制/排序/颜色/说明、按会话分配 |
+| F09.05 | 命令管理器 | 部分实现 | 独立明文commands.json原子保存、筛选、增删、置顶；最多200条，损坏文件保护。没有文件夹/秘密引用/命令库同步。<br>证据：[tests/test_automation.py](../../tests/test_automation.py); [tests/test_workflow_panel.py](../../tests/test_workflow_panel.py) | 分层保存、过滤、按钮栏互换及命令描述 |
+| F09.06 | Expect/Send 登录动作 | 部分实现 | 手动或CLI启动声明式send/wait/delay流程，跨分片增量解码匹配，超时/取消不继续发送。未自动绑定登录动作，也无凭据引用或SecureCRT脚本兼容。<br>证据：[tests/test_automation.py](../../tests/test_automation.py); [tests/test_authentication.py](../../tests/test_authentication.py); [tests/test_workflow_panel.py](../../tests/test_workflow_panel.py) | 跨 read 边界匹配、超时、顺序、编码和取消 |
+| F09.07 | 等待提示发送 | 已验证子集 | 独立有界接收流等待字面提示，按最早位置/候选顺序匹配；流与GUI渲染互不消费。游标被覆盖立即错误，不静默继续；断开/取消释放等待者。<br>证据：[tests/test_automation.py](../../tests/test_automation.py) | 无提示不能无限等待；等待状态可见，不重复发送 |
 | F09.08 | Python 脚本与对象模型 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | Screen/Session/Tab/Config/Clipboard/Dialog 等逐方法规格 |
-| F09.09 | Screen.Send/WaitFor/ReadString | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 同步模式、忽略大小写、超时、取消与消费语义明确 |
+| F09.09 | Screen.Send/WaitFor/ReadString | 部分实现 | Harbor JSON流程提供发送、等待、捕获匹配前文本与候选编号；保留匹配后尾部。无crt.Screen对象、IgnoreCase或完整ReadString兼容。<br>证据：[tests/test_automation.py](../../tests/test_automation.py); [tests/test_startup_batch.py](../../tests/test_startup_batch.py) | 同步模式、忽略大小写、超时、取消与消费语义明确 |
 | F09.10 | 脚本和标签生命周期 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 脚本目标固定，切换标签不误发；连接成功后才启动 |
 | F09.11 | Python 版本/架构与模块 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | Windows 嵌入或外置运行时、签名、位数和更新测试 |
 | F09.12 | VBScript/JScript/PerlScript | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | Windows ActiveX 兼容需求单列，不由 Python 支持推断 |
-| F09.13 | 脚本参数、状态与错误 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 参数不经 shell 拼接；异常有位置，取消收敛 |
+| F09.13 | 脚本参数、状态与错误 | 部分实现 | JSON流程有步骤/状态/错误、600秒总期限、每Worker一个流程，取消清理尚未发送队列；不执行本地Python/eval。不是通用脚本参数/API系统。<br>证据：[tests/test_automation.py](../../tests/test_automation.py); [tests/test_workflow_panel.py](../../tests/test_workflow_panel.py) | 参数不经 shell 拼接；异常有位置，取消收敛 |
 | F09.14 | 脚本录制 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 特殊键、反斜杠、Unicode 正确转义，秘密不被录制 |
 | F09.15 | 脚本编辑器 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 语法高亮、查找、保存和运行目标选择 |
 | F09.16 | 启动前本地程序/端口敲门 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 明确授权，不允许远端控制序列触发本地执行 |
-| F09.17 | 自动化 CLI 与批处理 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 可预测退出码、非交互、超时和机器可读结果 |
+| F09.17 | 自动化 CLI 与批处理 | 部分实现 | 显式--run-flow/--output无GUI执行SSH密钥/Agent或Serial，主机严格校验、独立接收、JSON结果和退出码。已测真实SSH及Unix PTY；无CLI交互MFA/密钥口令。<br>证据：[tests/test_startup_batch.py](../../tests/test_startup_batch.py); [harbor_terminal/batch.py](../../harbor_terminal/batch.py) | 可预测退出码、非交互、超时和机器可读结果 |
 
 ## 10. 文件传输
 
@@ -267,24 +267,24 @@
 | F12.03 | 打印屏幕/选择/透传 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 远端打印权限、编码、打印机缺失和禁用策略 |
 | F12.04 | SSH/Telnet URI 处理 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 系统注册，URI 不允许注入配置路径、脚本或本地程序 |
 | F12.05 | 本地文件/菜单/工具栏定制 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 用户控制的动作与远端不可信输入分离 |
-| F12.06 | 多显示器、DPI 与无障碍 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | Win10/11 缩放、焦点、对话框最小尺寸、JAWS/屏幕阅读器 |
-| F12.07 | 便携包/MSI/静默安装 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 版本升级不混用旧 DLL，不丢配置；卸载策略明确 |
+| F12.06 | 多显示器、DPI 与无障碍 | 部分实现 | Windows原生Qt确认Segoe UI/Consolas及100/125/150/200/300%启动/选项/字体对话框；CI屏幕小会裁切窗口。未验收真实Win10/11多显示器、中文IME与无障碍。<br>证据：[scripts/build-windows.ps1](../../scripts/build-windows.ps1); [artifacts/validation-0.5.md](../../artifacts/validation-0.5.md) | Win10/11 缩放、焦点、对话框最小尺寸、JAWS/屏幕阅读器 |
+| F12.07 | 便携包/MSI/静默安装 | 部分实现 | Windows原生PyInstaller x64便携EXE/运行库ZIP及SHA-256已构建并启动，附硬件工具；必须完整解压。无签名、MSI、升级/静默安装。<br>证据：[scripts/build-windows.ps1](../../scripts/build-windows.ps1); [artifacts/validation-0.5.md](../../artifacts/validation-0.5.md) | 版本升级不混用旧 DLL，不丢配置；卸载策略明确 |
 | F12.08 | 签名与可信更新 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | Windows Authenticode、下载校验、更新签名及回滚 |
 | F12.09 | 企业策略禁用开关 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 可控制脚本、明文传输、转发、打印、TFTP、自动登录和凭据保存 |
-| F12.10 | 依赖 SBOM 与供应链维护 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 版本、许可证、安全公告与签名验证纳入发布 |
-| F12.11 | 长期稳定性与故障注入 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | 24/72小时、资源趋势、多窗口同时关闭、网断与睡眠恢复 |
-| F12.12 | 兼容性与回归基线 | 未实现 | 尚无新增实现/验证记录；不得据依赖能力推断完成。 | Win10/11、SSH 服务矩阵、串口适配器与终端回放留原始结果 |
+| F12.10 | 依赖 SBOM 与供应链维护 | 部分实现 | 21个Python发行包锁版本；Windows包带发行包/许可证文件与哈希、Python许可和构建提交号，非完整原生DLL SBOM。签名与公告治理未实现。<br>证据：[scripts/collect_licenses.py](../../scripts/collect_licenses.py); [scripts/build-windows.ps1](../../scripts/build-windows.ps1) | 版本、许可证、安全公告与签名验证纳入发布 |
+| F12.11 | 长期稳定性与故障注入 | 部分实现 | 故障注入、真实SSH/SFTP/TCP/PTY连续检测与资源预算；旧基线中止报告已留存，最新源文件哈希对应的72小时测试在运行，未达到时限。无Windows/实体COM/供应商长期对照结论。<br>证据：[scripts/soak.py](../../scripts/soak.py); [artifacts/soak-0.5-baseline-interrupted.json](../../artifacts/soak-0.5-baseline-interrupted.json); [artifacts/validation-0.5.md](../../artifacts/validation-0.5.md) | 24/72小时、资源趋势、多窗口同时关闭、网断与睡眠恢复 |
+| F12.12 | 兼容性与回归基线 | 部分实现 | 已远端执行Linux/Windows与Python3.12/3.14矩阵和实际冻结EXE检查；失败初始证据保留。216本地用例并非SecureCRT逐项行为对照，实际Win10/11与完整TUI仍待测。<br>证据：[tests](../../tests); [.github/workflows/validate.yml](../../.github/workflows/validate.yml); [artifacts/validation-0.5.md](../../artifacts/validation-0.5.md) | Win10/11、SSH 服务矩阵、串口适配器与终端回放留原始结果 |
 
 ## 状态统计
 
-- 已验证子集：22 项。
-- 依赖能力未验证：3 项。
-- 未实现：116 项。
-- 部分实现：39 项。
+- 已验证子集：27 项。
+- 依赖能力未验证：2 项。
+- 部分实现：56 项。
+- 未实现：95 项。
 - 仅关闭策略：1 项。
 - 安全差异：2 项。
 
-原始0.1调研时为163项未实现。0.2补终端/串口，0.3补SFTP/日志/Hex，0.4补单级跳板/转发，0.4.1重做界面/字体；仍不能据子集测试宣称完整模块已经完成。
+原始0.1调研时为163项未实现。0.2补终端/串口，0.3补SFTP/日志/Hex，0.4补单级跳板/转发，0.4.1重做界面/字体，0.5补MFA/命令与JSON流程及原生Windows包；仍不能据子集测试宣称完整模块已经完成。
 
-后续仍包括SSH多轮认证/证书、命令和脚本、传输/日志高级功能、多级跳板/代理、布局快照/配置迁移、Windows原生与硬件及长期对照。
+后续仍包括证书/凭据库、完整脚本对象、传输/日志高级功能、多级跳板/代理、布局快照/配置迁移、Windows 10/11实机、实体硬件及长期对照。
 百万行历史、横向重排、完整仿真/鼠标协议、原生Windows IME/DPI仍未验收。历史中的弱协议/命令行秘密/自动信任不会作为安全默认值。

@@ -32,27 +32,31 @@
       "id": "F01.03",
       "domain": "连接与协议",
       "capability": "快速连接与 user@host:port 解析",
-      "status": "未实现",
+      "status": "已验证子集",
       "acceptance": "正确处理 IPv6 方括号、空输入和转义，不能把提示文案当主机名",
       "priority": "P0",
       "sources": [
         "https://www.vandyke.com/products/securecrt/features.html",
         "https://www.vandyke.com/products/securecrt/faq/index.html",
         "https://www.vandyke.com/products/securecrt/windows.html"
-      ]
+      ],
+      "implementation_note": "快捷主机框与CLI解析 user@host:port、带括号IPv6、SSH URI与IDNA；拒绝URL口令/控制符/无效端口。IPv6实际网络与系统URI注册未验收。",
+      "validation": "tests/test_startup_batch.py"
     },
     {
       "id": "F01.04",
       "domain": "连接与协议",
       "capability": "连接参数命令行入口",
-      "status": "未实现",
+      "status": "部分实现",
       "acceptance": "命令行可选择会话、协议、主机、用户和新标签，秘密不放命令行",
       "priority": "P0",
       "sources": [
         "https://www.vandyke.com/products/securecrt/features.html",
         "https://www.vandyke.com/products/securecrt/faq/index.html",
         "https://www.vandyke.com/products/securecrt/windows.html"
-      ]
+      ],
+      "implementation_note": "GUI命令行填入目标/会话/密钥路径/认证顺序；显式JSON流程可无界面执行SSH或Serial并写新报告。无命令行密码，未实现完整SecureCRT参数兼容。",
+      "validation": "tests/test_startup_batch.py"
     },
     {
       "id": "F01.05",
@@ -110,14 +114,16 @@
       "id": "F01.09",
       "domain": "连接与协议",
       "capability": "无 shell 的 SSH 连接",
-      "status": "未实现",
+      "status": "已验证子集",
       "acceptance": "仅转发或 SFTP 时不请求交互 shell",
       "priority": "P0",
       "sources": [
         "https://www.vandyke.com/products/securecrt/features.html",
         "https://www.vandyke.com/products/securecrt/faq/index.html",
         "https://www.vandyke.com/products/securecrt/windows.html"
-      ]
+      ],
+      "implementation_note": "SSH仅通道模式不请求PTY或Shell，保留SFTP/隧道；拒绝终端发送、BREAK与命令流程。真实服务SFTP成功且远端进程计数为零。",
+      "validation": "tests/test_startup_batch.py::test_shellless_ssh_retains_sftp_and_never_opens_a_process"
     },
     {
       "id": "F01.10",
@@ -170,8 +176,8 @@
         "https://www.vandyke.com/products/securecrt/faq/index.html",
         "https://www.vandyke.com/products/securecrt/windows.html"
       ],
-      "implementation_note": "每标签连接/关闭/错误状态独立；连接中可取消，自动关闭窗口有回归。DNS/KEX/认证分阶段 UI 尚未实现。",
-      "validation": "tests/test_session.py; tests/test_ssh_ui_integration.py; tests/test_terminal_widget.py"
+      "implementation_note": "跳板/目标连接及交互认证阶段分别显示，认证取消/超时收敛；没有DNS/TCP/KEX全部独立阶段。",
+      "validation": "tests/test_authentication.py; tests/test_jump.py; tests/test_ssh_ui_integration.py"
     },
     {
       "id": "F01.14",
@@ -220,40 +226,46 @@
       "id": "F02.03",
       "domain": "认证、主机信任与凭据",
       "capability": "默认密钥与 SSH Agent",
-      "status": "依赖能力未验证",
+      "status": "部分实现",
       "acceptance": "在 Windows OpenSSH Agent 上验证登录、agent 缺失和拒绝",
       "priority": "P0",
       "sources": [
         "https://www.vandyke.com/products/securecrt/features.html",
         "https://www.vandyke.com/products/securecrt/faq/index.html",
         "https://www.vandyke.com/products/securecrt/new-in.html"
-      ]
+      ],
+      "implementation_note": "修复显式client_keys=None意外禁用公钥认证；未指定密钥时允许默认密钥/Agent。实际默认密钥签名认证已测，Windows OpenSSH Agent互通未测。",
+      "validation": "tests/test_startup_batch.py::test_no_explicit_key_selection_does_not_disable_default_public_keys"
     },
     {
       "id": "F02.04",
       "domain": "认证、主机信任与凭据",
       "capability": "键盘交互/MFA",
-      "status": "未实现",
+      "status": "已验证子集",
       "acceptance": "多轮 challenge、多条提示、echo 标记、内嵌 LF 与超时正确",
       "priority": "P0",
       "sources": [
         "https://www.vandyke.com/products/securecrt/features.html",
         "https://www.vandyke.com/products/securecrt/faq/index.html",
         "https://www.vandyke.com/products/securecrt/new-in.html"
-      ]
+      ],
+      "implementation_note": "真实SSH多轮多提示认证与Qt应答；保留LF、按echo位隐藏输入，跳板/目标分别请求；90秒提示期限、单次UUID回复和轮次/大小上限。取消不回退密码。外部硬件MFA未测。",
+      "validation": "tests/test_authentication.py"
     },
     {
       "id": "F02.05",
       "domain": "认证、主机信任与凭据",
       "capability": "认证顺序与跳过方法",
-      "status": "未实现",
+      "status": "部分实现",
       "acceptance": "可选择公钥、交互、密码等顺序；取消不继续猜测认证",
       "priority": "P0",
       "sources": [
         "https://www.vandyke.com/products/securecrt/features.html",
         "https://www.vandyke.com/products/securecrt/faq/index.html",
         "https://www.vandyke.com/products/securecrt/new-in.html"
-      ]
+      ],
+      "implementation_note": "可保存auto（公钥优先）、密码优先、交互优先、仅公钥、仅交互的固定顺序预设；没有任意方法排序/GSSAPI。",
+      "validation": "tests/test_authentication.py; tests/test_profiles.py"
     },
     {
       "id": "F02.06",
@@ -503,8 +515,8 @@
         "https://www.vandyke.com/products/securecrt/faq/index.html",
         "https://www.vandyke.com/products/securecrt/new-in.html"
       ],
-      "implementation_note": "配置字段白名单拒绝密码、私钥口令/内容和跳板口令；v3仅增加跳板会话名称引用，兼容读取v1/v2。连接完成或取消移除Worker中的凭据选项，不宣称Python内存可靠擦除。",
-      "validation": "tests/test_profiles.py; tests/test_jump.py::test_cancelling_pending_target_handshake_closes_jump_and_drops_secrets"
+      "implementation_note": "会话v4白名单仅增加认证预设/通道模式与跳板引用，兼容读取v1/v2/v3；认证回答不写配置或终端日志。命令库/流程及其捕获结果为用户显式保存的明文，不能存秘密。不宣称Python内存可擦除。",
+      "validation": "tests/test_profiles.py; tests/test_authentication.py; tests/test_jump.py"
     },
     {
       "id": "F03.01",
@@ -735,8 +747,8 @@
         "https://www.vandyke.com/products/securecrt/faq/index.html",
         "https://www.vandyke.com/download/securecrt/7.1/history.txt"
       ],
-      "implementation_note": "本地转发支持明确目标、监听端口或自动分配，监听固定请求127.0.0.1；绑定冲突保持既有监听。真实二进制往返、停止和SSH断开释放已测。Windows及长时并发待测。",
-      "validation": "tests/test_forwarding.py; tests/test_service_panels.py::test_forward_dialog_operates_real_tcp_and_disconnect_releases_listener"
+      "implementation_note": "自有回环监听在Windows绑定前启用SO_EXCLUSIVEADDRUSE，修复已复现的重复绑定；Linux/Windows真实二进制转发、半关闭、SSH断开清理。停止监听保留已有流；每会话转发流总额64。",
+      "validation": "tests/test_forwarding.py; tests/test_service_panels.py"
     },
     {
       "id": "F04.07",
@@ -765,8 +777,8 @@
         "https://www.vandyke.com/products/securecrt/faq/index.html",
         "https://www.vandyke.com/download/securecrt/7.1/history.txt"
       ],
-      "implementation_note": "提供经SSH的本地SOCKS监听，请求固定127.0.0.1。SOCKS5无认证/IPv4握手与真实二进制数据已测；代理认证、域名/IPv6及长期并发尚未验证。本机其他用户仍可能访问监听。",
-      "validation": "tests/test_forwarding.py::test_socks5_handshake_routes_actual_binary_payload"
+      "implementation_note": "自有SOCKS5 CONNECT支持IPv4/域名/IPv6解析，固定127.0.0.1；实际域名和IPv4、拒绝认证/非法请求、握手超时/取消、半关闭已测。不支持代理认证；IPv6网络互通和长期并发待验收。",
+      "validation": "tests/test_forwarding.py"
     },
     {
       "id": "F04.09",
@@ -1443,14 +1455,16 @@
       "id": "F07.07",
       "domain": "串口与设备操作",
       "capability": "热拔插与重枚举",
-      "status": "未实现",
+      "status": "部分实现",
       "acceptance": "识别设备身份变更，不自动把命令发给另一设备",
       "priority": "P0",
       "sources": [
         "https://www.vandyke.com/products/securecrt/features.html",
         "https://www.vandyke.com/download/securecrt/9.6/history.txt",
         "https://www.vandyke.com/products/securecrt/history.txt"
-      ]
+      ],
+      "implementation_note": "独立只读诊断观察移除/返回，优先按唯一设备序列号跟随端口改名，重复序列号拒绝判断；无序列号仅按端口名。枚举模拟已测；实体Windows拔插未执行，未实现自动重连。",
+      "validation": "tests/test_diagnostics.py; docs/windows-hardware-testing.md"
     },
     {
       "id": "F07.08",
@@ -1512,14 +1526,16 @@
       "id": "F07.12",
       "domain": "串口与设备操作",
       "capability": "串口故障与持续流量",
-      "status": "未实现",
+      "status": "部分实现",
       "acceptance": "实体适配器矩阵、长期压力、拔插、睡眠唤醒",
       "priority": "P0",
       "sources": [
         "https://www.vandyke.com/products/securecrt/features.html",
         "https://www.vandyke.com/download/securecrt/9.6/history.txt",
         "https://www.vandyke.com/products/securecrt/history.txt"
-      ]
+      ],
+      "implementation_note": "显式回环检测逐帧验证全部字节、超时/短写失败无重放，报告资源/延迟；Unix PTY实际通过。Windows包包含72小时实体测试入口，但未取得实体报告，未验证挂死驱动恢复。",
+      "validation": "tests/test_diagnostics.py; docs/windows-hardware-testing.md"
     },
     {
       "id": "F08.01",
@@ -1875,7 +1891,7 @@
       "id": "F09.01",
       "domain": "命令工作流与自动化",
       "capability": "命令窗口与历史",
-      "status": "未实现",
+      "status": "部分实现",
       "acceptance": "编辑多行、历史检索、活动/可见/选组/全部目标",
       "priority": "P1",
       "sources": [
@@ -1885,13 +1901,15 @@
         "https://www.vandyke.com/download/securecrt/6.0/history.txt",
         "https://www.vandyke.com/download/securecrt/6.1/history.txt",
         "https://www.vandyke.com/products/securecrt/history.txt"
-      ]
+      ],
+      "implementation_note": "Alt+M打开多行命令面板、本窗口最近50条历史、显式选目标及可编辑预览；历史无检索/持久化。",
+      "validation": "tests/test_workflow_panel.py"
     },
     {
       "id": "F09.02",
       "domain": "命令工作流与自动化",
       "capability": "多会话命令广播",
-      "status": "未实现",
+      "status": "已验证子集",
       "acceptance": "明确展示目标列表，锁定或断开会话排除，高危命令确认",
       "priority": "P1",
       "sources": [
@@ -1901,7 +1919,9 @@
         "https://www.vandyke.com/download/securecrt/6.0/history.txt",
         "https://www.vandyke.com/download/securecrt/6.1/history.txt",
         "https://www.vandyke.com/products/securecrt/history.txt"
-      ]
+      ],
+      "implementation_note": "逐会话勾选，预览固定目标及编码；切换标签/新增连接不自动改发送目标，分别列入队结果，无重试。真实两个SSH/Qt验证。没有即时字符广播。",
+      "validation": "tests/test_workflow_panel.py"
     },
     {
       "id": "F09.03",
@@ -1923,7 +1943,7 @@
       "id": "F09.04",
       "domain": "命令工作流与自动化",
       "capability": "按钮栏与按钮管理",
-      "status": "未实现",
+      "status": "部分实现",
       "acceptance": "多栏、复制/排序/颜色/说明、按会话分配",
       "priority": "P1",
       "sources": [
@@ -1933,13 +1953,15 @@
         "https://www.vandyke.com/download/securecrt/6.0/history.txt",
         "https://www.vandyke.com/download/securecrt/6.1/history.txt",
         "https://www.vandyke.com/products/securecrt/history.txt"
-      ]
+      ],
+      "implementation_note": "保存命令可固定到按钮栏；按钮仅发当前交互会话并再次预览，不沿用上次广播目标。没有多组按钮栏/完整自定义动作。",
+      "validation": "tests/test_workflow_panel.py; harbor_terminal/desktop.py"
     },
     {
       "id": "F09.05",
       "domain": "命令工作流与自动化",
       "capability": "命令管理器",
-      "status": "未实现",
+      "status": "部分实现",
       "acceptance": "分层保存、过滤、按钮栏互换及命令描述",
       "priority": "P1",
       "sources": [
@@ -1949,13 +1971,15 @@
         "https://www.vandyke.com/download/securecrt/6.0/history.txt",
         "https://www.vandyke.com/download/securecrt/6.1/history.txt",
         "https://www.vandyke.com/products/securecrt/history.txt"
-      ]
+      ],
+      "implementation_note": "独立明文commands.json原子保存、筛选、增删、置顶；最多200条，损坏文件保护。没有文件夹/秘密引用/命令库同步。",
+      "validation": "tests/test_automation.py; tests/test_workflow_panel.py"
     },
     {
       "id": "F09.06",
       "domain": "命令工作流与自动化",
       "capability": "Expect/Send 登录动作",
-      "status": "未实现",
+      "status": "部分实现",
       "acceptance": "跨 read 边界匹配、超时、顺序、编码和取消",
       "priority": "P1",
       "sources": [
@@ -1965,13 +1989,15 @@
         "https://www.vandyke.com/download/securecrt/6.0/history.txt",
         "https://www.vandyke.com/download/securecrt/6.1/history.txt",
         "https://www.vandyke.com/products/securecrt/history.txt"
-      ]
+      ],
+      "implementation_note": "手动或CLI启动声明式send/wait/delay流程，跨分片增量解码匹配，超时/取消不继续发送。未自动绑定登录动作，也无凭据引用或SecureCRT脚本兼容。",
+      "validation": "tests/test_automation.py; tests/test_authentication.py; tests/test_workflow_panel.py"
     },
     {
       "id": "F09.07",
       "domain": "命令工作流与自动化",
       "capability": "等待提示发送",
-      "status": "未实现",
+      "status": "已验证子集",
       "acceptance": "无提示不能无限等待；等待状态可见，不重复发送",
       "priority": "P1",
       "sources": [
@@ -1981,7 +2007,9 @@
         "https://www.vandyke.com/download/securecrt/6.0/history.txt",
         "https://www.vandyke.com/download/securecrt/6.1/history.txt",
         "https://www.vandyke.com/products/securecrt/history.txt"
-      ]
+      ],
+      "implementation_note": "独立有界接收流等待字面提示，按最早位置/候选顺序匹配；流与GUI渲染互不消费。游标被覆盖立即错误，不静默继续；断开/取消释放等待者。",
+      "validation": "tests/test_automation.py"
     },
     {
       "id": "F09.08",
@@ -2003,7 +2031,7 @@
       "id": "F09.09",
       "domain": "命令工作流与自动化",
       "capability": "Screen.Send/WaitFor/ReadString",
-      "status": "未实现",
+      "status": "部分实现",
       "acceptance": "同步模式、忽略大小写、超时、取消与消费语义明确",
       "priority": "P1",
       "sources": [
@@ -2013,7 +2041,9 @@
         "https://www.vandyke.com/download/securecrt/6.0/history.txt",
         "https://www.vandyke.com/download/securecrt/6.1/history.txt",
         "https://www.vandyke.com/products/securecrt/history.txt"
-      ]
+      ],
+      "implementation_note": "Harbor JSON流程提供发送、等待、捕获匹配前文本与候选编号；保留匹配后尾部。无crt.Screen对象、IgnoreCase或完整ReadString兼容。",
+      "validation": "tests/test_automation.py; tests/test_startup_batch.py"
     },
     {
       "id": "F09.10",
@@ -2067,7 +2097,7 @@
       "id": "F09.13",
       "domain": "命令工作流与自动化",
       "capability": "脚本参数、状态与错误",
-      "status": "未实现",
+      "status": "部分实现",
       "acceptance": "参数不经 shell 拼接；异常有位置，取消收敛",
       "priority": "P1",
       "sources": [
@@ -2077,7 +2107,9 @@
         "https://www.vandyke.com/download/securecrt/6.0/history.txt",
         "https://www.vandyke.com/download/securecrt/6.1/history.txt",
         "https://www.vandyke.com/products/securecrt/history.txt"
-      ]
+      ],
+      "implementation_note": "JSON流程有步骤/状态/错误、600秒总期限、每Worker一个流程，取消清理尚未发送队列；不执行本地Python/eval。不是通用脚本参数/API系统。",
+      "validation": "tests/test_automation.py; tests/test_workflow_panel.py"
     },
     {
       "id": "F09.14",
@@ -2131,7 +2163,7 @@
       "id": "F09.17",
       "domain": "命令工作流与自动化",
       "capability": "自动化 CLI 与批处理",
-      "status": "未实现",
+      "status": "部分实现",
       "acceptance": "可预测退出码、非交互、超时和机器可读结果",
       "priority": "P1",
       "sources": [
@@ -2141,7 +2173,9 @@
         "https://www.vandyke.com/download/securecrt/6.0/history.txt",
         "https://www.vandyke.com/download/securecrt/6.1/history.txt",
         "https://www.vandyke.com/products/securecrt/history.txt"
-      ]
+      ],
+      "implementation_note": "显式--run-flow/--output无GUI执行SSH密钥/Agent或Serial，主机严格校验、独立接收、JSON结果和退出码。已测真实SSH及Unix PTY；无CLI交互MFA/密钥口令。",
+      "validation": "tests/test_startup_batch.py; harbor_terminal/batch.py"
     },
     {
       "id": "F10.01",
@@ -2629,7 +2663,7 @@
       "id": "F12.06",
       "domain": "Windows 集成与企业交付",
       "capability": "多显示器、DPI 与无障碍",
-      "status": "未实现",
+      "status": "部分实现",
       "acceptance": "Win10/11 缩放、焦点、对话框最小尺寸、JAWS/屏幕阅读器",
       "priority": "P1",
       "sources": [
@@ -2639,13 +2673,15 @@
         "https://www.vandyke.com/download/securecrt/9.3/history.txt",
         "https://www.vandyke.com/download/securecrt/9.6/history.txt",
         "https://www.vandyke.com/products/securecrt/history.txt"
-      ]
+      ],
+      "implementation_note": "Windows原生Qt确认Segoe UI/Consolas及100/125/150/200/300%启动/选项/字体对话框；CI屏幕小会裁切窗口。未验收真实Win10/11多显示器、中文IME与无障碍。",
+      "validation": "scripts/build-windows.ps1; artifacts/validation-0.5.md"
     },
     {
       "id": "F12.07",
       "domain": "Windows 集成与企业交付",
       "capability": "便携包/MSI/静默安装",
-      "status": "未实现",
+      "status": "部分实现",
       "acceptance": "版本升级不混用旧 DLL，不丢配置；卸载策略明确",
       "priority": "P1",
       "sources": [
@@ -2655,7 +2691,9 @@
         "https://www.vandyke.com/download/securecrt/9.3/history.txt",
         "https://www.vandyke.com/download/securecrt/9.6/history.txt",
         "https://www.vandyke.com/products/securecrt/history.txt"
-      ]
+      ],
+      "implementation_note": "Windows原生PyInstaller x64便携EXE/运行库ZIP及SHA-256已构建并启动，附硬件工具；必须完整解压。无签名、MSI、升级/静默安装。",
+      "validation": "scripts/build-windows.ps1; artifacts/validation-0.5.md"
     },
     {
       "id": "F12.08",
@@ -2693,7 +2731,7 @@
       "id": "F12.10",
       "domain": "Windows 集成与企业交付",
       "capability": "依赖 SBOM 与供应链维护",
-      "status": "未实现",
+      "status": "部分实现",
       "acceptance": "版本、许可证、安全公告与签名验证纳入发布",
       "priority": "P1",
       "sources": [
@@ -2703,13 +2741,15 @@
         "https://www.vandyke.com/download/securecrt/9.3/history.txt",
         "https://www.vandyke.com/download/securecrt/9.6/history.txt",
         "https://www.vandyke.com/products/securecrt/history.txt"
-      ]
+      ],
+      "implementation_note": "21个Python发行包锁版本；Windows包带发行包/许可证文件与哈希、Python许可和构建提交号，非完整原生DLL SBOM。签名与公告治理未实现。",
+      "validation": "scripts/collect_licenses.py; scripts/build-windows.ps1"
     },
     {
       "id": "F12.11",
       "domain": "Windows 集成与企业交付",
       "capability": "长期稳定性与故障注入",
-      "status": "未实现",
+      "status": "部分实现",
       "acceptance": "24/72小时、资源趋势、多窗口同时关闭、网断与睡眠恢复",
       "priority": "P1",
       "sources": [
@@ -2719,13 +2759,15 @@
         "https://www.vandyke.com/download/securecrt/9.3/history.txt",
         "https://www.vandyke.com/download/securecrt/9.6/history.txt",
         "https://www.vandyke.com/products/securecrt/history.txt"
-      ]
+      ],
+      "implementation_note": "故障注入、真实SSH/SFTP/TCP/PTY连续检测与资源预算；旧基线中止报告已留存，最新源文件哈希对应的72小时测试在运行，未达到时限。无Windows/实体COM/供应商长期对照结论。",
+      "validation": "scripts/soak.py; artifacts/soak-0.5-baseline-interrupted.json; artifacts/validation-0.5.md"
     },
     {
       "id": "F12.12",
       "domain": "Windows 集成与企业交付",
       "capability": "兼容性与回归基线",
-      "status": "未实现",
+      "status": "部分实现",
       "acceptance": "Win10/11、SSH 服务矩阵、串口适配器与终端回放留原始结果",
       "priority": "P1",
       "sources": [
@@ -2735,16 +2777,18 @@
         "https://www.vandyke.com/download/securecrt/9.3/history.txt",
         "https://www.vandyke.com/download/securecrt/9.6/history.txt",
         "https://www.vandyke.com/products/securecrt/history.txt"
-      ]
+      ],
+      "implementation_note": "已远端执行Linux/Windows与Python3.12/3.14矩阵和实际冻结EXE检查；失败初始证据保留。216本地用例并非SecureCRT逐项行为对照，实际Win10/11与完整TUI仍待测。",
+      "validation": "tests; .github/workflows/validate.yml; artifacts/validation-0.5.md"
     }
   ],
   "counts": {
-    "已验证子集": 22,
-    "依赖能力未验证": 3,
-    "未实现": 116,
-    "部分实现": 39,
+    "已验证子集": 27,
+    "依赖能力未验证": 2,
+    "部分实现": 56,
+    "未实现": 95,
     "仅关闭策略": 1,
     "安全差异": 2
   },
-  "implementation_version": "0.4.1"
+  "implementation_version": "0.5.0"
 }
